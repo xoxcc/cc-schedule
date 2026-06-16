@@ -343,7 +343,19 @@ thead .sticky{background:var(--surface2);z-index:3}
 .cov-cell-low{background:#fef9c3;color:#854d0e;font-weight:500}
 .cov-cell-mid{background:#dcfce7;color:#14532d;font-weight:500}
 .cov-cell-high{background:#bbf7d0;color:#14532d;font-weight:600}
-#covPopup{position:fixed;z-index:500;background:var(--surface);border:1px solid var(--border2);border-radius:var(--rl);padding:10px 14px;box-shadow:0 4px 20px rgba(0,0,0,.2);pointer-events:none;display:none;width:auto;white-space:nowrap}
+#covPopup{
+  position:fixed;z-index:9999;
+  background:var(--surface);
+  border:1px solid var(--border2);
+  border-radius:var(--rl);
+  padding:10px 14px;
+  box-shadow:0 4px 24px rgba(0,0,0,.25);
+  pointer-events:none;
+  display:none;
+  max-height:400px;
+  overflow-y:auto;
+  min-width:260px;
+}
 .cov-pos-header{background:var(--surface2);font-weight:600;font-size:11px;color:var(--text);padding:6px 10px;border-top:2px solid var(--border2)}
 
 /* ── DRAG REORDER ── */
@@ -4544,8 +4556,8 @@ function renderCoverage(){
           const otObj=getOT(s.id,vd.day);
           if(isWorkingDuringHour(sh,hour,otObj)){
             count++;
-            // Short display name — first + last word
-            working.push(s.name);
+            const userAcct=appUsersList.find(u=>u.staff_id===s.id);
+            working.push(userAcct?.username||s.name);
           }
         });
         const total=posStaff.length;
@@ -4575,12 +4587,19 @@ function renderCoverage(){
     if(!td){popup.style.display='none';return;}
     popup.innerHTML=decodeURIComponent(td.dataset.popup||'');
     popup.style.display='block';
-    const r=td.getBoundingClientRect();
-    let left=r.right+10, top=r.top-4;
-    if(left+230>window.innerWidth) left=r.left-238;
-    if(top+200>window.innerHeight) top=window.innerHeight-210;
-    popup.style.left=left+'px';
-    popup.style.top=Math.max(4,top)+'px';
+    popup.style.width='auto';
+    // Position after render so we know actual size
+    requestAnimationFrame(()=>{
+      const r=td.getBoundingClientRect();
+      const pw=popup.offsetWidth;
+      const ph=popup.offsetHeight;
+      let left=r.right+10;
+      let top=r.top-4;
+      if(left+pw>window.innerWidth-8) left=r.left-pw-10;
+      if(top+ph>window.innerHeight-8) top=window.innerHeight-ph-8;
+      popup.style.left=Math.max(4,left)+'px';
+      popup.style.top=Math.max(4,top)+'px';
+    });
   };
   grid.onmouseleave=()=>{popup.style.display='none';};
 
