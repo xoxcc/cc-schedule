@@ -343,7 +343,7 @@ thead .sticky{background:var(--surface2);z-index:3}
 .cov-cell-low{background:#fef9c3;color:#854d0e;font-weight:500}
 .cov-cell-mid{background:#dcfce7;color:#14532d;font-weight:500}
 .cov-cell-high{background:#bbf7d0;color:#14532d;font-weight:600}
-#covPopup{position:fixed;z-index:500;background:var(--surface);border:1px solid var(--border2);border-radius:var(--rl);padding:10px 12px;box-shadow:0 4px 20px rgba(0,0,0,.2);pointer-events:none;display:none;min-width:140px;max-width:220px}
+#covPopup{position:fixed;z-index:500;background:var(--surface);border:1px solid var(--border2);border-radius:var(--rl);padding:10px 12px;box-shadow:0 4px 20px rgba(0,0,0,.2);pointer-events:none;display:none;min-width:200px;max-width:320px}
 .cov-pos-header{background:var(--surface2);font-weight:600;font-size:11px;color:var(--text);padding:6px 10px;border-top:2px solid var(--border2)}
 
 /* ── DRAG REORDER ── */
@@ -4545,9 +4545,7 @@ function renderCoverage(){
           if(isWorkingDuringHour(sh,hour,otObj)){
             count++;
             // Short display name — first + last word
-            const parts=s.name.split(' ');
-            const shortName=parts.length>2?parts[0]+' '+parts[parts.length-1]:s.name;
-            working.push(shortName);
+            working.push(s.name);
           }
         });
         const total=posStaff.length;
