@@ -4544,8 +4544,9 @@ function renderCoverage(){
           const otObj=getOT(s.id,vd.day);
           if(isWorkingDuringHour(sh,hour,otObj)){
             count++;
-            // Short name — first name only for readability
-            const shortName=s.name.split(' ')[0];
+            // Short display name — first + last word
+            const parts=s.name.split(' ');
+            const shortName=parts.length>2?parts[0]+' '+parts[parts.length-1]:s.name;
             working.push(shortName);
           }
         });
@@ -4556,10 +4557,11 @@ function renderCoverage(){
           ?`No ${pos} working at ${timeLabel}`
           :`${count}/${total} working at ${timeLabel}:\n${working.join(', ')}`;
         const popupHtml=count===0
-          ?`<div style="font-size:11px;color:var(--text3)">Nobody working</div>`
-          :`<div style="font-size:11px;font-weight:600;color:var(--text);margin-bottom:4px">${count}/${total} working</div>`+
-           working.map(n=>`<div style="font-size:11px;color:var(--text2)">· ${n}</div>`).join('');
-        html+=`<td class="${cls} cov-hover-cell" data-popup="${encodeURIComponent(popupHtml)}" style="cursor:default;position:relative">${count||'—'}</td>`;
+          ?`<div style="font-size:11px;color:var(--text3);font-style:italic">Nobody working</div>`
+          :`<div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">${timeLabel}</div>`+
+           `<div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:6px">${count} of ${total} working</div>`+
+           working.map(n=>`<div style="font-size:11px;color:var(--text2);padding:1px 0">· ${n}</div>`).join('');
+        html+=`<td class="${cls} cov-hover-cell" data-popup="${encodeURIComponent(popupHtml)}" style="cursor:default">${count||'—'}</td>`;
       });
       html+='</tr>';
     });
@@ -4568,23 +4570,21 @@ function renderCoverage(){
   html+='</tbody></table>';
   grid.innerHTML=html;
 
-  // Hover popup for coverage cells
+  // Hover popup using event delegation — more reliable than per-cell listeners
   const popup=document.getElementById('covPopup');
-  grid.querySelectorAll('.cov-hover-cell').forEach(td=>{
-    td.addEventListener('mouseenter',e=>{
-      const html=decodeURIComponent(td.dataset.popup||'');
-      popup.innerHTML=html;
-      popup.style.display='block';
-      const r=td.getBoundingClientRect();
-      let left=r.right+8;
-      let top=r.top;
-      if(left+220>window.innerWidth) left=r.left-228;
-      if(top+200>window.innerHeight) top=window.innerHeight-210;
-      popup.style.left=left+'px';
-      popup.style.top=top+'px';
-    });
-    td.addEventListener('mouseleave',()=>{popup.style.display='none';});
-  });
+  grid.onmouseover=e=>{
+    const td=e.target.closest('.cov-hover-cell');
+    if(!td){popup.style.display='none';return;}
+    popup.innerHTML=decodeURIComponent(td.dataset.popup||'');
+    popup.style.display='block';
+    const r=td.getBoundingClientRect();
+    let left=r.right+10, top=r.top-4;
+    if(left+230>window.innerWidth) left=r.left-238;
+    if(top+200>window.innerHeight) top=window.innerHeight-210;
+    popup.style.left=left+'px';
+    popup.style.top=Math.max(4,top)+'px';
+  };
+  grid.onmouseleave=()=>{popup.style.display='none';};
 
   // Legend
   legend.innerHTML=`
