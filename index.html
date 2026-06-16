@@ -1419,24 +1419,28 @@ document.addEventListener('keydown',e=>{
 
   if(!canAssignShift()) return; // Ctrl+C/V only for managers+
 
-  // Ctrl+C — copy focused cell
+  // Ctrl+C — copy focused cell (shift + OT)
   if(ctrl&&e.key==='c'){
     e.preventDefault();
     if(!lastFocusedCell){toast('Click a cell first to select it','err');return;}
     const sh=getS(lastFocusedCell.sid, lastFocusedCell.day);
     if(!sh){toast('No shift on selected cell to copy','err');return;}
-    copySource={...lastFocusedCell, shift:sh};
+    const mk=cy+'-'+(cm+1);
+    const ot=otData[lastFocusedCell.sid+'_'+lastFocusedCell.day+'_'+mk]
+           ||otData[lastFocusedCell.sid+'_'+lastFocusedCell.day]||null;
+    copySource={...lastFocusedCell, shift:sh, ot:ot?{...ot}:null};
     const ct=document.getElementById('copyToolbar');
     const cl=document.getElementById('copyLabel');
     if(ct) ct.style.display='flex';
-    if(cl) cl.textContent=`"${sh}" copied — click target cell, then Ctrl+V`;
+    const otLabel=ot?` + OT ${ot.hours}h`:'';
+    if(cl) cl.textContent=`"${sh}"${otLabel} copied — click target cell, then Ctrl+V`;
     showSidebarActionPanel();
     renderSchedule();
-    toast(`Copied "${sh}" ✓`,'ok');
+    toast(`Copied "${sh}"${otLabel} ✓`,'ok');
     return;
   }
 
-  // Ctrl+V — paste to focused cell
+  // Ctrl+V — paste shift + OT to focused cell
   if(ctrl&&e.key==='v'){
     e.preventDefault();
     if(!copySource){toast('Nothing copied — Ctrl+C a cell first','err');return;}
@@ -3545,19 +3549,19 @@ function can(action){
 function handleCellClick(sid, day, name, e){
   if(!canAssignShift()) return;
   e.stopPropagation();
-  // Paste mode — paste immediately, no delay needed
+  // Paste mode — paste immediately
   if(copySource){
     clearTimeout(_clickTimer);
     doPaste(sid, day);
     return;
   }
-  // Debounce: wait 220ms to confirm this is a single click, not first of double-click
+  // Use short debounce only to distinguish from dblclick
   clearTimeout(_clickTimer);
   _clickTimer=setTimeout(()=>{
     _clickTimer=null;
     lastFocusedCell={sid, day};
-    renderSchedule(); // re-render to show blue outline
-  }, 220);
+    renderSchedule();
+  }, 180);
 }
 
 function handleCellDblClick(sid, day, name, e){
@@ -3639,8 +3643,12 @@ async function pickShiftFromModal(sid, day, val){
 async function doPaste(sid, day){
   if(!copySource) return;
   await saveShift(sid, day, copySource.shift);
-  lastFocusedCell={sid, day}; // stay focused on pasted cell
-  toast(`Pasted "${copySource.shift}" ✓`,'ok');
+  if(copySource.ot){
+    await saveOT(sid, day, copySource.ot.hours, copySource.ot.start, copySource.ot.end, copySource.ot.type||'OT');
+  }
+  lastFocusedCell={sid, day};
+  const otLabel=copySource.ot?` + OT ${copySource.ot.hours}h`:'';
+  toast(`Pasted "${copySource.shift}"${otLabel} ✓`,'ok');
 }
 
 async function pasteToRow(){
