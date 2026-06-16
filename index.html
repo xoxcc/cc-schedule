@@ -1931,7 +1931,12 @@ function renderSchedule(){
                   ${isApprover2?`onclick="switchTab('requests')"`:''}>
                   ${pendCode}<div class="cell-pending-dot" style="background:#d97706"></div>
                 </div>`
-              : `<div class="cell shift-main ${cls}${cellCanAssign?' editable':''}${isCopied?' copied':''}${isFocused?' focused':''}${isSelected?' selected':''}" ${cellStyle} data-sid="${x.id}" data-day="${d}" data-name="${x.name.replace(/"/g,'&quot;')}" title="${sh?(()=>{const sd=shiftTypes.find(x=>x.code===sh);return sd?sh+' '+sd.label+(sd.start?' '+sd.start+'–'+sd.end:''):sh;})():''}" ${cellCanAssign?`onclick="handleCellClick(this.dataset.sid,this.dataset.day,this.dataset.name,event)" ondblclick="handleCellDblClick(this.dataset.sid,this.dataset.day,this.dataset.name,event)"`:''}>${disp}</div>`
+              : `<div class="cell shift-main ${cls}${cellCanAssign?' editable':''}${isCopied?' copied':''}${isFocused?' focused':''}${isSelected?' selected':''}" ${cellStyle} data-sid="${x.id}" data-day="${d}" data-name="${x.name.replace(/"/g,'&quot;')}" title="${sh?(()=>{const sd=shiftTypes.find(x=>x.code===sh);return sd?sh+' '+sd.label+(sd.start?' '+sd.start+'–'+sd.end:''):sh;})():''}" ${cellCanAssign?`
+                onclick="handleCellClick(this.dataset.sid,this.dataset.day,this.dataset.name,event)"
+                ondblclick="handleCellDblClick(this.dataset.sid,this.dataset.day,this.dataset.name,event)"
+                onmousedown="handleCellMouseDown(this.dataset.sid,this.dataset.day,event)"
+                onmouseenter="handleCellMouseEnter(this.dataset.sid,this.dataset.day,event)"
+              `:''}>${disp}</div>`
             }
             <div class="ot-cell ${ot&&!isPreShift?'has-ot ot-below editable-ot':(otClickable&&!ot?'no-ot editable-empty ot-below':'no-ot ot-below')}"
               style="${ot&&!isPreShift?'background:'+otColor+';':''}"
@@ -3567,6 +3572,7 @@ function can(action){
 
 // ── COPY / PASTE / MULTI-SELECT ──
 let selectedCells=[]; // array of {sid, day} for multi-select
+let isDragging=false; // true while mouse is held down dragging across cells
 
 function handleCellClick(sid, day, name, e){
   if(!canAssignShift()) return;
@@ -3596,7 +3602,8 @@ function handleCellClick(sid, day, name, e){
   clearTimeout(_clickTimer);
   _clickTimer=setTimeout(()=>{
     _clickTimer=null;
-    // Single click = set as focused cell (clear multi-select)
+    // If drag just selected multiple cells, don't reset on click
+    if(selectedCells.length>1) return;
     selectedCells=[];
     lastFocusedCell={sid, day};
     renderSchedule();
@@ -3614,6 +3621,38 @@ function handleCellDblClick(sid, day, name, e){
   lastFocusedCell={sid, day};
   openShiftModal(sid, day, name);
 }
+
+function handleCellMouseDown(sid, day, e){
+  if(!canAssignShift()) return;
+  if(e.button!==0) return; // left click only
+  if(copySource) return; // in paste mode, let click handle it
+  isDragging=true;
+  // Start fresh selection
+  selectedCells=[{sid, day}];
+  lastFocusedCell={sid, day};
+  renderSchedule();
+  e.preventDefault(); // prevent text selection while dragging
+}
+
+function handleCellMouseEnter(sid, day, e){
+  if(!isDragging||!canAssignShift()) return;
+  if(copySource) return;
+  // Add to selection if not already there
+  if(!selectedCells.some(c=>c.sid===sid&&c.day===day)){
+    selectedCells.push({sid, day});
+    lastFocusedCell={sid, day};
+    renderSchedule();
+  }
+}
+
+// Stop drag on mouseup anywhere
+document.addEventListener('mouseup', e=>{
+  if(isDragging){
+    isDragging=false;
+    const n=selectedCells.length;
+    if(n>1) toast(`${n} cells selected — Ctrl+V to paste`,'ok');
+  }
+});
 
 function openShiftModal(sid, day, name){
   const sh=getS(sid, day);
