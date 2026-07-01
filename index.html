@@ -340,9 +340,15 @@ thead .sticky{background:var(--surface2);z-index:3}
 .cov-table td{border:1px solid var(--border);padding:4px 6px;text-align:center;white-space:nowrap;font-size:11px}
 .cov-table td.cov-label{text-align:left;font-size:11px;color:var(--text2);background:var(--surface);position:sticky;left:0;z-index:1;padding:5px 10px;font-weight:500}
 .cov-cell-0{background:var(--surface);color:var(--text3)}
-.cov-cell-low{background:#fef9c3;color:#854d0e;font-weight:500}
-.cov-cell-mid{background:#dcfce7;color:#14532d;font-weight:500}
-.cov-cell-high{background:#bbf7d0;color:#14532d;font-weight:600}
+.cov-cell-low{background:#854d0e22;color:#fbbf24;font-weight:500}
+.cov-cell-mid{background:#16653422;color:#4ade80;font-weight:500}
+.cov-cell-high{background:#16653444;color:#22c55e;font-weight:600}
+.dark .cov-cell-low{background:#854d0e33;color:#fcd34d}
+.dark .cov-cell-mid{background:#14532d33;color:#4ade80}
+.dark .cov-cell-high{background:#14532d55;color:#86efac}
+body:not(.dark) .cov-cell-low{background:#fef9c3;color:#854d0e}
+body:not(.dark) .cov-cell-mid{background:#dcfce7;color:#14532d}
+body:not(.dark) .cov-cell-high{background:#bbf7d0;color:#14532d}
 #covPopup{
   position:fixed;z-index:9999;
   background:var(--surface);
@@ -929,7 +935,7 @@ var { createClient } = supabase;
 var sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   auth:{
     flowType:'pkce',
-    redirectTo:'https://suffianarifen.github.io/cc-schedule'
+    redirectTo:window.location.origin+window.location.pathname
   }
 });
 
@@ -1046,7 +1052,34 @@ async function init(){
 
   // Restore existing session
   const {data:{session}}=await sb.auth.getSession();
-  if(session) await loadProfileFromAuth(session.user);
+  if(session){ await loadProfileFromAuth(session.user); return; }
+
+  // Fallback: try localStorage session (works across domain changes)
+  try{
+    const saved=localStorage.getItem('cc_session');
+    if(saved){
+      const sess=JSON.parse(saved);
+      if(sess?.id){
+        const {data}=await sb.from('app_users').select('*').eq('id',sess.id).single();
+        if(data&&data.is_active){
+          currentUser={id:data.id,username:data.username};
+          currentProfile={
+            app_role:data.app_role,display_name:data.display_name,
+            staff_role:data.staff_role,team:data.team,
+            staff_id:data.staff_id,username:data.username,
+            id:data.id,email:data.email
+          };
+          await loadSettings();await loadPublishedMonths();updateUserUI();
+          await loadStaff();await loadRemarks();await loadSchedule();
+          await loadBreakOverrides();await loadPendingRequests();
+          if(currentProfile.app_role==='admin') renderUsersTab();
+          showPage('app');startSchedulePoll();
+          return;
+        }
+      }
+      localStorage.removeItem('cc_session');
+    }
+  }catch(e){localStorage.removeItem('cc_session');}
 }
 
 async function loadProfileFromAuth(authUser){
@@ -1109,8 +1142,10 @@ async function doLogin(){
       }
       email=u.email;
     }
-    // Sign in via Supabase Auth
-    const {data,error}=await sb.auth.signInWithPassword({email,password:pw});
+    // Sign in via Supabase Auth — with timeout
+    const signInPromise=sb.auth.signInWithPassword({email,password:pw});
+    const timeoutPromise=new Promise((_,reject)=>setTimeout(()=>reject(new Error('Connection timeout — check your internet or try again')),15000));
+    const {data,error}=await Promise.race([signInPromise,timeoutPromise]);
     if(error){
       // Fallback: try legacy custom auth for users not yet migrated
       const {data:legacyUser}=await sb.from('app_users').select('*').eq('email',email).single();
@@ -1286,13 +1321,21 @@ function genTempPassword(){
 let appUsersList=[]; // cache of all app_users for linking
 
 async function loadStaff(){
-  // Load staff
-  const {data,error}=await sb.from('staff').select('*').order('name');
-  if(!error&&data) staffList=data;
-  else staffList=localStaff();
+  const {data,error}=await sb.from('staff').select('*').order('name').range(0,999);
+  if(error){
+    console.error('loadStaff error:', error.message, error.code);
+    toast('Staff load error: '+error.message,'err');
+    staffList=localStaff();
+  } else if(!data||data.length===0){
+    console.warn('loadStaff: empty result, using localStaff');
+    staffList=localStaff();
+  } else {
+    console.log('loadStaff: loaded',data.length,'staff');
+    staffList=data;
+  }
 
   // Load all app_users for cross-referencing
-  const {data:usersData}=await sb.from('app_users').select('*');
+  const {data:usersData}=await sb.from('app_users').select('*').range(0,999);
   if(usersData) appUsersList=usersData;
 
   // Sync team/role from app_users → staff (app_users is source of truth)
@@ -1322,7 +1365,7 @@ async function loadSchedule(){
   const monthKeys=[...new Set(viewDays.map(d=>d.year+'-'+(d.month+1)))];
   if(viewMode==='month') monthKeys.splice(0,monthKeys.length,cy+'-'+(cm+1));
   for(const mk of monthKeys){
-    const {data,error}=await sb.from('schedule').select('*').eq('month_key',mk);
+    const {data,error}=await sb.from('schedule').select('*').eq('month_key',mk).range(0,9999);
     if(!error&&data) data.forEach(r=>{
       const key=r.staff_id+'_'+r.day+'_'+r.month_key;
       const simpleKey=r.staff_id+'_'+r.day;
@@ -1482,8 +1525,36 @@ document.addEventListener('keydown',e=>{
     return;
   }
 
-  // Esc — exit copy mode
-  if(e.key==='Escape'&&copySource) clearCopyMode();
+  // Backspace / Delete — clear focused or selected cells
+  if(e.key==='Backspace'||e.key==='Delete'){
+    if(!canAssignShift()) return;
+    if(selectedCells.length>1){
+      // Clear all selected cells
+      e.preventDefault();
+      const cells=[...selectedCells];
+      (async()=>{
+        for(const c of cells) await saveShift(c.sid,c.day,'');
+        toast(`Cleared ${cells.length} cells ✓`,'ok');
+        selectedCells=[];
+      })();
+    } else if(lastFocusedCell){
+      e.preventDefault();
+      const {sid,day}=lastFocusedCell;
+      if(getS(sid,day)){
+        saveShift(sid,day,'');
+        toast('Cell cleared ✓','ok');
+      }
+    }
+    return;
+  }
+
+  // Esc — exit copy mode or clear selection
+  if(e.key==='Escape'){
+    if(copySource) clearCopyMode();
+    else if(selectedCells.length||lastFocusedCell){
+      selectedCells=[];lastFocusedCell=null;renderSchedule();
+    }
+  }
 });
 
 async function saveShift(staffId,day,val,monthOverride,noUnpublish=false){
@@ -1817,8 +1888,30 @@ function renderSchedule(){
     });
   });
 
-  const roleBg={'Admin':'#eff6ff','TL':'#f5f3ff','Sup':'#fffbeb','Agent':'#f0fdf4','Viewer':'#f7f7f5'};
-  const roleClr={'Admin':'#2563eb','TL':'#7c3aed','Sup':'#d97706','Agent':'#16a34a','Viewer':'#6b6b65'};
+  const isDarkMode=document.body.classList.contains('dark');
+  const roleBg={
+    'Admin':       isDarkMode?'#1e3a5f':'#eff6ff',
+    'TL':          isDarkMode?'#2e1065':'#f5f3ff',
+    'Sup':         isDarkMode?'#431407':'#fffbeb',
+    'Agent':       isDarkMode?'#14532d22':'#f0fdf4',
+    'Viewer':      isDarkMode?'#1e2130':'#f7f7f5',
+    'Team Leader': isDarkMode?'#2e1065':'#f5f3ff',
+    'Inbound Agent':  isDarkMode?'#14532d22':'#f0fdf4',
+    'Outbound Agent': isDarkMode?'#1e3a5f22':'#eff6ff',
+    'Quality Assurance': isDarkMode?'#431407':'#fffbeb',
+    'Senior Manager':isDarkMode?'#1e3a5f':'#eff6ff',
+    'Assistant Manager':isDarkMode?'#1e3a5f':'#eff6ff',
+  };
+  const roleClr={
+    'Admin':'#3b82f6','TL':'#8b5cf6','Sup':'#f59e0b',
+    'Agent':'#22c55e','Viewer':'#94a3b8',
+    'Team Leader':'#8b5cf6',
+    'Inbound Agent':'#22c55e',
+    'Outbound Agent':'#3b82f6',
+    'Quality Assurance':'#f59e0b',
+    'Senior Manager':'#3b82f6',
+    'Assistant Manager':'#3b82f6',
+  };
   const totalCols=5+days.length;
   let rowNum=0, rows='';
 
@@ -3008,7 +3101,7 @@ async function doForgotPassword(){
   errEl.textContent='Sending…';
 
   const {error}=await sb.auth.resetPasswordForEmail(email,{
-    redirectTo:'https://suffianarifen.github.io/cc-schedule'
+    redirectTo:window.location.origin+window.location.pathname
   });
 
   document.getElementById('fpBtns').style.display='none';
@@ -3599,45 +3692,51 @@ function handleCellMouseDown(sid, day, name, e){
   _mouseDownCell={sid,day,name};
   _mouseDownTime=Date.now();
   isDragging=false;
-  selectedCells=[{sid,day}];
-  lastFocusedCell={sid,day};
-  renderSchedule();
+  // Don't renderSchedule here — it destroys the DOM element mid-click
+  // Selection is applied on mouseup instead
 }
 
 function handleCellMouseEnter(sid, day, e){
   if(!canAssignShift()||!(e.buttons&1)||!_mouseDownCell||copySource) return;
-  // Only start drag after moving to a different cell
   if(_mouseDownCell.sid===sid&&_mouseDownCell.day===day) return;
   isDragging=true;
   if(!selectedCells.some(c=>c.sid===sid&&c.day===day)){
     selectedCells.push({sid,day});
     lastFocusedCell={sid,day};
-    renderSchedule();
+    renderSchedule(); // OK to render during drag — not the origin cell
   }
 }
 
 function handleCellDblClick(sid, day, name, e){
   if(!canAssignShift()) return;
   e.preventDefault();
-  if(copySource){clearCopyMode();return;}
+  e.stopPropagation();
+  if(copySource){clearCopyMode();}
   selectedCells=[];
   lastFocusedCell={sid,day};
+  // Always open modal on double click — whether empty or filled
   openShiftModal(sid,day,name);
 }
 
 document.addEventListener('mouseup',()=>{
   if(!_mouseDownCell) return;
+  const {sid,day,name}=_mouseDownCell;
   if(!isDragging){
-    const {sid,day,name}=_mouseDownCell;
     const sh=getS(sid,day);
-    selectedCells=[];
+    lastFocusedCell={sid,day};
     if(!sh){
-      // Empty cell — open assign modal directly
+      // Empty cell — open assign modal
+      selectedCells=[];
+      renderSchedule();
       openShiftModal(sid,day,name);
     } else {
-      // Filled cell — just focus (use Ctrl+C to copy, dblclick to reassign)
-      lastFocusedCell={sid,day};
-      renderSchedule();
+      // Filled cell — just focus, don't re-render (keeps DOM stable for dblclick)
+      selectedCells=[{sid,day}];
+      // Light highlight without full re-render
+      document.querySelectorAll('.cell.focused').forEach(c=>c.classList.remove('focused'));
+      document.querySelectorAll('.cell.selected').forEach(c=>c.classList.remove('selected'));
+      const el=document.querySelector(`.cell[data-sid="${sid}"][data-day="${day}"]`);
+      if(el) el.classList.add('focused');
     }
   } else if(selectedCells.length>1){
     toast(`${selectedCells.length} cells selected — Ctrl+V to paste`,'ok');
@@ -4613,11 +4712,11 @@ function renderCoverage(){
 
   // Legend
   legend.innerHTML=`
-    <span style="display:flex;align-items:center;gap:4px"><span style="width:14px;height:14px;background:#bbf7d0;border-radius:2px;display:inline-block"></span>High coverage (≥70%)</span>
-    <span style="display:flex;align-items:center;gap:4px"><span style="width:14px;height:14px;background:#dcfce7;border-radius:2px;display:inline-block"></span>Medium (30–69%)</span>
-    <span style="display:flex;align-items:center;gap:4px"><span style="width:14px;height:14px;background:#fef9c3;border-radius:2px;display:inline-block"></span>Low (<30%)</span>
-    <span style="display:flex;align-items:center;gap:4px"><span style="width:14px;height:14px;background:var(--surface);border:1px solid var(--border);border-radius:2px;display:inline-block"></span>None</span>
-    <span style="color:var(--text3);margin-left:8px">Numbers show staff count per hour slot (including OT coverage)</span>`;
+    <span style="display:flex;align-items:center;gap:4px"><span class="cov-cell-high" style="width:14px;height:14px;border-radius:2px;display:inline-block"></span>High coverage (≥70%)</span>
+    <span style="display:flex;align-items:center;gap:4px"><span class="cov-cell-mid" style="width:14px;height:14px;border-radius:2px;display:inline-block"></span>Medium (30–69%)</span>
+    <span style="display:flex;align-items:center;gap:4px"><span class="cov-cell-low" style="width:14px;height:14px;border-radius:2px;display:inline-block"></span>Low (&lt;30%)</span>
+    <span style="display:flex;align-items:center;gap:4px"><span class="cov-cell-0" style="width:14px;height:14px;border-radius:2px;display:inline-block;border:1px solid var(--border)"></span>None</span>
+    <span style="color:var(--text3);margin-left:8px">Numbers show staff count per hour slot</span>`;
 }
 
 // ── DARK MODE ──
