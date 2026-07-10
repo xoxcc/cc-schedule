@@ -166,7 +166,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);fon
 .scard strong{display:block;font-size:18px;font-weight:600;color:var(--text)}
 
 /* ── SCHEDULE TABLE ── */
-.tbl-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:var(--rl);background:var(--surface)}
+.tbl-wrap{overflow:auto;border:1px solid var(--border);border-radius:var(--rl);background:var(--surface);max-height:calc(100vh - 240px)}
 table{border-collapse:collapse;font-size:11px;min-width:100%}
 th{padding:5px 7px;background:var(--surface2);border-bottom:1px solid var(--border);border-right:1px solid var(--border);white-space:nowrap;font-weight:500;color:var(--text2);font-size:10px;text-transform:uppercase;letter-spacing:.04em}
 td{border-bottom:1px solid var(--border);border-right:1px solid var(--border);white-space:nowrap;padding:0}
@@ -180,6 +180,13 @@ tr:last-child td{border-bottom:none}
 thead .sticky{background:var(--surface2);z-index:3}
 .th-day{width:26px;text-align:center;font-size:10px;padding:3px 1px}
 .week-view .th-day{width:110px;min-width:110px}
+/* Sticky header rows */
+#thead tr:nth-child(1) th{position:sticky;top:0;z-index:4;background:var(--surface)}
+#thead tr:nth-child(2) th{position:sticky;top:22px;z-index:4;background:var(--surface)}
+#thead tr:nth-child(3) th{position:sticky;top:42px;z-index:4;background:var(--surface)}
+/* Sticky name column */
+thead th.sticky{position:sticky;left:0;z-index:5;background:var(--surface2)}
+tbody td.sticky{position:sticky;left:0;z-index:2;background:var(--surface)}
 .week-view .cell{width:100%;min-height:38px;font-size:11px;font-weight:600;border-radius:3px}
 .week-view .shift-ot-wrap{min-width:100px}
 .week-view .ot-cell{font-size:10px;height:20px}
@@ -190,6 +197,15 @@ thead .sticky{background:var(--surface2);z-index:3}
 .th-day:hover .remark-tip{display:block;}
 .th-day.has-remark{position:relative;}
 .wk-col{color:var(--text3) !important}
+/* Weekend column — visible border on left edge */
+.th-day.wk-col{background:var(--surface2) !important;border-left:2px solid var(--border2) !important}
+td.wk-cell{border-left:2px solid var(--border2) !important}
+/* Crosshair hover highlight */
+.tbl-wrap tbody tr.row-hover td{background-color:rgba(59,130,246,0.06) !important}
+.tbl-wrap tbody td.col-hover{background-color:rgba(59,130,246,0.06) !important}
+.tbl-wrap tbody tr.row-hover td.col-hover{background-color:rgba(59,130,246,0.18) !important}
+.tbl-wrap thead th.col-hover-head{background-color:rgba(59,130,246,0.18) !important;color:var(--blue) !important}
+.tbl-wrap tbody tr.row-hover .td-name{color:var(--blue) !important;font-weight:600 !important}
 .cell{width:30px;height:28px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;letter-spacing:.02em}
 .cell.editable{cursor:pointer;transition:opacity .1s}
 .ot-cell{width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;cursor:pointer;border-left:1px solid rgba(255,255,255,.3)}
@@ -335,8 +351,9 @@ thead .sticky{background:var(--surface2);z-index:3}
 .dv-name-header{min-width:150px;max-width:150px;padding:4px 8px;font-size:10px;font-weight:500;color:var(--text2);border-right:0.5px solid var(--border)}
 /* ── COVERAGE TABLE ── */
 .cov-table{border-collapse:collapse;font-size:11px;min-width:100%}
-.cov-table th{padding:5px 8px;background:var(--surface2);border:1px solid var(--border);font-size:10px;font-weight:500;color:var(--text2);white-space:nowrap;text-align:center}
-.cov-table th.cov-slot{text-align:left;width:120px;position:sticky;left:0;background:var(--surface2);z-index:2}
+.cov-table thead{position:sticky;top:0;z-index:5}
+.cov-table th{padding:5px 8px;background:var(--surface2);border:1px solid var(--border);font-size:10px;font-weight:500;color:var(--text2);white-space:nowrap;text-align:center;position:sticky;top:0;z-index:4}
+.cov-table th.cov-slot{text-align:left;width:120px;position:sticky;left:0;top:0;background:var(--surface2);z-index:6}
 .cov-table td{border:1px solid var(--border);padding:4px 6px;text-align:center;white-space:nowrap;font-size:11px}
 .cov-table td.cov-label{text-align:left;font-size:11px;color:var(--text2);background:var(--surface);position:sticky;left:0;z-index:1;padding:5px 10px;font-weight:500}
 .cov-cell-0{background:var(--surface);color:var(--text3)}
@@ -369,6 +386,21 @@ body:not(.dark) .cov-cell-high{background:#bbf7d0;color:#14532d}
 .drag-handle:active{cursor:grabbing}
 tr.dragging{opacity:.4}
 tr.drag-over td{border-top:2px solid var(--blue) !important}
+.cell-remark-dot{position:absolute;bottom:2px;right:2px;width:5px;height:5px;border-radius:50%;background:#f59e0b;pointer-events:none;flex-shrink:0;z-index:1}
+.cell.shift-main{position:relative}
+.cov-table tr.cov-row-hover td,.cov-table tr.cov-row-hover th{background-color:rgba(59,130,246,0.07) !important}
+.cov-table td.cov-col-hover,.cov-table th.cov-col-hover{background-color:rgba(59,130,246,0.07) !important}
+.cov-table tr.cov-row-hover td.cov-col-hover{background-color:rgba(59,130,246,0.18) !important}
+.cov-table tr.cov-row-hover td.cov-label{color:var(--blue) !important;font-weight:600 !important}
+.cov-table th.cov-col-hover{color:var(--blue) !important}
+.section-hd{transition:background .2s}
+.section-agent{background:#f0fdf4}.dark .section-agent{background:#14532d22}
+.section-outbound{background:#eff6ff}.dark .section-outbound{background:#1e3a5f33}
+.section-tl{background:#f5f3ff}.dark .section-tl{background:#2e106533}
+.section-sup{background:#fffbeb}.dark .section-sup{background:#43140733}
+.section-qa{background:#fffbeb}.dark .section-qa{background:#43140733}
+.section-admin{background:#eff6ff}.dark .section-admin{background:#1e3a5f33}
+.section-viewer{background:#f7f7f5}.dark .section-viewer{background:#1e213033}
 .section-drag-handle{cursor:grab;margin-right:6px;opacity:.5;font-size:13px}
 .section-drag-handle:active{cursor:grabbing}
 tr.section-drag-over td{border-top:3px solid var(--blue) !important}
@@ -680,7 +712,7 @@ tr.section-drag-over td{border-top:3px solid var(--blue) !important}
         <button class="btn" onclick="renderCoverage()">↻ Refresh</button>
       </div>
     </div>
-    <div id="coverageGrid" style="overflow-x:auto"></div>
+    <div id="coverageGrid" style="overflow:auto;max-height:calc(100vh - 260px)"></div>
     <div style="margin-top:10px;display:flex;gap:12px;flex-wrap:wrap;font-size:11px;color:var(--text2)" id="covLegend"></div>
   </div>
 
@@ -995,7 +1027,13 @@ let currentTab='schedule'; // tracks active tab for hardRefresh
 let sectionOrder=[]; // populated from Supabase app_settings
 let staffOrder=[]; // array of staff ids in preferred order
 // Copy/paste state
-let copySource=null; // {sid, day, shift}
+let copySource=null;
+let remarkData={}; // key: staffId_day_monthKey → remark string
+
+function getR(sid,day){
+  const mk=cy+'-'+(cm+1);
+  return remarkData[sid+'_'+day+'_'+mk]||remarkData[sid+'_'+day]||'';
+} // {sid, day, shift}
 let copyMode=null;   // 'cell'
 let lastFocusedCell=null; // {sid, day} — tracks selected cell for Ctrl+C/V
 let _clickTimer=null;     // debounce single vs double click
@@ -1369,11 +1407,15 @@ async function loadSchedule(){
     if(!error&&data) data.forEach(r=>{
       const key=r.staff_id+'_'+r.day+'_'+r.month_key;
       const simpleKey=r.staff_id+'_'+r.day;
-      schedData[simpleKey]=r.shift; // backward compat for monthly
-      schedData[key]=r.shift;       // keyed with month for weekly
+      schedData[simpleKey]=r.shift;
+      schedData[key]=r.shift;
       if(r.ot_hours||r.ot_start){
         otData[simpleKey]={hours:r.ot_hours||0,start:r.ot_start||'',end:r.ot_end||'',type:r.ot_type||'OT'};
         otData[key]={hours:r.ot_hours||0,start:r.ot_start||'',end:r.ot_end||'',type:r.ot_type||'OT'};
+      }
+      if(r.remark){
+        remarkData[simpleKey]=r.remark;
+        remarkData[key]=r.remark;
       }
     });
   }
@@ -1888,19 +1930,16 @@ function renderSchedule(){
     });
   });
 
-  const isDarkMode=document.body.classList.contains('dark');
-  const roleBg={
-    'Admin':       isDarkMode?'#1e3a5f':'#eff6ff',
-    'TL':          isDarkMode?'#2e1065':'#f5f3ff',
-    'Sup':         isDarkMode?'#431407':'#fffbeb',
-    'Agent':       isDarkMode?'#14532d22':'#f0fdf4',
-    'Viewer':      isDarkMode?'#1e2130':'#f7f7f5',
-    'Team Leader': isDarkMode?'#2e1065':'#f5f3ff',
-    'Inbound Agent':  isDarkMode?'#14532d22':'#f0fdf4',
-    'Outbound Agent': isDarkMode?'#1e3a5f22':'#eff6ff',
-    'Quality Assurance': isDarkMode?'#431407':'#fffbeb',
-    'Senior Manager':isDarkMode?'#1e3a5f':'#eff6ff',
-    'Assistant Manager':isDarkMode?'#1e3a5f':'#eff6ff',
+  const roleClass={
+    'Admin':'section-admin','TL':'section-tl','Sup':'section-sup',
+    'Agent':'section-agent','Viewer':'section-viewer',
+    'Team Leader':'section-tl',
+    'Inbound Agent':'section-agent',
+    'Outbound Agent':'section-outbound',
+    'Quality Assurance':'section-qa',
+    'Senior Manager':'section-admin',
+    'Assistant Manager':'section-admin',
+    'Reporting Exec':'section-viewer',
   };
   const roleClr={
     'Admin':'#3b82f6','TL':'#8b5cf6','Sup':'#f59e0b',
@@ -1911,20 +1950,21 @@ function renderSchedule(){
     'Quality Assurance':'#f59e0b',
     'Senior Manager':'#3b82f6',
     'Assistant Manager':'#3b82f6',
+    'Reporting Exec':'#94a3b8',
   };
   const totalCols=5+days.length;
   let rowNum=0, rows='';
 
   sectionOrder.forEach((role,si)=>{
     if(!grouped[role]||!grouped[role].length)return;
-    const bg=roleBg[role]||'#f7f7f5';
-    const clr=roleClr[role]||'#1a1a18';
+    const cls=roleClass[role]||'section-viewer';
+    const clr=roleClr[role]||'var(--text2)';
     rows+=`<tr class="section-row" ${isAdmin?`draggable="true"
       ondragstart="sectionDragStart(event,'${role}')"
       ondragover="sectionDragOver(event)"
       ondrop="sectionDrop(event,'${role}')"
       ondragleave="sectionDragLeave(event)"`:'draggable="false"'}>
-      <td colspan="${totalCols}" style="padding:5px 10px;background:${bg};border-bottom:1px solid var(--border);border-top:2px solid ${clr}30;cursor:${isAdmin?'grab':'default'}">
+      <td colspan="${totalCols}" class="section-hd ${cls}" style="padding:5px 10px;border-bottom:1px solid var(--border);border-top:2px solid ${clr}40;cursor:${isAdmin?'grab':'default'}">
         ${isAdmin?`<span style="font-size:10px;color:${clr}88;margin-right:4px">⠿</span>`:''}
         <span style="font-size:11px;font-weight:600;color:${clr};text-transform:uppercase;letter-spacing:.06em">${role}</span>
         <span style="font-size:10px;color:var(--text3);margin-left:6px">${grouped[role].length} staff</span>
@@ -2003,6 +2043,9 @@ function renderSchedule(){
           const isCopied=copySource&&copySource.sid===x.id&&copySource.day===d;
           const isFocused=!isCopied&&lastFocusedCell&&lastFocusedCell.sid===x.id&&lastFocusedCell.day===d;
           const isSelected=!isCopied&&selectedCells.some(c=>c.sid===x.id&&c.day===d);
+          const cellRemark=getR(x.id,d);
+          const remarkDot=cellRemark?`<div class="cell-remark-dot" title="${cellRemark.replace(/"/g,'&quot;')}"></div>`:'';
+          const cellTitle=sh?(()=>{const sd=shiftTypes.find(s=>s.code===sh);return(sd?sh+' '+sd.label+(sd.start?' '+sd.start+'–'+sd.end:''):sh)+(cellRemark?' 📝 '+cellRemark:'');})():(cellRemark?'📝 '+cellRemark:'');
           const cellCanAssign=canAssignShift();
           // Check for pending leave request on this cell
           const pendKey=x.id+'_'+d+'_'+(vd.year||cy)+'-'+((vd.month!==undefined?vd.month:cm)+1);
@@ -2022,13 +2065,17 @@ function renderSchedule(){
           // Determine if OT is before or after shift based on start time vs shift start
           // Pre-shift: OT-Pre type or start time before 12:00
           const isPreShift=otObj&&(otObj.type==='OT-Pre'||(otObj.start&&parseInt(otObj.start)<12));
+          const isWknd=(new Date(vd.year||cy,(vd.month!==undefined?vd.month:cm),d)).getDay()%6===0;
           const safeName=x.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-          const tdStyle='padding:0';  // cells just show empty if unpublished (sh='')
-          return`<td style="${tdStyle}"><div class="shift-ot-wrap">
+          const tdStyle='padding:0';
+          return`<td style="${tdStyle}" class="${isWknd?'wk-cell':''}"><div class="shift-ot-wrap">
             <div class="ot-cell ${ot&&isPreShift?'has-ot ot-above':(otClickable&&!ot?'no-ot editable-empty ot-above':'no-ot ot-above')}" 
               style="${ot&&isPreShift?'background:'+otColor+';':''}order:-1"
-              ${otClickable?`onclick="openOTModal('${x.id}',${d},'${x.name.replace(/"/g,'&quot;')}')"`:''} 
-              title="${ot&&isPreShift?otTitle:(sh?'Add pre-shift OT':'')}">
+              ${otClickable?`
+                onclick="handleOTCellClick('${x.id}',${d},event)"
+                ondblclick="openOTModal('${x.id}',${d},'${x.name.replace(/"/g,'&quot;')}')"
+              `:''}
+              title="${ot&&isPreShift?otTitle:(sh?'Click to select · Double-click to edit OT':'')}">
               ${ot&&isPreShift?otDisplay:''}
             </div>
             ${showPending
@@ -2038,16 +2085,19 @@ function renderSchedule(){
                   ${isApprover2?`onclick="switchTab('requests')"`:''}>
                   ${pendCode}<div class="cell-pending-dot" style="background:#d97706"></div>
                 </div>`
-              : `<div class="cell shift-main ${cls}${cellCanAssign?' editable':''}${isCopied?' copied':''}${isFocused?' focused':''}${isSelected?' selected':''}" ${cellStyle} data-sid="${x.id}" data-day="${d}" data-name="${x.name.replace(/"/g,'&quot;')}" title="${sh?(()=>{const sd=shiftTypes.find(x=>x.code===sh);return sd?sh+' '+sd.label+(sd.start?' '+sd.start+'–'+sd.end:''):sh;})():''}" ${cellCanAssign?`
+              : `<div class="cell shift-main ${cls}${cellCanAssign?' editable':''}${isCopied?' copied':''}${isFocused?' focused':''}${isSelected?' selected':''}" ${cellStyle} data-sid="${x.id}" data-day="${d}" data-name="${x.name.replace(/"/g,'&quot;')}" title="${cellTitle}" ${cellCanAssign?`
                 onmousedown="handleCellMouseDown(this.dataset.sid,this.dataset.day,this.dataset.name,event)"
                 onmouseenter="handleCellMouseEnter(this.dataset.sid,this.dataset.day,event)"
                 ondblclick="handleCellDblClick(this.dataset.sid,this.dataset.day,this.dataset.name,event)"
-              `:''}>${disp}</div>`
+              `:''}>${disp}${remarkDot}</div>`
             }
             <div class="ot-cell ${ot&&!isPreShift?'has-ot ot-below editable-ot':(otClickable&&!ot?'no-ot editable-empty ot-below':'no-ot ot-below')}"
               style="${ot&&!isPreShift?'background:'+otColor+';':''}"
-              ${otClickable?`onclick="openOTModal('${x.id}',${d},'${x.name.replace(/"/g,'&quot;')}')"`:''} 
-              title="${ot&&!isPreShift?otTitle:(sh?'Add post-shift OT':'')}">
+              ${otClickable?`
+                onclick="handleOTCellClick('${x.id}',${d},event)"
+                ondblclick="openOTModal('${x.id}',${d},'${x.name.replace(/"/g,'&quot;')}')"
+              `:''}
+              title="${ot&&!isPreShift?otTitle:(sh?'Click to select · Double-click to edit OT':'')}">
               ${ot&&!isPreShift?otDisplay:''}
             </div>
           </div></td>`;
@@ -2923,6 +2973,21 @@ async function submitSwapRequest(){
   toast('Swap request submitted ✓','ok');
 }
 
+function handleOTCellClick(sid, day, e){
+  // Single click on OT cell = focus the parent shift cell (same as clicking the shift)
+  e.stopPropagation();
+  if(copySource){
+    doPaste(sid, day);
+    return;
+  }
+  lastFocusedCell={sid, day};
+  // Light highlight without full re-render
+  document.querySelectorAll('.cell.focused').forEach(c=>c.classList.remove('focused'));
+  document.querySelectorAll('.cell.selected').forEach(c=>c.classList.remove('selected'));
+  const el=document.querySelector(`.cell[data-sid="${sid}"][data-day="${day}"]`);
+  if(el) el.classList.add('focused');
+}
+
 function openOTModal(sid, day, name){
   const sh=getS(sid,day);
   const shiftDef=shiftTypes.find(s=>s.code===sh);
@@ -3747,6 +3812,7 @@ document.addEventListener('mouseup',()=>{
 
 function openShiftModal(sid, day, name){
   const sh=getS(sid, day);
+  const rem=getR(sid,day);
   const box=document.getElementById('modalBox');
 
   const btnStyle=(code, color)=>{
@@ -3767,7 +3833,6 @@ function openShiftModal(sid, day, name){
       onmouseout="if('${sh}'!=='${s.code}')this.style.opacity='0.45'"
     >${s.code}</button>`).join('');
 
-  // Include OD/RD with their colors
   const allLeave=[
     ...timeoffTypes.filter(t=>!['OD','RD'].includes(t.code)),
     {code:'OD',label:'Off day',  color:'#8b5cf6'},
@@ -3781,6 +3846,24 @@ function openShiftModal(sid, day, name){
       onmouseout="if('${sh}'!=='${s.code}')this.style.opacity='0.45'"
     >${s.code}</button>`).join('');
 
+  // Half-day AL buttons — combine with current shift
+  const baseShift=sh&&!sh.includes('-')&&!['AL','RL','MC','EL','PH','OD','RD'].includes(sh)?sh:'M';
+  const h1Code=baseShift+'-H1AL';
+  const h2Code=baseShift+'-H2AL';
+  const halfDayBtns=`
+    <button onclick="pickShiftFromModal('${sid}',${day},'${h1Code}')"
+      style="${btnStyle(h1Code,'#22c55e')}"
+      title="Half-day AL (1st half — morning off)"
+      onmouseover="this.style.opacity='1'"
+      onmouseout="if('${sh}'!=='${h1Code}')this.style.opacity='0.45'"
+    >H1AL</button>
+    <button onclick="pickShiftFromModal('${sid}',${day},'${h2Code}')"
+      style="${btnStyle(h2Code,'#16a34a')}"
+      title="Half-day AL (2nd half — afternoon off)"
+      onmouseover="this.style.opacity='1'"
+      onmouseout="if('${sh}'!=='${h2Code}')this.style.opacity='0.45'"
+    >H2AL</button>`;
+
   box.innerHTML=`
     <h3>Assign — day ${day}</h3>
     <div class="msub">${name}${sh?` <span style="font-size:11px;background:var(--surface2);padding:2px 8px;border-radius:20px;margin-left:4px">Current: ${sh}</span>`:''}</div>
@@ -3790,8 +3873,13 @@ function openShiftModal(sid, day, name){
         ${shiftBtns}
       </div>
       <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Leave / Time off</div>
-      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;padding:12px;background:var(--surface2);border-radius:var(--r)">
+      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px;padding:12px;background:var(--surface2);border-radius:var(--r)">
         ${leaveBtns}
+      </div>
+      <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Half-day AL <span style="font-size:10px;color:var(--text3);font-weight:400">(based on current shift: ${baseShift})</span></div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;padding:12px;background:var(--surface2);border-radius:var(--r)">
+        ${halfDayBtns}
+        <span style="font-size:10px;color:var(--text3);align-self:center">H1AL = 1st half off · H2AL = 2nd half off</span>
       </div>
       <button onclick="pickShiftFromModal('${sid}',${day},'')"
         style="width:100%;padding:7px;font-size:12px;border-radius:5px;border:2px solid var(--red);background:transparent;color:var(--red);cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:600"
@@ -3799,9 +3887,44 @@ function openShiftModal(sid, day, name){
         onmouseout="this.style.background='transparent'">
         ✕ Clear cell
       </button>
+      <div style="margin-top:14px;border-top:1px solid var(--border);padding-top:12px">
+        <label style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;display:flex;align-items:center;gap:6px;margin-bottom:6px">
+          <span style="color:#f59e0b">●</span> Cell comment <span style="font-size:10px;color:var(--text3);font-weight:400">(shown on hover)</span>
+        </label>
+        <input id="cellRemarkInp" type="text" value="${rem.replace(/"/g,'&quot;')}" placeholder="e.g. WFH, Training, replacement for Ahmad…"
+          style="width:100%;font-size:12px;border:1px solid var(--border2);border-radius:var(--r);padding:7px 10px;background:var(--surface);color:var(--text);font-family:'DM Sans',sans-serif"
+          onkeydown="if(event.key==='Enter')saveCellRemark('${sid}',${day})">
+        <div style="display:flex;gap:6px;margin-top:6px">
+          <button onclick="saveCellRemark('${sid}',${day})" class="btn btn-blue" style="flex:1;justify-content:center">💾 Save comment</button>
+          ${rem?`<button onclick="saveCellRemark('${sid}',${day},true)" class="btn" style="color:var(--red)">✕ Clear</button>`:''}
+        </div>
+      </div>
     </div>
-    <div class="mbtns"><button class="btn" onclick="closeModal()">Cancel</button></div>`;
+    <div class="mbtns"><button class="btn" onclick="closeModal()">Close</button></div>`;
   document.getElementById('overlay').classList.add('open');
+  // Don't auto-focus remark field — user may just want to assign shift
+}
+
+async function saveCellRemark(sid, day, clear=false){
+  const inp=document.getElementById('cellRemarkInp');
+  const remark=clear?'':(inp?.value.trim()||'');
+  const mk=cy+'-'+(cm+1);
+  const simpleKey=sid+'_'+day;
+  const fullKey=sid+'_'+day+'_'+mk;
+  const shift=getS(sid,day)||null;
+  const ot=otData[fullKey]||otData[simpleKey]||null;
+  const {error}=await sb.from('schedule').upsert({
+    staff_id:sid, month_key:mk, day:parseInt(day),
+    shift, remark:remark||null,
+    ot_hours:ot?.hours||null, ot_start:ot?.start||null,
+    ot_end:ot?.end||null, ot_type:ot?.type||null
+  },{onConflict:'staff_id,month_key,day'});
+  if(error){toast('Error: '+error.message,'err');return;}
+  if(remark){remarkData[simpleKey]=remark;remarkData[fullKey]=remark;}
+  else{delete remarkData[simpleKey];delete remarkData[fullKey];}
+  closeModal();
+  toast(remark?'Comment saved 📝':'Comment cleared','ok');
+  renderSchedule();
 }
 
 async function pickShiftFromModal(sid, day, val){
@@ -4590,10 +4713,36 @@ function isWorkingDuringHour(shiftCode, hour, otObj){
     const otStart=parseInt(otObj.start.split(':')[0]);
     const otEnd=parseInt(otObj.end.split(':')[0]);
     if(otEnd>otStart && hour>=otStart && hour<otEnd) return true;
-    if(otEnd<otStart && (hour>=otStart || hour<otEnd)) return true; // overnight OT
+    if(otEnd<otStart && (hour>=otStart || hour<otEnd)) return true;
   }
-  // Check regular shift
-  if(!shiftCode || ABSENT_CODES.has(shiftCode)) return false;
+  if(!shiftCode) return false;
+
+  // Handle composite half-day codes e.g. M-H1AL, E-H2AL
+  const halfMatch=shiftCode.match(/^([A-Z]+)-(H[12]AL)$/);
+  if(halfMatch){
+    const base=halfMatch[1];
+    const half=halfMatch[2];
+    const range=SHIFT_HOURS[base];
+    if(!range) return false;
+    const start=range[0], end=range[1];
+    // Fixed split times per shift (not calculated midpoints)
+    // Per-shift half-day working hours (may have gap for lunch between halves)
+    const HALF_HOURS={
+      'M': {h2:[8,12],  h1:[13,17]}, // H2AL: 8AM-12PM, H1AL: 1PM-5PM
+      'E': {h2:[13,17], h1:[18,22]}, // H2AL: 1PM-5PM,  H1AL: 6PM-10PM
+      'MD':{h2:[10,14], h1:[15,19]}, // H2AL: 10AM-2PM, H1AL: 3PM-7PM
+      'A': {h2:[11,15], h1:[16,20]}, // H2AL: 11AM-3PM, H1AL: 4PM-8PM
+    };
+    const hrs=HALF_HOURS[base];
+    if(!hrs) return false;
+    if(half==='H1AL') return hour>=hrs.h1[0] && hour<hrs.h1[1];
+    if(half==='H2AL') return hour>=hrs.h2[0] && hour<hrs.h2[1];
+  }
+
+  // Plain H1AL / H2AL without base shift — treat as absent
+  if(shiftCode==='H1AL'||shiftCode==='H2AL') return false;
+
+  if(ABSENT_CODES.has(shiftCode)) return false;
   const range=SHIFT_HOURS[shiftCode];
   if(!range) return false;
   return hour>=range[0] && hour<range[1];
@@ -4695,7 +4844,6 @@ function renderCoverage(){
     popup.innerHTML=decodeURIComponent(td.dataset.popup||'');
     popup.style.display='block';
     popup.style.width='auto';
-    // Position after render so we know actual size
     requestAnimationFrame(()=>{
       const r=td.getBoundingClientRect();
       const pw=popup.offsetWidth;
@@ -4707,8 +4855,22 @@ function renderCoverage(){
       popup.style.left=Math.max(4,left)+'px';
       popup.style.top=Math.max(4,top)+'px';
     });
+    // Crosshair highlight
+    const tbl=td.closest('table');
+    if(tbl){
+      const row=td.parentElement;
+      const colIdx=[...row.children].indexOf(td);
+      tbl.querySelectorAll('tr').forEach(r=>r.classList.remove('cov-row-hover'));
+      tbl.querySelectorAll('.cov-col-hover').forEach(c=>c.classList.remove('cov-col-hover'));
+      row.classList.add('cov-row-hover');
+      tbl.querySelectorAll(`tr td:nth-child(${colIdx+1}),tr th:nth-child(${colIdx+1})`).forEach(c=>c.classList.add('cov-col-hover'));
+    }
   };
-  grid.onmouseleave=()=>{popup.style.display='none';};
+  grid.onmouseleave=()=>{
+    popup.style.display='none';
+    document.querySelectorAll('.cov-row-hover').forEach(r=>r.classList.remove('cov-row-hover'));
+    document.querySelectorAll('.cov-col-hover').forEach(c=>c.classList.remove('cov-col-hover'));
+  };
 
   // Legend
   legend.innerHTML=`
@@ -7478,7 +7640,51 @@ async function saveLeaveEntitlement(staffId){
   renderProfileCard(staffId);
 }
 
-// ── TOAST ──
+// ── CROSSHAIR HOVER ──
+(function setupCrosshair(){
+  let lastRow=null, lastColIdx=-1;
+  document.addEventListener('mouseover',e=>{
+    const td=e.target.closest('.tbl-wrap tbody td');
+    const tbl=td?.closest('.tbl-wrap table');
+    if(!tbl){
+      // Leaving table — clear
+      if(lastRow){lastRow.classList.remove('row-hover');lastRow=null;}
+      if(lastColIdx>=0){
+        tbl?.querySelectorAll(`td:nth-child(${lastColIdx+1})`).forEach(c=>c.classList.remove('col-hover'));
+        tbl?.querySelector(`thead th:nth-child(${lastColIdx+1})`)?.classList.remove('col-hover-head');
+        lastColIdx=-1;
+      }
+      return;
+    }
+    const row=td.parentElement;
+    const cells=[...row.parentElement.parentElement.querySelectorAll('thead tr th')];
+    const colIdx=[...row.children].indexOf(td);
+    // Update row highlight
+    if(lastRow&&lastRow!==row) lastRow.classList.remove('row-hover');
+    row.classList.add('row-hover');
+    lastRow=row;
+    // Update col highlight
+    if(lastColIdx!==colIdx){
+      if(lastColIdx>=0){
+        tbl.querySelectorAll(`tbody td:nth-child(${lastColIdx+1})`).forEach(c=>c.classList.remove('col-hover'));
+        const oldTh=tbl.querySelector(`thead th:nth-child(${lastColIdx+1})`);
+        if(oldTh) oldTh.classList.remove('col-hover-head');
+      }
+      tbl.querySelectorAll(`tbody td:nth-child(${colIdx+1})`).forEach(c=>c.classList.add('col-hover'));
+      const newTh=tbl.querySelector(`thead th:nth-child(${colIdx+1})`);
+      if(newTh) newTh.classList.add('col-hover-head');
+      lastColIdx=colIdx;
+    }
+  });
+  document.addEventListener('mouseleave',e=>{
+    if(e.target.classList?.contains('tbl-wrap')){
+      if(lastRow){lastRow.classList.remove('row-hover');lastRow=null;}
+      document.querySelectorAll('.col-hover').forEach(c=>c.classList.remove('col-hover'));
+      document.querySelectorAll('.col-hover-head').forEach(c=>c.classList.remove('col-hover-head'));
+      lastColIdx=-1;
+    }
+  },true);
+})();
 function toast(msg,type='ok'){
   const area=document.getElementById('toastArea');
   const el=document.createElement('div');
