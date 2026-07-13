@@ -180,12 +180,11 @@ tr:last-child td{border-bottom:none}
 thead .sticky{background:var(--surface2);z-index:3}
 .th-day{width:26px;text-align:center;font-size:10px;padding:3px 1px}
 .week-view .th-day{width:110px;min-width:110px}
-/* Sticky header rows */
-#thead tr:nth-child(1) th{position:sticky;top:0;z-index:4;background:var(--surface)}
-#thead tr:nth-child(2) th{position:sticky;top:22px;z-index:4;background:var(--surface)}
-#thead tr:nth-child(3) th{position:sticky;top:42px;z-index:4;background:var(--surface)}
-/* Sticky name column */
-thead th.sticky{position:sticky;left:0;z-index:5;background:var(--surface2)}
+/* Sticky table header */
+.tbl-wrap table{border-collapse:collapse}
+.tbl-wrap thead{position:sticky;top:0;z-index:10;background:var(--surface)}
+.tbl-wrap thead th{background:var(--surface);border-bottom:1px solid var(--border)}
+thead th.sticky{position:sticky;left:0;z-index:11;background:var(--surface2)}
 tbody td.sticky{position:sticky;left:0;z-index:2;background:var(--surface)}
 .week-view .cell{width:100%;min-height:38px;font-size:11px;font-weight:600;border-radius:3px}
 .week-view .shift-ot-wrap{min-width:100px}
@@ -509,6 +508,12 @@ tr.section-drag-over td{border-top:3px solid var(--blue) !important}
       <button class="snav-item" data-tab="breaks" id="snavBreaks" onclick="switchTab('breaks')">
         <span class="snav-icon">☕</span> Breaks
       </button>
+      <button class="snav-item" data-tab="tasks" id="snavTasks" onclick="switchTab('tasks')">
+        <span class="snav-icon">✅</span> Tasks
+      </button>
+      <button class="snav-item" data-tab="availability" id="snavAvail" onclick="switchTab('availability')">
+        <span class="snav-icon">📶</span> Availability
+      </button>
       <button class="snav-item" data-tab="requests" id="snavRequests" style="display:none" onclick="switchTab('requests')">
         <span class="snav-icon">🔔</span> Requests
         <span id="reqTabBadge" style="display:none" class="snav-badge">0</span>
@@ -582,6 +587,7 @@ tr.section-drag-over td{border-top:3px solid var(--blue) !important}
         <button class="ptab" data-tab="coverage" onclick="switchTab('coverage')" id="coverageTab">Coverage</button>
         <button class="ptab" data-tab="hours" onclick="switchTab('hours')" id="hoursTab">Hours</button>
         <button class="ptab" data-tab="breaks" onclick="switchTab('breaks')" id="breaksTab">Breaks</button>
+        <button class="ptab" data-tab="tasks" onclick="switchTab('tasks')" id="tasksTab">Tasks</button>
         <button class="ptab" data-tab="profile" onclick="switchTab('profile')" id="profileTab">Profile</button>
         <button class="ptab" data-tab="requests" onclick="switchTab('requests')" id="requestsTab" style="display:none">Requests</button>
         <button class="ptab" data-tab="settings" onclick="switchTab('settings')" id="settingsTab" style="display:none">Settings</button>
@@ -791,6 +797,47 @@ tr.section-drag-over td{border-top:3px solid var(--blue) !important}
     <div id="profileContent"></div>
   </div>
 
+  <!-- TASKS TAB -->
+  <div id="tab-tasks" class="page-content" style="display:none">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+      <div>
+        <div style="font-size:15px;font-weight:600">Productive Tasks</div>
+        <div style="font-size:12px;color:var(--text2);margin-top:2px">Assign Quiz, Meeting, Huddle and other tasks to staff</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <select id="taskDayFilter" onchange="renderTasksTab()" style="font-family:'DM Sans',sans-serif;font-size:12px;height:30px;padding:0 10px;border:0.5px solid var(--border2);border-radius:var(--r);background:var(--surface);color:var(--text);min-width:140px">
+          <option value="">Select day…</option>
+        </select>
+        <button class="btn btn-blue" id="addTaskBtn" onclick="openAddTaskModal()" style="display:none">+ Assign task</button>
+        <button class="btn" onclick="renderTasksTab()">↻ Refresh</button>
+      </div>
+    </div>
+    <div id="tasksSummary" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px"></div>
+    <div id="tasksGrid"></div>
+  </div>
+
+  <!-- AVAILABILITY TAB -->
+  <div id="tab-availability" class="page-content" style="display:none">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+      <div>
+        <div style="font-size:15px;font-weight:600">Agent Availability</div>
+        <div style="font-size:12px;color:var(--text2);margin-top:2px">Available agents per 10-min slot — weekly view, minus breaks &amp; tasks</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <select id="availPosFil" onchange="renderAvailability()" style="font-family:'DM Sans',sans-serif;font-size:12px;height:30px;padding:0 10px;border:0.5px solid var(--border2);border-radius:var(--r);background:var(--surface);color:var(--text)">
+          <option value="">All positions</option>
+        </select>
+        <button class="btn" style="width:26px;padding:0;justify-content:center" onclick="availNavWeek(-1)">←</button>
+        <span id="availWeekLabel" style="font-size:12px;font-weight:500;min-width:160px;text-align:center;color:var(--text)">Week</span>
+        <button class="btn" style="width:26px;padding:0;justify-content:center" onclick="availNavWeek(1)">→</button>
+        <button class="btn" onclick="availGoToday()">Today</button>
+        <button class="btn" onclick="renderAvailability()">↻ Refresh</button>
+      </div>
+    </div>
+    <div id="availLegend" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px;padding:8px 12px;background:var(--surface2);border-radius:var(--r);border:0.5px solid var(--border)"></div>
+    <div id="availGrid" style="overflow:auto;max-height:calc(100vh - 260px)"></div>
+  </div>
+
   <!-- SETTINGS TAB (admin only) -->
   <div id="tab-settings" class="page-content" style="display:none">
     <div style="font-size:15px;font-weight:600;margin-bottom:4px">Settings</div>
@@ -960,7 +1007,7 @@ tr.section-drag-over td{border-top:3px solid var(--blue) !important}
 //  CONFIGURATION — replace these two values
 // ─────────────────────────────────────────
 var SUPABASE_URL = 'https://jrfiyliesitsgnehxqtv.supabase.co';
-var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpyZml5bGllc2l0c2duZWh4cXR2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk2ODAwNjAsImV4cCI6MjA5NTI1NjA2MH0.ZO-4OYF9_1NRduLZlKiSVStOfg07W4Ozx7vhvUTuozA';
+var SUPABASE_ANON_KEY = 'sb_publishable_-AOpf0GlT5MeQh5-NMZc9g_CD2xu9Ch';
 // ─────────────────────────────────────────
 
 var { createClient } = supabase;
@@ -1694,7 +1741,7 @@ function getS(sid,d,m,y){
   return schedData[sid+'_'+d]||'';
 }
 
-function chMonth(n){cm+=n;if(cm>11){cm=0;cy++}if(cm<0){cm=11;cy--}document.getElementById('mLabel').textContent=MONTHS[cm]+' '+cy;loadSchedule();}
+function chMonth(n){cm+=n;if(cm>11){cm=0;cy++}if(cm<0){cm=11;cy--}document.getElementById('mLabel').textContent=MONTHS[cm]+' '+cy;injectMalaysianHolidays();loadSchedule();}
 
 function setViewMode(mode){
   viewMode=mode;
@@ -3103,6 +3150,8 @@ function switchTab(t){
   if(t==='coverage') renderCoverage();
   if(t==='hours'){updateHoursMonthLabel();renderHours();}
   if(t==='breaks') initBreaksTab();
+  if(t==='tasks') initTasksTab();
+  if(t==='availability') initAvailability();
   if(t==='profile') renderProfile();
   if(t==='settings') renderSettingsTab();
   if(t==='users') renderUsersTab();
@@ -4110,6 +4159,78 @@ async function loadRemarks(){
       dateRemarks=JSON.parse(data.value);
     }
   } catch(e){console.warn('loadRemarks:',e);}
+  // Inject Malaysian public holidays (don't overwrite existing remarks)
+  injectMalaysianHolidays();
+}
+
+function injectMalaysianHolidays(){
+  // Malaysian national public holidays
+  const PH={
+    // 2025
+    '2025-1-1':  'New Year\'s Day',
+    '2025-1-29': 'Chinese New Year',
+    '2025-1-30': 'Chinese New Year (2nd day)',
+    '2025-2-1':  'Federal Territory Day',
+    '2025-3-30': 'Hari Raya Aidilfitri',
+    '2025-3-31': 'Hari Raya Aidilfitri (2nd day)',
+    '2025-5-1':  'Labour Day',
+    '2025-5-12': 'Wesak Day',
+    '2025-6-2':  'King\'s Birthday',
+    '2025-6-6':  'Hari Raya Aidiladha',
+    '2025-6-7':  'Hari Raya Aidiladha (2nd day)',
+    '2025-6-26': 'Awal Muharram',
+    '2025-8-31': 'Hari Merdeka',
+    '2025-9-16': 'Malaysia Day',
+    '2025-9-4':  'Maulidur Rasul',
+    '2025-10-20':'Deepavali',
+    '2025-12-25':'Christmas Day',
+    // 2026
+    '2026-1-1':  'New Year\'s Day',
+    '2026-1-17': 'Thaipusam',
+    '2026-1-28': 'Federal Territory Day',  
+    '2026-1-29': 'Chinese New Year',
+    '2026-1-30': 'Chinese New Year (2nd day)',
+    '2026-3-20': 'Hari Raya Aidilfitri',
+    '2026-3-21': 'Hari Raya Aidilfitri (2nd day)',
+    '2026-5-1':  'Labour Day',
+    '2026-5-31': 'Wesak Day',
+    '2026-5-27': 'Hari Raya Aidiladha',
+    '2026-6-1':  'King\'s Birthday',
+    '2026-6-16': 'Awal Muharram',
+    '2026-8-25': 'Maulidur Rasul',
+    '2026-8-31': 'Hari Merdeka',
+    '2026-9-16': 'Malaysia Day',
+    '2026-11-8': 'Deepavali',
+    '2026-12-25':'Christmas Day',
+    // 2027
+    '2027-1-1':  'New Year\'s Day',
+    '2027-1-28': 'Federal Territory Day',
+    '2027-2-17': 'Chinese New Year',
+    '2027-2-18': 'Chinese New Year (2nd day)',
+    '2027-3-10': 'Hari Raya Aidilfitri',
+    '2027-3-11': 'Hari Raya Aidilfitri (2nd day)',
+    '2027-5-1':  'Labour Day',
+    '2027-5-16': 'Hari Raya Aidiladha',
+    '2027-5-21': 'Wesak Day',
+    '2027-6-5':  'Awal Muharram',
+    '2027-6-7':  'King\'s Birthday',
+    '2027-8-14': 'Maulidur Rasul',
+    '2027-8-31': 'Hari Merdeka',
+    '2027-9-16': 'Malaysia Day',
+    '2027-10-28':'Deepavali',
+    '2027-12-25':'Christmas Day',
+  };
+  // Only inject for current view month — don't overwrite user remarks
+  const prefix=`${cy}-${cm+1}-`;
+  Object.entries(PH).forEach(([dateKey,label])=>{
+    if(!dateKey.startsWith(prefix)) return;
+    const day=parseInt(dateKey.split('-')[2]);
+    const remarkKey=cy+'-'+(cm+1)+'-'+day;
+    // Only set if no user remark exists
+    if(!dateRemarks[remarkKey]){
+      dateRemarks[remarkKey]={label,color:'#ef4444',isPH:true};
+    }
+  });
 }
 
 // ── REQUESTS ──
@@ -7642,49 +7763,385 @@ async function saveLeaveEntitlement(staffId){
 
 // ── CROSSHAIR HOVER ──
 (function setupCrosshair(){
-  let lastRow=null, lastColIdx=-1;
+  let lastRow=null, lastTbl=null, lastColIdx=-1;
+
+  function clearHighlight(){
+    if(lastRow) lastRow.classList.remove('row-hover');
+    if(lastTbl&&lastColIdx>=0){
+      lastTbl.querySelectorAll(`tbody td:nth-child(${lastColIdx+1})`).forEach(c=>c.classList.remove('col-hover'));
+      const th=lastTbl.querySelector(`thead th:nth-child(${lastColIdx+1})`);
+      if(th) th.classList.remove('col-hover-head');
+    }
+    lastRow=null; lastTbl=null; lastColIdx=-1;
+  }
+
   document.addEventListener('mouseover',e=>{
     const td=e.target.closest('.tbl-wrap tbody td');
-    const tbl=td?.closest('.tbl-wrap table');
-    if(!tbl){
-      // Leaving table — clear
-      if(lastRow){lastRow.classList.remove('row-hover');lastRow=null;}
-      if(lastColIdx>=0){
-        tbl?.querySelectorAll(`td:nth-child(${lastColIdx+1})`).forEach(c=>c.classList.remove('col-hover'));
-        tbl?.querySelector(`thead th:nth-child(${lastColIdx+1})`)?.classList.remove('col-hover-head');
-        lastColIdx=-1;
-      }
-      return;
-    }
+    if(!td){clearHighlight();return;}
+    const tbl=td.closest('table');
+    if(!tbl){clearHighlight();return;}
     const row=td.parentElement;
-    const cells=[...row.parentElement.parentElement.querySelectorAll('thead tr th')];
     const colIdx=[...row.children].indexOf(td);
-    // Update row highlight
+
+    // Clear old row
     if(lastRow&&lastRow!==row) lastRow.classList.remove('row-hover');
+    // Clear old col
+    if(lastTbl&&lastColIdx>=0&&lastColIdx!==colIdx){
+      lastTbl.querySelectorAll(`tbody td:nth-child(${lastColIdx+1})`).forEach(c=>c.classList.remove('col-hover'));
+      const oldTh=lastTbl.querySelector(`thead th:nth-child(${lastColIdx+1})`);
+      if(oldTh) oldTh.classList.remove('col-hover-head');
+    }
+
+    // Apply new row
     row.classList.add('row-hover');
-    lastRow=row;
-    // Update col highlight
-    if(lastColIdx!==colIdx){
-      if(lastColIdx>=0){
-        tbl.querySelectorAll(`tbody td:nth-child(${lastColIdx+1})`).forEach(c=>c.classList.remove('col-hover'));
-        const oldTh=tbl.querySelector(`thead th:nth-child(${lastColIdx+1})`);
-        if(oldTh) oldTh.classList.remove('col-hover-head');
-      }
+    // Apply new col
+    if(lastColIdx!==colIdx||lastTbl!==tbl){
       tbl.querySelectorAll(`tbody td:nth-child(${colIdx+1})`).forEach(c=>c.classList.add('col-hover'));
       const newTh=tbl.querySelector(`thead th:nth-child(${colIdx+1})`);
       if(newTh) newTh.classList.add('col-hover-head');
-      lastColIdx=colIdx;
     }
+    lastRow=row; lastTbl=tbl; lastColIdx=colIdx;
   });
-  document.addEventListener('mouseleave',e=>{
-    if(e.target.classList?.contains('tbl-wrap')){
-      if(lastRow){lastRow.classList.remove('row-hover');lastRow=null;}
-      document.querySelectorAll('.col-hover').forEach(c=>c.classList.remove('col-hover'));
-      document.querySelectorAll('.col-hover-head').forEach(c=>c.classList.remove('col-hover-head'));
-      lastColIdx=-1;
-    }
-  },true);
+
+  document.addEventListener('mouseover',e=>{
+    if(!e.target.closest('.tbl-wrap')) clearHighlight();
+  });
 })();
+// ── AVAILABILITY ──
+let availWeekStart=null; // Monday of current week
+
+function availGoToday(){
+  const now=new Date();
+  const day=now.getDay();
+  const mon=new Date(now);
+  mon.setDate(now.getDate()-(day===0?6:day-1));
+  mon.setHours(0,0,0,0);
+  availWeekStart=mon;
+  renderAvailability();
+}
+
+function availNavWeek(n){
+  if(!availWeekStart) availGoToday();
+  availWeekStart=new Date(availWeekStart);
+  availWeekStart.setDate(availWeekStart.getDate()+n*7);
+  renderAvailability();
+}
+
+function initAvailability(){
+  if(!availWeekStart) availGoToday();
+  // Populate position filter
+  const fil=document.getElementById('availPosFil');
+  if(fil&&fil.options.length<=1){
+    const roles=[...new Set(staffList.map(s=>s.staff_role).filter(Boolean))];
+    roles.forEach(r=>{const o=document.createElement('option');o.value=r;o.textContent=r;fil.appendChild(o);});
+  }
+  renderAvailability();
+}
+
+async function renderAvailability(){
+  if(!availWeekStart) availGoToday();
+  const grid=document.getElementById('availGrid');
+  const legend=document.getElementById('availLegend');
+  if(!grid) return;
+  grid.innerHTML='<div class="spinner" style="margin:30px auto"></div>';
+  try{
+
+  // Build week days (Mon–Sun)
+  const days=[];
+  for(let i=0;i<7;i++){
+    const d=new Date(availWeekStart);
+    d.setDate(d.getDate()+i);
+    days.push(d);
+  }
+  // Update label
+  const fmt=d=>`${d.getDate()} ${MONTHS[d.getMonth()].substr(0,3)}`;
+  document.getElementById('availWeekLabel').textContent=`${fmt(days[0])} – ${fmt(days[6])} ${days[0].getFullYear()}`;
+
+  // Filter staff
+  const posF=document.getElementById('availPosFil')?.value||'';
+  const posList=posF?staffList.filter(s=>s.staff_role===posF):staffList;
+
+  // Load tasks for week
+  const dateFrom=`${days[0].getFullYear()}-${String(days[0].getMonth()+1).padStart(2,'0')}-${String(days[0].getDate()).padStart(2,'0')}`;
+  const dateTo=`${days[6].getFullYear()}-${String(days[6].getMonth()+1).padStart(2,'0')}-${String(days[6].getDate()).padStart(2,'0')}`;
+  const {data:tasksData}=await sb.from('tasks').select('*').gte('date',dateFrom).lte('date',dateTo);
+  const tasksByStaffDate={};
+  (tasksData||[]).forEach(t=>{
+    const k=t.staff_id+'_'+t.date;
+    if(!tasksByStaffDate[k]) tasksByStaffDate[k]=[];
+    tasksByStaffDate[k].push(t);
+  });
+
+  const isOnBreak=(sid,d,shiftCode,slotMin)=>{
+    const mk=`${d.getFullYear()}-${d.getMonth()+1}`;
+    const key=sid+'_'+d.getDate()+'_'+mk;
+    const breaks=breakOverrides[key]||getAutoBreaks(shiftCode)||[];
+    return breaks.some(b=>{
+      if(!b||!b.start) return false;
+      const [bh,bm]=b.start.split(':').map(Number);
+      const bStart=bh*60+bm;
+      const bEnd=bStart+(b.duration_mins||60);
+      return slotMin>=bStart&&slotMin<bEnd;
+    });
+  };
+
+  const isOnTask=(tasks,slotMin)=>{
+    if(!tasks||!tasks.length) return false;
+    return tasks.some(t=>{
+      const [th,tm]=t.start_time.split(':').map(Number);
+      const tStart=th*60+tm;
+      const tEnd=tStart+t.duration_mins;
+      return slotMin>=tStart&&slotMin<tEnd;
+    });
+  };
+
+  const isAvailable=(s,dayDate,slotMin)=>{
+    const mk=`${dayDate.getFullYear()}-${dayDate.getMonth()+1}`;
+    const d=dayDate.getDate();
+    const sh=schedData[s.id+'_'+d+'_'+mk]||schedData[s.id+'_'+d]||'';
+    const ot=otData[s.id+'_'+d+'_'+mk]||otData[s.id+'_'+d]||null;
+    const slotHour=Math.floor(slotMin/60);
+    if(!isWorkingDuringHour(sh,slotHour,ot)) return false;
+    if(isOnBreak(s.id,dayDate,sh,slotMin)) return false;
+    const dateStr=`${dayDate.getFullYear()}-${String(dayDate.getMonth()+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const tasks=tasksByStaffDate[s.id+'_'+dateStr];
+    if(isOnTask(tasks,slotMin)) return false;
+    return true;
+  };
+
+  // Time slots: 8:00 to 22:00 in 10-min intervals
+  const slots=[];
+  for(let m=8*60;m<22*60;m+=10) slots.push(m);
+
+  // Build matrix: slots × days
+  const matrix=slots.map(slot=>days.map(day=>posList.filter(s=>isAvailable(s,day,slot)).length));
+  const maxCount=Math.max(1,...matrix.flat());
+
+  // Color based on count
+  const cellColor=(count)=>{
+    if(count===0) return 'var(--surface)';
+    const pct=count/maxCount;
+    if(pct>=0.7) return 'rgba(34,197,94,0.7)';
+    if(pct>=0.4) return 'rgba(34,197,94,0.35)';
+    if(pct>=0.2) return 'rgba(251,191,36,0.5)';
+    return 'rgba(239,68,68,0.4)';
+  };
+  const textColor=(count)=>{
+    if(count===0) return 'var(--text3)';
+    const pct=count/maxCount;
+    if(pct>=0.7) return '#14532d';
+    if(pct>=0.4) return '#166534';
+    if(pct>=0.2) return '#92400e';
+    return '#991b1b';
+  };
+
+  const DOW=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  const today=new Date();today.setHours(0,0,0,0);
+
+  let html=`<table class="cov-table" style="min-width:100%"><thead><tr>
+    <th class="cov-slot">Time</th>`;
+  days.forEach((d,i)=>{
+    const isToday=d.getTime()===today.getTime();
+    const isWknd=d.getDay()===0||d.getDay()===6;
+    html+=`<th style="${isToday?'color:var(--blue);font-weight:700;':''}${isWknd?'color:var(--text3);':''}">${DOW[i]}<br><span style="font-size:10px;font-weight:400">${d.getDate()} ${MONTHS[d.getMonth()].substr(0,3)}</span></th>`;
+  });
+  html+='</tr></thead><tbody>';
+
+  slots.forEach((slot,si)=>{
+    const hh=String(Math.floor(slot/60)).padStart(2,'0');
+    const mm=String(slot%60).padStart(2,'0');
+    const showLabel=slot%60===0; // bold label on the hour
+    html+=`<tr><td class="cov-label" style="font-size:${showLabel?'11':'10'}px;font-weight:${showLabel?'600':'400'};color:${showLabel?'var(--text)':'var(--text3)'};padding:${showLabel?'4px 10px':'2px 10px'}">${hh}:${mm}</td>`;
+    matrix[si].forEach((count,di)=>{
+      const bg=cellColor(count);
+      const tc=textColor(count);
+      html+=`<td class="cov-hover-cell" style="background:${bg};color:${tc};padding:2px 4px;text-align:center;font-size:10px;font-weight:${count>0?'600':'400'};border:0.5px solid var(--border)" data-popup="${encodeURIComponent(`<div style='font-size:10px;font-weight:700;color:var(--text3);margin-bottom:4px'>${DOW[di]} ${days[di].getDate()} — ${hh}:${mm}</div><div style='font-size:13px;font-weight:700;color:var(--text)'>${count} available</div><div style='font-size:10px;color:var(--text3)'>${posF||'All staff'}</div>`)}">${count||'—'}</td>`;
+    });
+    html+='</tr>';
+  });
+
+  html+='</tbody></table>';
+  grid.innerHTML=html;
+
+  // Legend
+  legend.innerHTML=`
+    <span style="display:flex;align-items:center;gap:4px"><span style="width:14px;height:14px;background:rgba(34,197,94,0.7);border-radius:2px;display:inline-block"></span>High (≥70%)</span>
+    <span style="display:flex;align-items:center;gap:4px"><span style="width:14px;height:14px;background:rgba(34,197,94,0.35);border-radius:2px;display:inline-block"></span>Medium (40–69%)</span>
+    <span style="display:flex;align-items:center;gap:4px"><span style="width:14px;height:14px;background:rgba(251,191,36,0.5);border-radius:2px;display:inline-block"></span>Low (20–39%)</span>
+    <span style="display:flex;align-items:center;gap:4px"><span style="width:14px;height:14px;background:rgba(239,68,68,0.4);border-radius:2px;display:inline-block"></span>Critical (&lt;20%)</span>
+    <span style="display:flex;align-items:center;gap:4px"><span style="width:14px;height:14px;background:var(--surface);border:1px solid var(--border);border-radius:2px;display:inline-block"></span>None</span>
+    <span style="font-size:11px;color:var(--text3);margin-left:8px">Counts exclude staff on break or assigned tasks</span>`;
+
+  // Hover popup
+  const popup=document.getElementById('covPopup');
+  grid.onmouseover=e=>{
+    const td=e.target.closest('.cov-hover-cell');
+    if(!td){popup.style.display='none';return;}
+    popup.innerHTML=decodeURIComponent(td.dataset.popup||'');
+    popup.style.display='block';
+    popup.style.width='auto';
+    requestAnimationFrame(()=>{
+      const r=td.getBoundingClientRect();
+      let left=r.right+10,top=r.top-4;
+      if(left+popup.offsetWidth>window.innerWidth-8) left=r.left-popup.offsetWidth-10;
+      if(top+popup.offsetHeight>window.innerHeight-8) top=window.innerHeight-popup.offsetHeight-8;
+      popup.style.left=Math.max(4,left)+'px';
+      popup.style.top=Math.max(4,top)+'px';
+    });
+  };
+  grid.onmouseleave=()=>{popup.style.display='none';};
+  }catch(err){
+    console.error('renderAvailability error:',err);
+    grid.innerHTML=`<div style="padding:20px;color:var(--red)">Error: ${err.message}</div>`;
+  }
+}
+
+// ── TASKS ──
+const TASK_TYPES=[
+  {code:'Quiz',    color:'#8b5cf6', icon:'📝'},
+  {code:'Meeting', color:'#2563eb', icon:'🤝'},
+  {code:'Huddle',  color:'#f59e0b', icon:'💬'},
+  {code:'Training',color:'#16a34a', icon:'📚'},
+  {code:'Other',   color:'#64748b', icon:'📋'},
+];
+function getTaskColor(type){return TASK_TYPES.find(t=>t.code===type)?.color||'#64748b';}
+function getTaskIcon(type){return TASK_TYPES.find(t=>t.code===type)?.icon||'📋';}
+
+async function initTasksTab(){
+  const isApprover=currentProfile?.app_role==='admin'||['Senior Manager','Assistant Manager','Team Leader','Supervisor','Manager'].includes(currentProfile?.staff_role||'');
+  const addBtn=document.getElementById('addTaskBtn');
+  if(addBtn) addBtn.style.display=isApprover?'':'none';
+  const dayFilter=document.getElementById('taskDayFilter');
+  if(dayFilter&&dayFilter.options.length<=1){
+    const today=new Date().getDate();
+    for(let d=1;d<=dim(cy,cm);d++){
+      const dt=new Date(cy,cm,d);
+      const dn=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][dt.getDay()];
+      const opt=document.createElement('option');
+      opt.value=d;opt.textContent=`${d} ${MONTHS[cm].substr(0,3)} (${dn})`;
+      if(d===today) opt.selected=true;
+      dayFilter.appendChild(opt);
+    }
+  }
+  renderTasksTab();
+}
+
+async function renderTasksTab(){
+  const grid=document.getElementById('tasksGrid');
+  const summary=document.getElementById('tasksSummary');
+  if(!grid) return;
+  const dayVal=parseInt(document.getElementById('taskDayFilter')?.value||0);
+  if(!dayVal){grid.innerHTML='<div style="padding:20px;text-align:center;color:var(--text3)">Select a day to view tasks</div>';return;}
+  grid.innerHTML='<div class="spinner" style="margin:20px auto"></div>';
+  const dateStr=`${cy}-${String(cm+1).padStart(2,'0')}-${String(dayVal).padStart(2,'0')}`;
+  const {data:tasks,error}=await sb.from('tasks').select('*').eq('date',dateStr).order('start_time');
+  if(error){grid.innerHTML=`<div style="padding:20px;color:var(--red)">${error.message}</div>`;return;}
+  const counts={};
+  (tasks||[]).forEach(t=>{counts[t.task_type]=(counts[t.task_type]||0)+1;});
+  summary.innerHTML=TASK_TYPES.map(t=>counts[t.code]?`<div style="background:${t.color}22;border:1px solid ${t.color}44;border-radius:var(--r);padding:8px 14px;display:flex;align-items:center;gap:6px"><span>${t.icon}</span><span style="font-size:13px;font-weight:700;color:${t.color}">${counts[t.code]}</span><span style="font-size:11px;color:var(--text2)">${t.code}</span></div>`:''
+  ).join('');
+  if(!tasks||!tasks.length){grid.innerHTML='<div style="padding:32px;text-align:center;color:var(--text3)">No tasks assigned for this day.<br><span style="font-size:12px">Click \"+ Assign task\" to add one.</span></div>';return;}
+  const isApprover=currentProfile?.app_role==='admin'||['Senior Manager','Assistant Manager','Team Leader','Supervisor','Manager'].includes(currentProfile?.staff_role||'');
+  const grouped={};
+  tasks.forEach(t=>{if(!grouped[t.task_type])grouped[t.task_type]=[];grouped[t.task_type].push(t);});
+  let html='<div style="display:flex;flex-direction:column;gap:12px">';
+  for(const [type,list] of Object.entries(grouped)){
+    const color=getTaskColor(type);const icon=getTaskIcon(type);
+    html+=`<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);overflow:hidden">
+      <div style="padding:10px 14px;background:${color}18;border-bottom:1px solid ${color}33;display:flex;align-items:center;gap:8px">
+        <span>${icon}</span><span style="font-size:13px;font-weight:600;color:${color}">${type}</span>
+        <span style="font-size:11px;color:var(--text3)">${list.length} assignment${list.length>1?'s':''}</span>
+      </div>
+      <table style="width:100%;border-collapse:collapse;font-size:12px">
+        <thead><tr style="background:var(--surface2)">
+          <th style="padding:7px 12px;text-align:left;color:var(--text3);font-weight:500;font-size:11px">Staff</th>
+          <th style="padding:7px 12px;text-align:left;color:var(--text3);font-weight:500;font-size:11px">Time</th>
+          <th style="padding:7px 12px;text-align:left;color:var(--text3);font-weight:500;font-size:11px">Duration</th>
+          <th style="padding:7px 12px;text-align:left;color:var(--text3);font-weight:500;font-size:11px">Notes</th>
+          ${isApprover?'<th style="padding:7px 12px;width:60px"></th>':''}
+        </tr></thead><tbody>`;
+    list.forEach(t=>{
+      const staff=staffList.find(s=>s.id===t.staff_id);
+      const endTime=addMins(t.start_time,t.duration_mins);
+      html+=`<tr style="border-top:0.5px solid var(--border)">
+        <td style="padding:8px 12px;font-weight:500">${staff?.name||'Unknown'}</td>
+        <td style="padding:8px 12px;font-family:'DM Mono',monospace;font-size:11px">${t.start_time}–${endTime}</td>
+        <td style="padding:8px 12px;color:var(--text2)">${t.duration_mins} min</td>
+        <td style="padding:8px 12px;color:var(--text3)">${t.notes||'—'}</td>
+        ${isApprover?`<td style="padding:8px 12px"><button onclick="deleteTask('${t.id}')" style="font-size:11px;padding:2px 8px;border:1px solid var(--border2);border-radius:var(--r);background:none;color:var(--red);cursor:pointer">✕</button></td>`:''}
+      </tr>`;
+    });
+    html+='</tbody></table></div>';
+  }
+  grid.innerHTML=html+'</div>';
+}
+
+function addMins(timeStr,mins){
+  const [h,m]=(timeStr||'00:00').split(':').map(Number);
+  const total=h*60+m+mins;
+  return `${String(Math.floor(total/60)%24).padStart(2,'0')}:${String(total%60).padStart(2,'0')}`;
+}
+
+function openAddTaskModal(){
+  const dayVal=parseInt(document.getElementById('taskDayFilter')?.value||0);
+  if(!dayVal){toast('Select a day first','err');return;}
+  const dateStr=`${cy}-${String(cm+1).padStart(2,'0')}-${String(dayVal).padStart(2,'0')}`;
+  const box=document.getElementById('modalBox');
+  const staffOpts=staffList.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
+  const typeOpts=TASK_TYPES.map(t=>`<option value="${t.code}">${t.icon} ${t.code}</option>`).join('');
+  box.innerHTML=`
+    <h3>✅ Assign Task</h3>
+    <div class="msub">Day ${dayVal} ${MONTHS[cm]} ${cy}</div>
+    <div class="mf">
+      <label>Task type</label>
+      <select id="taskType" style="font-family:'DM Sans',sans-serif">${typeOpts}</select>
+      <label>Staff <span style="font-size:10px;color:var(--text3)">(hold Ctrl/Cmd for multiple)</span></label>
+      <select id="taskStaff" multiple size="7" style="font-family:'DM Sans',sans-serif;font-size:12px;border:1px solid var(--border2);border-radius:var(--r);padding:4px">${staffOpts}</select>
+      <label>Start time</label>
+      <input id="taskStart" type="time" value="10:00">
+      <label>Duration (minutes)</label>
+      <input id="taskDuration" type="number" value="60" min="5" max="480" step="5">
+      <label>Notes (optional)</label>
+      <input id="taskNotes" type="text" placeholder="e.g. Monthly product knowledge quiz">
+      <div class="merr" id="taskErr"></div>
+    </div>
+    <div class="mbtns">
+      <button class="btn" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-blue" onclick="doAssignTask('${dateStr}')">💾 Assign</button>
+    </div>`;
+  document.getElementById('overlay').classList.add('open');
+}
+
+async function doAssignTask(dateStr){
+  const type=document.getElementById('taskType').value;
+  const selected=[...document.getElementById('taskStaff').selectedOptions].map(o=>o.value);
+  const start=document.getElementById('taskStart').value;
+  const duration=parseInt(document.getElementById('taskDuration').value);
+  const notes=document.getElementById('taskNotes').value.trim();
+  const errEl=document.getElementById('taskErr');
+  if(!selected.length){errEl.textContent='Select at least one staff member.';return;}
+  if(!start){errEl.textContent='Set a start time.';return;}
+  if(!duration||duration<5){errEl.textContent='Duration must be at least 5 minutes.';return;}
+  errEl.textContent='Saving…';
+  const {error}=await sb.from('tasks').insert(selected.map(sid=>({
+    staff_id:sid, date:dateStr, task_type:type,
+    start_time:start, duration_mins:duration,
+    notes:notes||null
+  })));
+  if(error){errEl.textContent=error.message;return;}
+  closeModal();
+  toast(`${type} assigned to ${selected.length} staff ✓`,'ok');
+  renderTasksTab();
+}
+
+async function deleteTask(id){
+  if(!confirm('Remove this task?')) return;
+  const {error}=await sb.from('tasks').delete().eq('id',id);
+  if(error){toast(error.message,'err');return;}
+  toast('Task removed','ok');
+  renderTasksTab();
+}
+
 function toast(msg,type='ok'){
   const area=document.getElementById('toastArea');
   const el=document.createElement('div');
