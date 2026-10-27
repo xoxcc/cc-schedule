@@ -1091,23 +1091,11 @@ let dragSid=null, dragRole=null, dragSection=null;
 async function init(){
   // FIRST: register auth state listener before anything else
   // This catches PASSWORD_RECOVERY event from both PKCE and implicit flows
-  sb.auth.onAuthStateChange(async(event,session)=>{
-    if(event==='PASSWORD_RECOVERY'){
-      showPasswordResetScreen(); return;
-    } else if(event==='SIGNED_IN'&&session&&!currentProfile){
-      // Only auto-load if we're on the login page (handles PKCE callback)
-      if(document.getElementById('loginPage')?.style.display!=='none'){
-        // Check if this is a recovery session — don't auto-login on reset
-        const isRecovery=window.location.hash.includes('type=recovery')||
-          window.location.search.includes('type=recovery');
-        if(!isRecovery) await loadProfileFromAuth(session.user);
-      }
-    } else if(event==='TOKEN_REFRESHED'&&session&&!currentProfile){
-      await loadProfileFromAuth(session.user);
-    } else if(event==='SIGNED_OUT'){
-      currentUser=null; currentProfile=null;
-      showPage('login');
-    }
+  // Never await Supabase calls directly inside this callback: supabase-js holds its
+  // auth lock while callbacks run, so a query here deadlocks every tab on this origin.
+  // Defer the work with setTimeout so the lock is released first.
+  sb.auth.onAuthStateChange((event,session)=>{
+    setTimeout(()=>handleAuthEvent(event,session),0);
   });
 
   showPage('login');
@@ -1167,7 +1155,33 @@ async function init(){
   }catch(e){localStorage.removeItem('cc_session');}
 }
 
-async function loadProfileFromAuth(authUser){
+async function handleAuthEvent(event,session){
+  if(event==='PASSWORD_RECOVERY'){
+    showPasswordResetScreen(); return;
+  } else if(event==='SIGNED_IN'&&session&&!currentProfile){
+    // Only auto-load if we're on the login page (handles PKCE callback)
+    if(document.getElementById('loginPage')?.style.display!=='none'){
+      // Check if this is a recovery session — don't auto-login on reset
+      const isRecovery=window.location.hash.includes('type=recovery')||
+        window.location.search.includes('type=recovery');
+      if(!isRecovery) await loadProfileFromAuth(session.user);
+    }
+  } else if(event==='TOKEN_REFRESHED'&&session&&!currentProfile){
+    await loadProfileFromAuth(session.user);
+  } else if(event==='SIGNED_OUT'){
+    currentUser=null; currentProfile=null;
+    showPage('login');
+  }
+}
+
+// Login and the SIGNED_IN event can both ask for the profile; share one load.
+let _profileLoad=null;
+function loadProfileFromAuth(authUser){
+  if(!_profileLoad) _profileLoad=_loadProfileFromAuth(authUser).finally(()=>{_profileLoad=null;});
+  return _profileLoad;
+}
+
+async function _loadProfileFromAuth(authUser){
   // Load app_users profile by email (linked via Supabase Auth email)
   const {data,error}=await sb.from('app_users').select('*').eq('email',authUser.email).single();
   if(error||!data){
