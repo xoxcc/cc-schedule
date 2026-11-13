@@ -220,6 +220,15 @@ td.wk-cell{border-left:2px solid var(--border2) !important}
 .ot-cell.no-ot{background:transparent;color:var(--text3);height:0;overflow:hidden}
 .ot-cell.editable-ot:hover{opacity:.75}
 .ot-cell.editable-empty{height:8px;background:var(--surface2)}
+/* OT day: the whole cell takes the OT colour */
+.cell.ot-split{flex-direction:column;align-items:stretch;justify-content:stretch;position:relative;overflow:hidden}
+.cell.ot-split .ot-split-top{flex:1;display:flex;align-items:center;justify-content:center;font-size:9px;line-height:1}
+.cell.ot-split .ot-split-bot{flex:1;display:flex;align-items:center;justify-content:center;font-size:7px;font-weight:700;color:#fff;line-height:1;letter-spacing:-.02em;white-space:nowrap}
+.ot-split-bot .t-full{display:none}
+.week-view .ot-split-bot .t-full{display:inline}
+.week-view .ot-split-bot .t-short{display:none}
+.week-view .cell.ot-split .ot-split-top{font-size:11px}
+.week-view .cell.ot-split .ot-split-bot{font-size:9px}
 .ot-cell.editable-empty:hover{height:14px;background:#fef3c7}
 .cell.editable:hover{opacity:.7}
 .s-M{background:#3b82f6;color:#fff}
@@ -385,6 +394,7 @@ body:not(.dark) .cov-cell-high{background:#bbf7d0;color:#14532d}
 .drag-handle:active{cursor:grabbing}
 tr.dragging{opacity:.4}
 tr.drag-over td{border-top:2px solid var(--blue) !important}
+.cell-task-flag{position:absolute;top:0;left:0;width:0;height:0;border-top:9px solid #0891b2;border-right:9px solid transparent;z-index:2;pointer-events:auto}
 .cell-remark-dot{position:absolute;bottom:2px;right:2px;width:5px;height:5px;border-radius:50%;background:#f59e0b;pointer-events:none;flex-shrink:0;z-index:1}
 .cell.shift-main{position:relative}
 .cov-table tr.cov-row-hover td,.cov-table tr.cov-row-hover th{background-color:rgba(59,130,246,0.07) !important}
@@ -405,9 +415,25 @@ tr.drag-over td{border-top:2px solid var(--blue) !important}
 tr.section-drag-over td{border-top:3px solid var(--blue) !important}
 
 /* ── COPY PASTE ── */
-.cell.copied{outline:2px dashed var(--blue);outline-offset:-2px}
-.cell.focused{outline:2px solid var(--blue);outline-offset:-2px;z-index:2}
-.cell.selected{outline:2px solid #f59e0b;outline-offset:-2px;z-index:2;background-blend-mode:overlay}
+.cell.copied{outline:none}
+/* Excel-style range selection */
+.cell[data-sid]{user-select:none}
+.cell[data-sid]::before,.cell[data-sid]::after{content:'';position:absolute;inset:0;pointer-events:none;border:0 solid transparent;z-index:3}
+.cell.selected{box-shadow:inset 0 0 0 100px rgba(37,99,235,.22)}
+.cell.focused{box-shadow:none}
+.cell.focused::after{border:2px solid var(--blue)!important}
+.cell.sel-t::after{border-top:2px solid var(--blue)}
+.cell.sel-b::after{border-bottom:2px solid var(--blue)}
+.cell.sel-l::after{border-left:2px solid var(--blue)}
+.cell.sel-r::after{border-right:2px solid var(--blue)}
+.cell.cp-t::before{border-top:2px dashed #16a34a}
+.cell.cp-b::before{border-bottom:2px dashed #16a34a}
+.cell.cp-l::before{border-left:2px dashed #16a34a}
+.cell.cp-r::before{border-right:2px dashed #16a34a}
+.cell.fill-prev{box-shadow:inset 0 0 0 100px rgba(37,99,235,.10);outline:1px dashed var(--blue);outline-offset:-1px}
+.grid-dragging .ot-cell.editable-empty:hover{height:8px;background:var(--surface2)}
+.grid-dragging,.grid-dragging *{cursor:cell!important}
+.fill-handle{position:absolute;right:-1px;bottom:-1px;width:8px;height:8px;background:var(--blue);border:1.5px solid #fff;cursor:crosshair;z-index:6;pointer-events:auto}
 .cell.paste-preview{outline:2px dashed #22c55e;outline-offset:-2px;opacity:.7}
 /* copy toolbar moved to sidebar */
 
@@ -542,8 +568,8 @@ tr.section-drag-over td{border-top:3px solid var(--blue) !important}
         <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em">📋 Copy mode</div>
         <div id="copyLabel" style="font-size:11px;color:var(--text2);line-height:1.4">—</div>
         <div style="display:flex;flex-direction:column;gap:4px">
-          <button onclick="pasteToRow()" class="btn" style="font-size:11px;justify-content:center;width:100%">Paste to row →</button>
-          <button onclick="pasteToNextAgent()" class="btn" style="font-size:11px;justify-content:center;width:100%">Paste to next ↓</button>
+          <button onclick="pasteToRow()" class="btn" style="font-size:11px;justify-content:center;width:100%">Repeat to end of month →</button>
+          <button onclick="pasteToNextAgent()" class="btn" style="font-size:11px;justify-content:center;width:100%">Paste below copy ↓</button>
           <button onclick="clearCopyMode()" class="btn" style="font-size:11px;justify-content:center;width:100%;color:var(--red)">✕ Exit copy</button>
         </div>
       </div>
@@ -709,7 +735,7 @@ tr.section-drag-over td{border-top:3px solid var(--blue) !important}
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
       <div>
         <div style="font-size:15px;font-weight:600">Coverage view</div>
-        <div style="font-size:12px;color:var(--text2);margin-top:2px">Staff headcount per hour slot — 8AM to 10PM</div>
+        <div id="covSubtitle" style="font-size:12px;color:var(--text2);margin-top:2px">Staff headcount per hour slot</div>
       </div>
       <div style="display:flex;gap:8px;align-items:center">
         <select id="covPosFil" onchange="renderCoverage()" style="font-family:'DM Sans',sans-serif;font-size:12px;height:30px;padding:0 10px;border:1px solid var(--border2);border-radius:var(--r);background:var(--surface);color:var(--text)">
@@ -1024,7 +1050,7 @@ const PH={}; // Public holidays managed manually — no hardcoded dates
 let dateRemarks={}; // key: "YYYY-M-D", value: {label, color}
 let shiftTypes=[
   {code:'M',  label:'Morning',    color:'#3b82f6', start:'08:00', end:'17:00', hours:9},
-  {code:'E',  label:'Evening',    color:'#f97316', start:'13:00', end:'22:00', hours:9},
+  {code:'E',  label:'Evening',    color:'#f97316', start:'11:00', end:'20:00', hours:9},
   {code:'MD', label:'Middle',     color:'#8b5cf6', start:'10:00', end:'19:00', hours:9},
   {code:'A',  label:'Afternoon',  color:'#22c55e', start:'11:00', end:'20:00', hours:9},
 
@@ -1046,7 +1072,7 @@ let otTypes=[
 // Break rules — { name, duration(min), color, shiftOffsets: {M:minFromStart, E:minFromStart, MD:..., A:...} }
 let breakRules=[
   {id:'lunch',  name:'Lunch',    duration:60, color:'#f97316', icon:'🍽️',
-   shiftOffsets:{M:180, E:60, MD:90, A:90}},     // M=11AM, E=2PM, MD=12PM, A=1PM
+   shiftOffsets:{M:180, E:60, MD:90, A:90}},     // fallback only — Settings → Break rules overrides this
   {id:'prayer1',name:'Prayer (Zohor)', duration:15, color:'#8b5cf6', icon:'🕌',
    shiftOffsets:{M:240, E:90, MD:150, A:150}},
   {id:'prayer2',name:'Prayer (Asar)',  duration:15, color:'#8b5cf6', icon:'🕌',
@@ -1480,7 +1506,58 @@ async function loadSchedule(){
       }
     });
   }
+  await loadViewTasks();
   renderSchedule();
+}
+
+// ── TASKS ON THE GRID (e.g. QA supporting inbound) ──
+let tasksMap={}; // staffId_YYYY-MM-DD -> [task]
+const ymdStr=(y,m0,d)=>`${y}-${String(m0+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+async function loadViewTasks(){
+  const vds=getViewDays(); if(!vds.length) return;
+  const f=vds[0], l=vds[vds.length-1];
+  const {data,error}=await sb.from('tasks').select('*')
+    .gte('date',ymdStr(f.year,f.month,f.day)).lte('date',ymdStr(l.year,l.month,l.day));
+  tasksMap={};
+  if(error){ console.warn('tasks:',error.message); return; }
+  (data||[]).forEach(t=>{ const k=t.staff_id+'_'+t.date; (tasksMap[k]=tasksMap[k]||[]).push(t); });
+}
+const toMin=t=>{ const [h,m]=String(t||'0:0').split(':').map(Number); return h*60+(m||0); };
+function supportTasks(sid,y,m0,d){
+  return (tasksMap[sid+'_'+ymdStr(y,m0,d)]||[]).filter(t=>TASK_TYPES.find(x=>x.code===t.task_type)?.covers);
+}
+// Which position a staff member is covering in this hour slot (null = their own). Needs ≥30 min of the hour.
+function coverRoleAt(sid,y,m0,d,hour){
+  for(const t of supportTasks(sid,y,m0,d)){
+    const a=toMin(t.start_time), b=a+(t.duration_mins||0);
+    const ov=Math.min(b,(hour+1)*60)-Math.max(a,hour*60);
+    if(ov>=30) return TASK_TYPES.find(x=>x.code===t.task_type).covers;
+  }
+  return null;
+}
+async function addSupportTask(sid,day,dateStr,name){
+  const st=document.getElementById('supStart').value, en=document.getElementById('supEnd').value;
+  const type=document.getElementById('supType').value;
+  if(!st||!en){ toast('Set start and end time','err'); return; }
+  const dur=toMin(en)-toMin(st);
+  if(dur<15){ toast('End time must be after start time','err'); return; }
+  const clash=(tasksMap[sid+'_'+dateStr]||[]).some(t=>{const a=toMin(t.start_time);return toMin(st)<a+t.duration_mins&&a<toMin(en);});
+  if(clash&&!confirm('This overlaps another task for this person. Add anyway?')) return;
+  const {data,error}=await sb.from('tasks').insert({staff_id:sid,date:dateStr,task_type:type,start_time:st,duration_mins:dur,
+    assigned_by:currentUser?.id||null,notes:null}).select().single();
+  if(error){ toast('Could not save: '+error.message,'err'); return; }
+  (tasksMap[sid+'_'+dateStr]=tasksMap[sid+'_'+dateStr]||[]).push(data);
+  toast(`${type} ${st}–${en} added ✓`,'ok');
+  renderSchedule(); if(currentTab==='coverage') renderCoverage();
+  openShiftModal(sid,day,name);
+}
+async function removeSupportTask(id,sid,day,dateStr,name){
+  const {error}=await sb.from('tasks').delete().eq('id',id);
+  if(error){ toast('Could not remove: '+error.message,'err'); return; }
+  tasksMap[sid+'_'+dateStr]=(tasksMap[sid+'_'+dateStr]||[]).filter(t=>t.id!==id);
+  toast('Removed ✓','ok');
+  renderSchedule(); if(currentTab==='coverage') renderCoverage();
+  openShiftModal(sid,day,name);
 }
 
 // ── UNDO STACK ──
@@ -1531,6 +1608,12 @@ async function doUndo(){
   const entry=undoStack.pop();
   if(!entry){toast('Nothing to undo','err');hideUndoBar();return;}
   hideUndoBar();
+  if(entry.batch){
+    const n=await applyCells(entry.batch.map(b=>({sid:b.staffId,day:b.day,mk:b.month_key,shift:b.prevShift||'',ot:b.prevOT||null})),'',{noUndo:true,quiet:true});
+    if(n>=0) toast(`Undone — ${entry.batch.length} cell${entry.batch.length>1?'s':''} restored ✓`,'ok');
+    if(undoStack.length) showUndoBar(undoStack.length+' more undo'+(undoStack.length>1?'s':''));
+    return;
+  }
   const {staffId,day,month_key,prevShift,prevOT}=entry;
   // Restore shift
   if(prevShift===null||prevShift===''||prevShift===undefined){
@@ -1578,86 +1661,83 @@ document.addEventListener('keydown',e=>{
     e.preventDefault(); doUndo(); return;
   }
 
-  if(!canAssignShift()) return; // Ctrl+C/V only for managers+
+  if(!canAssignShift()) return; // grid editing only for managers+
+  if(currentTab!=='schedule'||viewMode==='day') return;
+  if(document.getElementById('overlay')?.classList.contains('open')) return;
 
-  // Ctrl+C — copy focused/selected cell
-  if(ctrl&&e.key==='c'){
-    e.preventDefault();
-    const src=lastFocusedCell;
-    if(!src){toast('Click a cell first','err');return;}
-    const sh=getS(src.sid, src.day);
-    if(!sh){toast('No shift on selected cell','err');return;}
-    // Look up OT with all possible key formats
-    const mk=cy+'-'+(cm+1);
-    const ot=otData[src.sid+'_'+src.day+'_'+mk]
-           ||otData[src.sid+'_'+src.day]
-           ||null;
-    copySource={...src, shift:sh, ot:ot?{...ot}:null};
-    const ct=document.getElementById('copyToolbar');
-    const cl=document.getElementById('copyLabel');
-    if(ct) ct.style.display='flex';
-    const otLabel=ot?` + OT ${ot.hours}h`:'';
-    if(cl) cl.textContent=`"${sh}"${otLabel} copied — click cells then Ctrl+V`;
-    showSidebarActionPanel();
-    renderSchedule();
-    toast(`Copied "${sh}"${otLabel} ✓`,'ok');
+  // Ctrl+C — copy selected block
+  if(ctrl&&(e.key==='c'||e.key==='C')){ if(lastFocusedCell){ doCopy(); _copyPending=true; } return; }
+  // Ctrl+X — cut (copy + clear after paste is Excel; here: copy then clear now)
+  if(ctrl&&(e.key==='x'||e.key==='X')){ if(lastFocusedCell){ doCopy(true); _copyPending=true; } return; }
+  // Ctrl+V — let the browser fire the 'paste' event (reads Excel/Sheets clipboard too)
+  if(ctrl&&(e.key==='v'||e.key==='V')){
+    if(!lastFocusedCell){toast('Click a target cell first','err');return;}
+    _pasteHandled=false;
+    setTimeout(()=>{ if(!_pasteHandled&&clip) pasteBlock(clip.block,true); },150);
     return;
   }
-
-  // Ctrl+V — paste to focused cell OR all selected cells
-  if(ctrl&&e.key==='v'){
-    e.preventDefault();
-    if(!copySource){toast('Nothing copied — Ctrl+C first','err');return;}
-    // If multi-select active, paste to all selected cells
-    if(selectedCells.length>1){
-      const cells=[...selectedCells];
-      (async()=>{
-        for(const c of cells){
-          await saveShift(c.sid, c.day, copySource.shift);
-          if(copySource.ot) await saveOT(c.sid, c.day, copySource.ot.hours, copySource.ot.start, copySource.ot.end, copySource.ot.type||'OT');
-        }
-        const otLabel=copySource.ot?` + OT`:'';
-        toast(`Pasted "${copySource.shift}"${otLabel} to ${cells.length} cells ✓`,'ok');
-        selectedCells=[];
-      })();
-    } else if(lastFocusedCell){
-      doPaste(lastFocusedCell.sid, lastFocusedCell.day);
-    } else {
-      toast('Click a target cell first','err');
-    }
-    return;
-  }
-
-  // Backspace / Delete — clear focused or selected cells
+  // Delete / Backspace — clear selected block
   if(e.key==='Backspace'||e.key==='Delete'){
-    if(!canAssignShift()) return;
-    if(selectedCells.length>1){
-      // Clear all selected cells
-      e.preventDefault();
-      const cells=[...selectedCells];
-      (async()=>{
-        for(const c of cells) await saveShift(c.sid,c.day,'');
-        toast(`Cleared ${cells.length} cells ✓`,'ok');
-        selectedCells=[];
-      })();
-    } else if(lastFocusedCell){
-      e.preventDefault();
-      const {sid,day}=lastFocusedCell;
-      if(getS(sid,day)){
-        saveShift(sid,day,'');
-        toast('Cell cleared ✓','ok');
-      }
-    }
+    const r=selRect(); if(!r) return;
+    e.preventDefault();
+    const ch=[];
+    for(let i=r.r0;i<=r.r1;i++) for(let j=r.c0;j<=r.c1;j++) ch.push({sid:r.rows[i],day:r.cols[j],shift:'',ot:null});
+    applyCells(ch,`Cleared ${ch.length} cell${ch.length>1?'s':''}`);
     return;
   }
-
-  // Esc — exit copy mode or clear selection
-  if(e.key==='Escape'){
-    if(copySource) clearCopyMode();
-    else if(selectedCells.length||lastFocusedCell){
-      selectedCells=[];lastFocusedCell=null;renderSchedule();
-    }
+  // Arrow keys — move; Shift+Arrow — extend
+  const mv={ArrowUp:[-1,0],ArrowDown:[1,0],ArrowLeft:[0,-1],ArrowRight:[0,1]}[e.key];
+  if(mv&&lastFocusedCell){
+    e.preventDefault();
+    const {rows,cols}=gridAxes();
+    let ri=rows.indexOf(lastFocusedCell.sid), ci=cols.indexOf(+lastFocusedCell.day);
+    if(ri<0||ci<0) return;
+    ri=Math.max(0,Math.min(rows.length-1,ri+mv[0]));
+    ci=Math.max(0,Math.min(cols.length-1,ci+mv[1]));
+    lastFocusedCell={sid:rows[ri],day:cols[ci]};
+    if(!e.shiftKey) selAnchor={...lastFocusedCell};
+    paintSelection();
+    document.querySelector(`#tbody .cell[data-sid="${rows[ri]}"][data-day="${cols[ci]}"]`)?.scrollIntoView({block:'nearest',inline:'nearest'});
+    return;
   }
+  // Enter / F2 — open the assign window for the active cell
+  if((e.key==='Enter'||e.key==='F2')&&lastFocusedCell){
+    e.preventDefault();
+    const st=staffList.find(x=>x.id===lastFocusedCell.sid);
+    openShiftModal(lastFocusedCell.sid,lastFocusedCell.day,st?st.name:'');
+    return;
+  }
+  // Esc — drop the copied block first, then the selection
+  if(e.key==='Escape'){
+    if(clip) clearCopyMode();
+    else if(lastFocusedCell){ selAnchor=null; lastFocusedCell=null; paintSelection(); }
+  }
+});
+
+// Native copy event — puts the block on the system clipboard (pastes into Excel/Sheets)
+document.addEventListener('copy',e=>{
+  if(!_copyPending||!clip) return;
+  _copyPending=false;
+  e.clipboardData.setData('text/plain',clip.tsv);
+  e.preventDefault();
+  clip.sys=true;
+});
+
+// Paste from internal clipboard or from Excel / Google Sheets (tab-separated text)
+document.addEventListener('paste',e=>{
+  if(['INPUT','TEXTAREA','SELECT'].includes(document.activeElement?.tagName)) return;
+  if(!canAssignShift()||currentTab!=='schedule'||viewMode==='day'||!lastFocusedCell) return;
+  if(document.getElementById('overlay')?.classList.contains('open')) return;
+  _pasteHandled=true;
+  e.preventDefault();
+  const text=(e.clipboardData?.getData('text/plain')||'').replace(/\r/g,'');
+  const norm=t=>t.replace(/\n+$/,'');
+  if(clip&&(!text||!clip.sys||norm(text)===norm(clip.tsv))){ pasteBlock(clip.block,true); return; }
+  if(!text){ toast('Clipboard is empty','err'); return; }
+  const block=norm(text).split('\n').map(line=>line.split('\t').map(v=>({shift:v.trim().toUpperCase()})));
+  const bad=[...new Set(block.flat().map(c=>c.shift).filter(v=>v&&!isValidCode(v)))];
+  if(bad.length){ toast('Unknown code'+(bad.length>1?'s':'')+': '+bad.slice(0,6).join(', '),'err'); return; }
+  pasteBlock(block,false);
 });
 
 async function saveShift(staffId,day,val,monthOverride,noUnpublish=false){
@@ -2101,11 +2181,14 @@ function renderSchedule(){
           } else if(colorDef){
             cls=''; cellStyle=`style="background:${colorDef.color};color:#fff"`;
           }
-          const isCopied=copySource&&copySource.sid===x.id&&copySource.day===d;
+          const isCopied=false;
           const isFocused=!isCopied&&lastFocusedCell&&lastFocusedCell.sid===x.id&&lastFocusedCell.day===d;
           const isSelected=!isCopied&&selectedCells.some(c=>c.sid===x.id&&c.day===d);
           const cellRemark=getR(x.id,d);
-          const remarkDot=cellRemark?`<div class="cell-remark-dot" title="${cellRemark.replace(/"/g,'&quot;')}"></div>`:'';
+          const remarkDot=(cellRemark?`<div class="cell-remark-dot" title="${cellRemark.replace(/"/g,'&quot;')}"></div>`:'')
+            +(()=>{const sup=supportTasks(x.id,vd.year||cy,vd.month!==undefined?vd.month:cm,d);if(!sup.length)return'';
+              const c=getTaskColor(sup[0].task_type);
+              return `<div class="cell-task-flag" style="border-top-color:${c}" title="${sup.map(t=>getTaskIcon(t.task_type)+' '+t.task_type+' '+t.start_time.slice(0,5)+'–'+addMins(t.start_time,t.duration_mins)).join('\n')}"></div>`;})();
           const cellTitle=sh?(()=>{const sd=shiftTypes.find(s=>s.code===sh);return(sd?sh+' '+sd.label+(sd.start?' '+sd.start+'–'+sd.end:''):sh)+(cellRemark?' 📝 '+cellRemark:'');})():(cellRemark?'📝 '+cellRemark:'');
           const cellCanAssign=canAssignShift();
           // Check for pending leave request on this cell
@@ -2129,15 +2212,23 @@ function renderSchedule(){
           const isWknd=(new Date(vd.year||cy,(vd.month!==undefined?vd.month:cm),d)).getDay()%6===0;
           const safeName=x.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
           const tdStyle='padding:0';
+          // OT day: same-size cell split in two — shift colour + OT colour (OT on top if pre-shift)
+          const otShort=otObj?(otObj.start&&otObj.end
+            ?[otObj.start,otObj.end].map(t=>{const [h,m]=String(t).split(':');return +h+(m&&m!=='00'?':'+m:'');}).join('-')
+            :ot+'h'):'';
+          const otSplit=ot&&sh&&!showPending
+            ?`<div class="ot-split-bot" style="background:${otColor}${isPreShift?';order:-1':''}" title="${otTitle}"
+                ${otClickable?`ondblclick="event.stopPropagation();openOTModal('${x.id}',${d},'${x.name.replace(/"/g,'&quot;')}')"`:''}>
+                <span class="t-short">${otShort}</span><span class="t-full">${otDisplay}</span></div>`:'';
           return`<td style="${tdStyle}" class="${isWknd?'wk-cell':''}"><div class="shift-ot-wrap">
-            <div class="ot-cell ${ot&&isPreShift?'has-ot ot-above':(otClickable&&!ot?'no-ot editable-empty ot-above':'no-ot ot-above')}" 
-              style="${ot&&isPreShift?'background:'+otColor+';':''}order:-1"
+            <div class="ot-cell ${ot&&isPreShift&&!otSplit?'has-ot ot-above':(otClickable&&!ot?'no-ot editable-empty ot-above':'no-ot ot-above')}" 
+              style="${ot&&isPreShift&&!otSplit?'background:'+otColor+';':''}order:-1"
               ${otClickable?`
                 onclick="handleOTCellClick('${x.id}',${d},event)"
                 ondblclick="openOTModal('${x.id}',${d},'${x.name.replace(/"/g,'&quot;')}')"
               `:''}
               title="${ot&&isPreShift?otTitle:(sh?'Click to select · Double-click to edit OT':'')}">
-              ${ot&&isPreShift?otDisplay:''}
+              ${ot&&isPreShift&&!otSplit?otDisplay:''}
             </div>
             ${showPending
               ? `<div class="cell shift-main cell-pending${isApprover2?' editable':''}" 
@@ -2146,20 +2237,20 @@ function renderSchedule(){
                   ${isApprover2?`onclick="switchTab('requests')"`:''}>
                   ${pendCode}<div class="cell-pending-dot" style="background:#d97706"></div>
                 </div>`
-              : `<div class="cell shift-main ${cls}${cellCanAssign?' editable':''}${isCopied?' copied':''}${isFocused?' focused':''}${isSelected?' selected':''}" ${cellStyle} data-sid="${x.id}" data-day="${d}" data-name="${x.name.replace(/"/g,'&quot;')}" title="${cellTitle}" ${cellCanAssign?`
+              : `<div class="cell shift-main ${cls}${otSplit?' ot-split':''}${cellCanAssign?' editable':''}${isCopied?' copied':''}${isFocused?' focused':''}${isSelected?' selected':''}" ${cellStyle} data-sid="${x.id}" data-day="${d}" data-name="${x.name.replace(/"/g,'&quot;')}" title="${cellTitle}" ${cellCanAssign?`
                 onmousedown="handleCellMouseDown(this.dataset.sid,this.dataset.day,this.dataset.name,event)"
                 onmouseenter="handleCellMouseEnter(this.dataset.sid,this.dataset.day,event)"
                 ondblclick="handleCellDblClick(this.dataset.sid,this.dataset.day,this.dataset.name,event)"
-              `:''}>${disp}${remarkDot}</div>`
+              `:''}>${otSplit?`<span class="ot-split-top">${disp}</span>${otSplit}`:disp}${remarkDot}</div>`
             }
-            <div class="ot-cell ${ot&&!isPreShift?'has-ot ot-below editable-ot':(otClickable&&!ot?'no-ot editable-empty ot-below':'no-ot ot-below')}"
-              style="${ot&&!isPreShift?'background:'+otColor+';':''}"
+            <div class="ot-cell ${ot&&!isPreShift&&!otSplit?'has-ot ot-below editable-ot':(otClickable&&!ot?'no-ot editable-empty ot-below':'no-ot ot-below')}"
+              style="${ot&&!isPreShift&&!otSplit?'background:'+otColor+';':''}"
               ${otClickable?`
                 onclick="handleOTCellClick('${x.id}',${d},event)"
                 ondblclick="openOTModal('${x.id}',${d},'${x.name.replace(/"/g,'&quot;')}')"
               `:''}
               title="${ot&&!isPreShift?otTitle:(sh?'Click to select · Double-click to edit OT':'')}">
-              ${ot&&!isPreShift?otDisplay:''}
+              ${ot&&!isPreShift&&!otSplit?otDisplay:''}
             </div>
           </div></td>`;
         }).join('')}
@@ -2167,6 +2258,7 @@ function renderSchedule(){
     });
   });
   document.getElementById('tbody').innerHTML=rows;
+  paintSelection();
 
   let M=0,E=0,AL=0,MC=0;
   list.forEach(x=>days.forEach(d=>{const sh=getS(x.id,d);if(sh==='M')M++;else if(sh==='E')E++;else if(sh==='AL')AL++;else if(sh==='MC')MC++;}));
@@ -2205,7 +2297,6 @@ async function setField(sid,field,val){
     const userField=field==='staff_role'?'staff_role':field; // same field name
     await sb.from('app_users').update({[userField]:val}).eq('id',u.id);
     u[userField]=val;
-    usersCache=usersCache.map(uc=>uc.id===u.id?{...uc,[userField]:val}:uc);
   }
   renderSchedule();
   toast('Updated ✓','ok');
@@ -2243,11 +2334,7 @@ async function renderUsersTab(){
     const appRoleOpts=['admin','staff'].map(r=>`<option value="${r}"${r===u.app_role?' selected':''}>${r}</option>`).join('');
     // Use whichever roles array has data
     // Position uses customPositions list (Inbound Agent, Team Leader etc.)
-    const _positions=customPositions.length?customPositions:
-      ['Inbound Agent','Outbound Agent','Team Leader','Reporting Exec','Assistant Manager','Quality Assurance','Senior Manager'];
-    const _allPos=[..._positions];
-    if(u.staff_role && !_allPos.includes(u.staff_role)) _allPos.push(u.staff_role);
-    const staffRoleOpts=_allPos.map(r=>`<option value="${r}"${r===u.staff_role?' selected':''}>${r}</option>`).join('');
+    const staffRoleOpts=roleOptionsHtml(u.staff_role);
     const _teams=TEAMS.length?TEAMS:(customTeams.length?customTeams:['Asrul','Asriza','Zaid','Saputra','Intan','Operation','Clement']);
     if(u.team && !_teams.includes(u.team)) _teams.push(u.team);
     const teamOpts=`<option value="">—</option>`+_teams.map(t=>`<option value="${t}"${t===u.team?' selected':''}>${t}</option>`).join('');
@@ -2270,7 +2357,7 @@ async function renderUsersTab(){
         <select class="utable-sel" onchange="updateUserField('${u.id}','app_role',this.value)">${appRoleOpts}</select>
       </td>
       <td style="padding:6px 8px">
-        <select class="utable-sel" onchange="updateUserField('${u.id}','staff_role',this.value)">${staffRoleOpts}</select>
+        <select class="utable-sel" data-prev="${(u.staff_role||'').replace(/"/g,'&quot;')}" onchange="roleSelectChanged(this,v=>updateUserField('${u.id}','staff_role',v))">${staffRoleOpts}</select>
       </td>
       <td style="padding:6px 8px">
         <select class="utable-sel" onchange="updateUserField('${u.id}','team',this.value)">${teamOpts}</select>
@@ -2309,13 +2396,11 @@ async function updateUserField(uid,field,value){
   if(error){toast('Error: '+error.message,'err');renderUsersTab();return;}
 
   // 2. Update local caches
-  const cached=usersCache.find(u=>u.id===uid);
-  if(cached) cached[field]=value;
   const appU=appUsersList.find(u=>u.id===uid);
   if(appU) appU[field]=value;
 
   // 3. If role/team/name changed — sync to staff table via staff_id
-  if(field==='staff_role'||field==='team'||field==='display_name'){    const staffId=cached?cached.staff_id:(appU?appU.staff_id:null);
+  if(field==='staff_role'||field==='team'||field==='display_name'){    const staffId=appU?appU.staff_id:null;
     if(staffId){
       const staffField=field==='display_name'?'name':field;
       const {error:se}=await sb.from('staff').update({[staffField]:value}).eq('id',staffId);
@@ -2402,7 +2487,7 @@ function openModal(type,...args){
       <div class="mf-row"><div><label>ID No.</label><input id="nI" placeholder="2099"></div><div><label>3CX</label><input id="nC" placeholder="1055"></div></div>
       <div class="mf-row">
         <div><label>Team</label><select id="nT">${TEAMS.map(t=>`<option>${t}</option>`).join('')}</select></div>
-        <div><label>Role</label><select id="nR">${(STAFF_ROLES.length?STAFF_ROLES:customRoles.length?customRoles:['Agent','Supervisor','Admin','Viewer']).map(r=>`<option>${r}</option>`).join('')}</select></div>
+        <div><label>Role</label><select id="nR" onchange="roleSelectChanged(this)">${roleOptionsHtml()}</select></div>
       </div>
       <div class="merr" id="aErr"></div>
     </div>
@@ -2416,7 +2501,7 @@ function openModal(type,...args){
       <div class="mf-row"><div><label>ID No.</label><input id="eI" value="${x.employee_id||''}"></div><div><label>3CX</label><input id="eC" value="${x.cx||''}"></div></div>
       <div class="mf-row">
         <div><label>Team</label><select id="eT">${TEAMS.map(t=>`<option${t===x.team?' selected':''}>${t}</option>`).join('')}</select></div>
-        <div><label>Role</label><select id="eR">${(STAFF_ROLES.length?STAFF_ROLES:customRoles.length?customRoles:['Agent','Supervisor','Admin','Viewer']).map(r=>`<option${r===x.staff_role?' selected':''}>${r}</option>`).join('')}</select></div>
+        <div><label>Role</label><select id="eR" onchange="roleSelectChanged(this)">${roleOptionsHtml(x.staff_role)}</select></div>
       </div>
       <div class="merr" id="eErr"></div>
     </div>
@@ -2434,7 +2519,7 @@ function openModal(type,...args){
       </div>
       <div class="mf-row">
         <div><label>Team</label><select id="saTeam" style="width:100%;font-family:'DM Sans',sans-serif;font-size:13px;height:34px;padding:0 10px;border:1px solid var(--border2);border-radius:var(--r);background:var(--surface);color:var(--text);outline:none"><option value="">— None —</option>${(TEAMS.length?TEAMS:customTeams.length?customTeams:['Asrul','Asriza','Zaid','Saputra','Intan','Operation','Clement']).map(t=>`<option>${t}</option>`).join('')}</select></div>
-        <div><label>Staff role</label><select id="saRole" style="width:100%;font-family:'DM Sans',sans-serif;font-size:13px;height:34px;padding:0 10px;border:1px solid var(--border2);border-radius:var(--r);background:var(--surface);color:var(--text);outline:none">${(STAFF_ROLES.length?STAFF_ROLES:customRoles.length?customRoles:['Agent','Supervisor','Admin','Viewer']).map(r=>`<option>${r}</option>`).join('')}</select></div>
+        <div><label>Staff role</label><select id="saRole" style="width:100%;font-family:'DM Sans',sans-serif;font-size:13px;height:34px;padding:0 10px;border:1px solid var(--border2);border-radius:var(--r);background:var(--surface);color:var(--text);outline:none" onchange="roleSelectChanged(this)">${roleOptionsHtml()}</select></div>
       </div>
       <div style="margin:14px 0 6px;padding-top:12px;border-top:1px solid var(--border);font-size:12px;font-weight:600;color:var(--text2)">🔐 Login credentials (optional)</div>
       <div style="font-size:11px;color:var(--text3);margin-bottom:8px">Leave username/password blank to add to schedule only without a login account.</div>
@@ -2461,7 +2546,7 @@ function openModal(type,...args){
       <label>Password</label><input id="uP" type="password" placeholder="Min 6 characters">
       <div class="mf-row">
         <div><label>App role</label><select id="uA"><option value="staff">Staff</option><option value="admin">Admin</option></select></div>
-        <div><label>Staff role</label><select id="uR">${(STAFF_ROLES.length?STAFF_ROLES:customRoles.length?customRoles:['Agent','Supervisor','Admin','Viewer']).map(r=>`<option>${r}</option>`).join('')}</select></div>
+        <div><label>Staff role</label><select id="uR" onchange="roleSelectChanged(this)">${roleOptionsHtml()}</select></div>
       </div>
       <div class="mf-row">
         <div><label>Team</label><select id="uT"><option value="">None</option>${(TEAMS.length?TEAMS:customTeams.length?customTeams:['Asrul','Asriza','Zaid','Saputra','Intan','Operation','Clement']).map(t=>`<option>${t}</option>`).join('')}</select></div>
@@ -3035,18 +3120,10 @@ async function submitSwapRequest(){
 }
 
 function handleOTCellClick(sid, day, e){
-  // Single click on OT cell = focus the parent shift cell (same as clicking the shift)
   e.stopPropagation();
-  if(copySource){
-    doPaste(sid, day);
-    return;
-  }
-  lastFocusedCell={sid, day};
-  // Light highlight without full re-render
-  document.querySelectorAll('.cell.focused').forEach(c=>c.classList.remove('focused'));
-  document.querySelectorAll('.cell.selected').forEach(c=>c.classList.remove('selected'));
-  const el=document.querySelector(`.cell[data-sid="${sid}"][data-day="${day}"]`);
-  if(el) el.classList.add('focused');
+  if(e.shiftKey&&lastFocusedCell) lastFocusedCell={sid,day:+day};
+  else selAnchor=lastFocusedCell={sid,day:+day};
+  paintSelection();
 }
 
 function openOTModal(sid, day, name){
@@ -3388,8 +3465,61 @@ const PERM_LABELS={
 
 async function saveSettings(){
   const payload={roles:customRoles,teams:customTeams,positions:customPositions,permissions,sectionOrder,staffOrder,shiftTypes,timeoffTypes,otTypes,breakRules};
-  await sb.from('app_settings').upsert({key:'schedule_config',value:JSON.stringify(payload)},{onConflict:'key'});
+  const {error}=await sb.from('app_settings').upsert({key:'schedule_config',value:JSON.stringify(payload)},{onConflict:'key'});
   injectDynamicShiftCSS();
+  if(error) throw new Error(error.message);
+}
+
+// ── ROLES: one combined list + "Add new role" in every role dropdown ──
+const NEW_ROLE='__new_role__';
+function roleList(cur){
+  const all=[...STAFF_ROLES,...customRoles,...customPositions,...staffList.map(x=>x.staff_role)];
+  if(cur) all.push(cur);
+  const seen=new Set(), out=[];
+  all.forEach(r=>{ const v=(r||'').trim(); if(v&&!seen.has(v.toLowerCase())){ seen.add(v.toLowerCase()); out.push(v); } });
+  return out;
+}
+function roleOptionsHtml(cur){
+  const esc=v=>String(v).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+  const isAdmin=currentProfile&&currentProfile.app_role==='admin';
+  return roleList(cur).map(r=>`<option value="${esc(r)}"${r===cur?' selected':''}>${esc(r)}</option>`).join('')
+    +(isAdmin?`<option value="${NEW_ROLE}">＋ Add new role…</option>`:'');
+}
+async function addRole(name){
+  name=(name||'').trim().replace(/\s+/g,' ');
+  if(!name) return null;
+  if(name.length>40){ toast('Role name is too long (max 40)','err'); return null; }
+  const existing=roleList().find(r=>r.toLowerCase()===name.toLowerCase());
+  if(existing&&customRoles.includes(existing)&&customPositions.includes(existing)) return existing;
+  const role=existing||name;
+  if(!customRoles.includes(role)) customRoles.push(role);
+  if(!customPositions.includes(role)) customPositions.push(role);
+  if(!STAFF_ROLES.includes(role)) STAFF_ROLES.push(role);
+  if(!sectionOrder.includes(role)) sectionOrder.push(role);
+  if(!permissions[role]) permissions[role]={view_schedule:true,assign_shift:false,edit_schedule:false,publish_schedule:false,
+    view_team:true,edit_team:false,apply_own_timeoff:true,swap_with_others:true,assign_breaks:false,swap_breaks:true,manage_users:false};
+  try{ await saveSettings(); }
+  catch(e){ toast('Could not save role: '+e.message,'err'); return null; }
+  refreshFilterDropdowns();
+  if(currentTab==='settings') renderSettingsTab();
+  toast(`Role "${role}" added ✓ — set its access in Settings → Role access permissions`,'ok');
+  return role;
+}
+async function roleSelectChanged(el,cb){
+  if(el.value!==NEW_ROLE){ el.dataset.prev=el.value; if(cb) cb(el.value); return; }
+  const prev=el.dataset.prev||'';
+  const name=prompt('New role name (e.g. Workforce Planner):');
+  const role=name?await addRole(name):null;
+  if(!role){
+    el.value=prev&&[...el.options].some(o=>o.value===prev)?prev:el.options[0].value;
+    return;
+  }
+  if(![...el.options].some(o=>o.value===role)){
+    const o=document.createElement('option'); o.value=role; o.textContent=role;
+    el.insertBefore(o,el.querySelector(`option[value="${NEW_ROLE}"]`));
+  }
+  el.value=role; el.dataset.prev=role;
+  if(cb) cb(role);
 }
 
 async function saveSettingsManual(section){
@@ -3501,7 +3631,7 @@ async function loadSettings(){
       await syncRolesFromStaff();
       await syncTeamsFromStaff();
       sectionOrder=[...STAFF_ROLES];
-      await saveSettings();
+      await saveSettings().catch(e=>console.warn("saveSettings:",e.message));
     }
     // Always ensure new roles from staff table are included
     await mergeNewRolesFromStaff();
@@ -3545,7 +3675,7 @@ async function mergeNewRolesFromStaff(){
       changed=true;
     }
   });
-  if(changed) await saveSettings();
+  if(changed) await saveSettings().catch(e=>console.warn("saveSettings:",e.message));
 }
 
 function renderSettingsTab(){
@@ -3671,11 +3801,16 @@ function addCustomItem(type){
   dataMap[type].push(val);
   document.getElementById(inputMap[type]).value='';
   renderTagList(type);
-  if(type==='role'){STAFF_ROLES.length=0;customRoles.forEach(r=>STAFF_ROLES.push(r));}
+  if(type==='role'||type==='pos'){
+    if(!customRoles.includes(val)) customRoles.push(val);
+    if(!customPositions.includes(val)) customPositions.push(val);
+    STAFF_ROLES.length=0;customRoles.forEach(r=>STAFF_ROLES.push(r));
+    if(!sectionOrder.includes(val)) sectionOrder.push(val);
+    renderTagList('role'); renderTagList('pos');
+  }
   if(type==='team'){TEAMS.length=0;customTeams.forEach(t=>TEAMS.push(t));}
   refreshFilterDropdowns();
-  saveSettings();
-  toast(val+' added','ok');
+  saveSettings().then(()=>toast(val+' added ✓','ok')).catch(e=>toast('Save failed: '+e.message,'err'));
 }
 
 function removeCustomItem(type,idx){
@@ -3685,7 +3820,7 @@ function removeCustomItem(type,idx){
   if(type==='role'){STAFF_ROLES.length=0;customRoles.forEach(r=>STAFF_ROLES.push(r));}
   if(type==='team'){TEAMS.length=0;customTeams.forEach(t=>TEAMS.push(t));}
   refreshFilterDropdowns();
-  saveSettings();
+  saveSettings().catch(e=>toast("Save failed: "+e.message,"err"));
 }
 
 let _refreshing=false;
@@ -3695,7 +3830,7 @@ function refreshFilterDropdowns(){
   if(!tf||!rf)return;
   const tv=tf.value, rv=rf.value;
   tf.innerHTML='<option value="">All teams</option>'+TEAMS.map(t=>`<option${t===tv?' selected':''}>${t}</option>`).join('');
-  rf.innerHTML='<option value="">All roles</option>'+STAFF_ROLES.map(r=>`<option${r===rv?' selected':''}>${r}</option>`).join('');
+  rf.innerHTML='<option value="">All roles</option>'+roleList().map(r=>`<option${r===rv?' selected':''}>${r}</option>`).join('');
   if(!_refreshing){_refreshing=true;renderSchedule();_refreshing=false;}
 }
 
@@ -3804,74 +3939,289 @@ function can(action){
 }
 
 
-// ── CELL INTERACTION STATE MACHINE ──
+// ── CELL INTERACTION — Excel-style range select, copy, paste, fill ──
 let selectedCells=[];
-let isDragging=false;
-let _mouseDownCell=null;
-let _mouseDownTime=0;
+let selAnchor=null;          // fixed corner of the selection {sid,day}
+let _dragSel=false;          // mouse is held down selecting
+let clip=null;               // {block:[[{shift,ot}]], tsv, sys, range:{a,b}}
+let fillDrag=null;           // {base:rect, target:rect|null}
+let _pasteHandled=false;
+let _copyPending=false;
+
+function gridAxes(){
+  const rows=[...document.querySelectorAll('#tbody tr.staff-row')].map(tr=>tr.dataset.sid);
+  const cols=getViewDays().map(v=>v.day);
+  return {rows,cols};
+}
+function rectOf(a,b){
+  const {rows,cols}=gridAxes();
+  const r1=rows.indexOf(a.sid), r2=rows.indexOf(b.sid), c1=cols.indexOf(+a.day), c2=cols.indexOf(+b.day);
+  if(r1<0||r2<0||c1<0||c2<0) return null;
+  return {r0:Math.min(r1,r2),r1:Math.max(r1,r2),c0:Math.min(c1,c2),c1:Math.max(c1,c2),rows,cols};
+}
+function selRect(){ return lastFocusedCell?rectOf(selAnchor||lastFocusedCell,lastFocusedCell):null; }
+const inR=(r,i,j)=>r&&i>=r.r0&&i<=r.r1&&j>=r.c0&&j<=r.c1;
+
+function paintSelection(){
+  const cells=document.querySelectorAll('#tbody .cell[data-sid]');
+  if(!cells.length) return;
+  const rect=selRect();
+  const crect=clip?rectOf(clip.range.a,clip.range.b):null;
+  const frect=fillDrag?.target||null;
+  const {rows,cols}=rect||crect||gridAxes();
+  const rIdx={},cIdx={};
+  rows.forEach((s,i)=>rIdx[s]=i); cols.forEach((d,i)=>cIdx[d]=i);
+  document.querySelectorAll('#tbody .fill-handle').forEach(h=>h.remove());
+  const multi=rect&&(rect.r1>rect.r0||rect.c1>rect.c0);
+  selectedCells=[];
+  cells.forEach(el=>{
+    el.classList.remove('focused','selected','copied','sel-t','sel-b','sel-l','sel-r','cp-t','cp-b','cp-l','cp-r','fill-prev');
+    const i=rIdx[el.dataset.sid], j=cIdx[+el.dataset.day];
+    if(i===undefined||j===undefined) return;
+    if(inR(rect,i,j)){
+      selectedCells.push({sid:el.dataset.sid,day:+el.dataset.day});
+      if(multi){
+        el.classList.add('selected');
+        if(i===rect.r0) el.classList.add('sel-t'); if(i===rect.r1) el.classList.add('sel-b');
+        if(j===rect.c0) el.classList.add('sel-l'); if(j===rect.c1) el.classList.add('sel-r');
+      }
+      if(i===rect.r1&&j===rect.c1){
+        const h=document.createElement('div');
+        h.className='fill-handle'; h.title='Drag to fill';
+        h.addEventListener('mousedown',startFill);
+        el.appendChild(h);
+      }
+    }
+    if(lastFocusedCell&&el.dataset.sid===lastFocusedCell.sid&&+el.dataset.day===+lastFocusedCell.day) el.classList.add('focused');
+    if(inR(crect,i,j)){
+      if(i===crect.r0) el.classList.add('cp-t'); if(i===crect.r1) el.classList.add('cp-b');
+      if(j===crect.c0) el.classList.add('cp-l'); if(j===crect.c1) el.classList.add('cp-r');
+    }
+    if(inR(frect,i,j)&&!inR(fillDrag.base,i,j)) el.classList.add('fill-prev');
+  });
+}
+
+function cellVal(sid,day){
+  const vd=getViewDays().find(v=>v.day===+day)||{month:cm,year:cy};
+  const mk=vd.year+'-'+(vd.month+1);
+  const sk=sid+'_'+day, fk=sk+'_'+mk;
+  const ot=otData[fk]??otData[sk]??null;
+  return {shift:schedData[fk]??schedData[sk]??'', ot:ot?{...ot}:null};
+}
+function readBlock(r){
+  const out=[];
+  for(let i=r.r0;i<=r.r1;i++){ const row=[]; for(let j=r.c0;j<=r.c1;j++) row.push(cellVal(r.rows[i],r.cols[j])); out.push(row); }
+  return out;
+}
+
+// Batch-write cells in one go (one DB round-trip, one undo step)
+async function applyCells(changes,label,opts={}){
+  const vds=getViewDays();
+  const ups=[], dels=[], undo=[]; let pubChanged=false;
+  const seen=new Set();
+  for(const c of changes){
+    const day=+c.day;
+    let mk=c.mk;
+    if(!mk){ const vd=vds.find(v=>v.day===day)||{month:cm,year:cy}; mk=vd.year+'-'+(vd.month+1); }
+    const key=c.sid+'_'+day+'_'+mk; if(seen.has(key)) continue; seen.add(key);
+    const sk=c.sid+'_'+day, fk=sk+'_'+mk;
+    const prevShift=schedData[fk]??schedData[sk]??'';
+    const prevOT=otData[fk]??otData[sk]??null;
+    const newShift=c.shift||'';
+    const newOT=newShift?(c.ot===undefined?prevOT:c.ot):null;
+    if(prevShift===newShift&&JSON.stringify(prevOT||null)===JSON.stringify(newOT||null)) continue;
+    undo.push({staffId:c.sid,day,month_key:mk,prevShift:prevShift||null,prevOT:prevOT?{...prevOT}:null});
+    if(!opts.noUndo){ const dk=mk+'-'+day; if(publishedDays[dk]){ delete publishedDays[dk]; pubChanged=true; } }
+    if(newShift){
+      const hasOT=newOT&&(newOT.hours||newOT.start);
+      ups.push({staff_id:c.sid,month_key:mk,day,shift:newShift,
+        ot_hours:hasOT?(newOT.hours||null):null, ot_start:hasOT?(newOT.start||null):null,
+        ot_end:hasOT?(newOT.end||null):null, ot_type:hasOT?(newOT.type||'OT'):null});
+    } else dels.push({sid:c.sid,mk,day});
+  }
+  if(!undo.length){ if(!opts.quiet) toast('Nothing changed','ok'); return 0; }
+  for(let i=0;i<ups.length;i+=500){
+    const {error}=await sb.from('schedule').upsert(ups.slice(i,i+500),{onConflict:'staff_id,month_key,day'});
+    if(error){ toast('Save failed: '+error.message,'err'); await loadSchedule(); return -1; }
+  }
+  const grp={};
+  dels.forEach(d=>{ const k=d.sid+'|'+d.mk; (grp[k]=grp[k]||[]).push(d.day); });
+  for(const k of Object.keys(grp)){
+    const [sid,mk]=k.split('|');
+    const {error}=await sb.from('schedule').delete().eq('staff_id',sid).eq('month_key',mk).in('day',grp[k]);
+    if(error){ toast('Save failed: '+error.message,'err'); await loadSchedule(); return -1; }
+  }
+  ups.forEach(u=>{
+    const sk=u.staff_id+'_'+u.day, fk=sk+'_'+u.month_key;
+    schedData[sk]=u.shift; schedData[fk]=u.shift;
+    if(u.ot_hours||u.ot_start){ const o={hours:u.ot_hours||0,start:u.ot_start||'',end:u.ot_end||'',type:u.ot_type||'OT'}; otData[sk]=o; otData[fk]={...o}; }
+    else { delete otData[sk]; delete otData[fk]; }
+  });
+  dels.forEach(d=>{
+    const sk=d.sid+'_'+d.day, fk=sk+'_'+d.mk;
+    [schedData,otData,remarkData].forEach(m=>{ delete m[sk]; delete m[fk]; });
+  });
+  if(pubChanged){ await savePublishedDays(); updatePublishBtn(); }
+  if(!opts.noUndo&&canAssignShift()){
+    undoStack.push({batch:undo,desc:label});
+    if(undoStack.length>UNDO_MAX) undoStack.shift();
+    showUndoBar(label+' — '+undo.length+' cell'+(undo.length>1?'s':'')+' changed');
+  }
+  renderSchedule();
+  return undo.length;
+}
+
+function isValidCode(v){
+  if(shiftTypes.some(s=>s.code===v)||timeoffTypes.some(t=>t.code===v)) return true;
+  if(['OD','RD','O','H1AL','H2AL'].includes(v)) return true;
+  const m=v.match(/^([A-Z][A-Z0-9]*)-H[12]AL$/);
+  return !!(m&&shiftTypes.some(s=>s.code===m[1]));
+}
+
+function doCopy(cut){
+  const r=selRect(); if(!r){ toast('Select cells first','err'); return; }
+  const block=readBlock(r);
+  const tsv=block.map(row=>row.map(c=>c.shift||'').join('\t')).join('\n');
+  clip={block,tsv,sys:false,range:{a:{sid:r.rows[r.r0],day:r.cols[r.c0]},b:{sid:r.rows[r.r1],day:r.cols[r.c1]}}};
+  // Fallback if the browser didn't fire a copy event for the shortcut
+  setTimeout(()=>{ if(_copyPending&&clip&&clip.tsv===tsv){ _copyPending=false;
+    try{ navigator.clipboard?.writeText(tsv).then(()=>{ if(clip&&clip.tsv===tsv) clip.sys=true; }).catch(()=>{}); }catch(_){} } },0);
+  const h=block.length, w=block[0].length;
+  const ct=document.getElementById('copyToolbar'), cl=document.getElementById('copyLabel');
+  if(ct) ct.style.display='flex';
+  if(cl) cl.textContent=(h*w===1?`"${block[0][0].shift||'empty'}"`:`${h} row${h>1?'s':''} × ${w} day${w>1?'s':''}`)+' copied — select a cell, Ctrl+V';
+  showSidebarActionPanel();
+  paintSelection();
+  if(cut){
+    const ch=[]; for(let i=r.r0;i<=r.r1;i++) for(let j=r.c0;j<=r.c1;j++) ch.push({sid:r.rows[i],day:r.cols[j],shift:'',ot:null});
+    applyCells(ch,`Cut ${h}×${w}`);
+    toast(`Cut ${h}×${w} — Ctrl+V to place it`,'ok');
+  } else toast(`Copied ${h}×${w} ✓ — select where to paste, Ctrl+V`,'ok');
+}
+
+// Paste a block at the current selection (Excel rules: 1 cell fills the whole
+// selection; a selection that's an exact multiple of the block gets tiled)
+async function pasteBlock(block,internal){
+  const r=selRect(); if(!r){ toast('Click a target cell first','err'); return; }
+  const h=block.length, w=Math.max(...block.map(x=>x.length));
+  const sh=r.r1-r.r0+1, sw=r.c1-r.c0+1;
+  let th=h, tw=w;
+  if((sh>1||sw>1)&&sh%h===0&&sw%w===0){ th=sh; tw=sw; }
+  const ch=[];
+  for(let i=0;i<th;i++) for(let j=0;j<tw;j++){
+    const ri=r.r0+i, ci=r.c0+j;
+    if(ri>=r.rows.length||ci>=r.cols.length) continue;
+    const src=block[i%h][j%w]; if(!src) continue;
+    ch.push({sid:r.rows[ri],day:r.cols[ci],shift:src.shift||'',ot:internal?(src.ot||null):undefined});
+  }
+  const lastR=Math.min(r.rows.length-1,r.r0+th-1), lastC=Math.min(r.cols.length-1,r.c0+tw-1);
+  selAnchor={sid:r.rows[r.r0],day:r.cols[r.c0]};
+  lastFocusedCell={sid:r.rows[lastR],day:r.cols[lastC]};
+  const n=await applyCells(ch,`Pasted ${th}×${tw}`);
+  if(n>0) toast(`Pasted to ${ch.length} cell${ch.length>1?'s':''} ✓`,'ok');
+  else paintSelection();
+}
 
 function handleCellMouseDown(sid, day, name, e){
   if(!canAssignShift()||e.button!==0) return;
   e.preventDefault();
-
-  // Paste mode — paste immediately
-  if(copySource){ doPaste(sid,day); return; }
-
-  _mouseDownCell={sid,day,name};
-  _mouseDownTime=Date.now();
-  isDragging=false;
-  // Don't renderSchedule here — it destroys the DOM element mid-click
-  // Selection is applied on mouseup instead
+  day=+day;
+  if(e.shiftKey&&lastFocusedCell){ lastFocusedCell={sid,day}; }
+  else { selAnchor={sid,day}; lastFocusedCell={sid,day}; }
+  _dragSel=true;
+  document.body.classList.add('grid-dragging');
+  paintSelection();
 }
 
+// While dragging, follow the pointer over the whole table cell (incl. the OT strips)
+document.addEventListener('mousemove',e=>{
+  if(!(e.buttons&1)||(!_dragSel&&!fillDrag)) return;
+  const td=e.target.closest?.('#tbody td');
+  const c=td?.querySelector('.cell[data-sid]');
+  if(c) handleCellMouseEnter(c.dataset.sid,c.dataset.day,e);
+});
+
 function handleCellMouseEnter(sid, day, e){
-  if(!canAssignShift()||!(e.buttons&1)||!_mouseDownCell||copySource) return;
-  if(_mouseDownCell.sid===sid&&_mouseDownCell.day===day) return;
-  isDragging=true;
-  if(!selectedCells.some(c=>c.sid===sid&&c.day===day)){
-    selectedCells.push({sid,day});
-    lastFocusedCell={sid,day};
-    renderSchedule(); // OK to render during drag — not the origin cell
-  }
+  day=+day;
+  if(fillDrag&&(e.buttons&1)){ updateFill(sid,day); return; }
+  if(!_dragSel||!(e.buttons&1)) return;
+  if(lastFocusedCell&&lastFocusedCell.sid===sid&&+lastFocusedCell.day===day) return;
+  lastFocusedCell={sid,day};
+  paintSelection();
 }
 
 function handleCellDblClick(sid, day, name, e){
   if(!canAssignShift()) return;
-  e.preventDefault();
-  e.stopPropagation();
-  if(copySource){clearCopyMode();}
-  selectedCells=[];
-  lastFocusedCell={sid,day};
-  // Always open modal on double click — whether empty or filled
-  openShiftModal(sid,day,name);
+  e.preventDefault(); e.stopPropagation();
+  selAnchor=lastFocusedCell={sid,day:+day};
+  paintSelection();
+  openShiftModal(sid,+day,name);
+}
+
+function startFill(e){
+  if(e.button!==0) return;
+  e.stopPropagation(); e.preventDefault();
+  const r=selRect(); if(!r) return;
+  fillDrag={base:r,target:null};
+  document.body.classList.add('grid-dragging');
+}
+function updateFill(sid,day){
+  const b=fillDrag.base;
+  const ri=b.rows.indexOf(sid), ci=b.cols.indexOf(day);
+  if(ri<0||ci<0) return;
+  const dR=ri>b.r1?ri-b.r1:ri<b.r0?ri-b.r0:0;
+  const dC=ci>b.c1?ci-b.c1:ci<b.c0?ci-b.c0:0;
+  const t={...b};
+  if(dR&&Math.abs(dR)>=Math.abs(dC)){ if(dR>0)t.r1=ri; else t.r0=ri; }
+  else if(dC){ if(dC>0)t.c1=ci; else t.c0=ci; }
+  fillDrag.target=(t.r0===b.r0&&t.r1===b.r1&&t.c0===b.c0&&t.c1===b.c1)?null:t;
+  paintSelection();
+}
+async function finishFill(){
+  const {base:b,target:t}=fillDrag; fillDrag=null;
+  if(!t){ paintSelection(); return; }
+  const src=readBlock(b), h=src.length, w=src[0].length;
+  const ch=[];
+  for(let i=t.r0;i<=t.r1;i++) for(let j=t.c0;j<=t.c1;j++){
+    if(inR(b,i,j)) continue;
+    const c=src[(((i-b.r0)%h)+h)%h][(((j-b.c0)%w)+w)%w];
+    ch.push({sid:t.rows[i],day:t.cols[j],shift:c.shift||'',ot:c.ot||null});
+  }
+  selAnchor={sid:t.rows[t.r0],day:t.cols[t.c0]};
+  lastFocusedCell={sid:t.rows[t.r1],day:t.cols[t.c1]};
+  await applyCells(ch,`Filled ${ch.length} cell${ch.length>1?'s':''}`);
 }
 
 document.addEventListener('mouseup',()=>{
-  if(!_mouseDownCell) return;
-  const {sid,day,name}=_mouseDownCell;
-  if(!isDragging){
-    const sh=getS(sid,day);
-    lastFocusedCell={sid,day};
-    if(!sh){
-      // Empty cell — open assign modal
-      selectedCells=[];
-      renderSchedule();
-      openShiftModal(sid,day,name);
-    } else {
-      // Filled cell — just focus, don't re-render (keeps DOM stable for dblclick)
-      selectedCells=[{sid,day}];
-      // Light highlight without full re-render
-      document.querySelectorAll('.cell.focused').forEach(c=>c.classList.remove('focused'));
-      document.querySelectorAll('.cell.selected').forEach(c=>c.classList.remove('selected'));
-      const el=document.querySelector(`.cell[data-sid="${sid}"][data-day="${day}"]`);
-      if(el) el.classList.add('focused');
-    }
-  } else if(selectedCells.length>1){
-    toast(`${selectedCells.length} cells selected — Ctrl+V to paste`,'ok');
-  }
-  isDragging=false;
-  _mouseDownCell=null;
+  if(fillDrag){ finishFill(); }
+  _dragSel=false;
+  document.body.classList.remove('grid-dragging');
 });
+
+function supportSectionHtml(sid,day,name){
+  const vd=getViewDays().find(v=>v.day===+day)||{year:cy,month:cm};
+  const dateStr=ymdStr(vd.year,vd.month,+day);
+  const list=(tasksMap[sid+'_'+dateStr]||[]).slice().sort((a,b)=>toMin(a.start_time)-toMin(b.start_time));
+  const nm=String(name).replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'&quot;');
+  const types=TASK_TYPES.filter(t=>t.covers);
+  const inp='font-size:12px;border:1px solid var(--border2);border-radius:var(--r);padding:6px 8px;background:var(--surface);color:var(--text);font-family:\'DM Sans\',sans-serif';
+  return `<div style="margin-top:14px;border-top:1px solid var(--border);padding-top:12px">
+    <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">🎧 Support another queue <span style="font-weight:400;text-transform:none;letter-spacing:0">(counts in Coverage)</span></div>
+    ${list.length?`<div style="display:flex;flex-direction:column;gap:4px;margin-bottom:8px">${list.map(t=>`
+      <div style="display:flex;align-items:center;gap:8px;font-size:12px;padding:5px 8px;border-radius:var(--r);background:${getTaskColor(t.task_type)}18;border:1px solid ${getTaskColor(t.task_type)}40">
+        <span>${getTaskIcon(t.task_type)}</span><span style="font-weight:600">${t.task_type}</span>
+        <span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text2)">${String(t.start_time).slice(0,5)}–${addMins(t.start_time,t.duration_mins)}</span>
+        <button onclick="removeSupportTask('${t.id}','${sid}',${day},'${dateStr}','${nm}')" style="margin-left:auto;font-size:11px;padding:1px 7px;border:1px solid var(--border2);border-radius:var(--r);background:none;color:var(--red);cursor:pointer">✕</button>
+      </div>`).join('')}</div>`:''}
+    <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+      <select id="supType" style="${inp};width:auto;flex:1 1 140px;min-width:0">${types.map(t=>`<option value="${t.code}">${t.icon} ${t.code}</option>`).join('')}</select>
+      <input id="supStart" type="time" value="08:00" style="${inp};width:auto;flex:0 0 auto">
+      <span style="font-size:12px;color:var(--text3)">to</span>
+      <input id="supEnd" type="time" value="11:00" style="${inp};width:auto;flex:0 0 auto">
+      <button class="btn btn-blue" onclick="addSupportTask('${sid}',${day},'${dateStr}','${nm}')">＋ Add</button>
+    </div>
+  </div>`;
+}
 
 function openShiftModal(sid, day, name){
   const sh=getS(sid, day);
@@ -3950,6 +4300,7 @@ function openShiftModal(sid, day, name){
         onmouseout="this.style.background='transparent'">
         ✕ Clear cell
       </button>
+      ${supportSectionHtml(sid,day,name)}
       <div style="margin-top:14px;border-top:1px solid var(--border);padding-top:12px">
         <label style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;display:flex;align-items:center;gap:6px;margin-bottom:6px">
           <span style="color:#f59e0b">●</span> Cell comment <span style="font-size:10px;color:var(--text3);font-weight:400">(shown on hover)</span>
@@ -3997,49 +4348,49 @@ async function pickShiftFromModal(sid, day, val){
 }
 
 async function doPaste(sid, day){
-  if(!copySource) return;
-  await saveShift(sid, day, copySource.shift);
-  if(copySource.ot){
-    await saveOT(sid, day, copySource.ot.hours, copySource.ot.start, copySource.ot.end, copySource.ot.type||'OT');
-  }
-  lastFocusedCell={sid, day};
-  const otLabel=copySource.ot?` + OT ${copySource.ot.hours}h`:'';
-  toast(`Pasted "${copySource.shift}"${otLabel} ✓`,'ok');
+  if(!clip) return;
+  selAnchor=lastFocusedCell={sid,day:+day};
+  await pasteBlock(clip.block,true);
 }
 
+// Sidebar: repeat the copied block across the rest of the month, starting at the selection
 async function pasteToRow(){
-  if(!copySource)return;
-  const days=Array.from({length:dim(cy,cm)},(_,i)=>i+1);
-  for(const d of days){
-    await saveShift(copySource.sid, d, copySource.shift);
+  if(!clip){ toast('Copy something first','err'); return; }
+  const r=selRect(); if(!r){ toast('Click where the fill should start','err'); return; }
+  const h=clip.block.length;
+  selAnchor={sid:r.rows[r.r0],day:r.cols[r.c0]};
+  lastFocusedCell={sid:r.rows[Math.min(r.rows.length-1,r.r0+h-1)],day:r.cols[r.cols.length-1]};
+  const w=clip.block[0].length, span=r.cols.length-r.c0;
+  // trim to a whole number of repeats is not required — pasteBlock tiles only exact multiples, so build directly
+  const ch=[];
+  for(let i=0;i<h;i++) for(let j=0;j<span;j++){
+    const ri=r.r0+i; if(ri>=r.rows.length) continue;
+    const c=clip.block[i][j%w];
+    ch.push({sid:r.rows[ri],day:r.cols[r.c0+j],shift:c.shift||'',ot:c.ot||null});
   }
-  toast(`"${copySource.shift}" pasted to entire row`, 'ok');
-  clearCopyMode();
+  await applyCells(ch,'Filled to end of row');
 }
 
+// Sidebar: paste the copied block straight below where it came from
 async function pasteToNextAgent(){
-  if(!copySource)return;
-  // Find next staff in list after copy source
-  const flat=sectionOrder.flatMap(role=>
-    staffList.filter(x=>x.staff_role===role)
-  );
-  const idx=flat.findIndex(x=>x.id===copySource.sid);
-  if(idx===-1||idx>=flat.length-1){toast('No next staff found','err');return;}
-  const next=flat[idx+1];
-  await saveShift(next.id, copySource.day, copySource.shift);
-  copySource={...copySource, sid:next.id};
-  toast(`Pasted to ${next.name}`, 'ok');
-  renderSchedule();
+  if(!clip){ toast('Copy something first','err'); return; }
+  const r=rectOf(clip.range.a,clip.range.b); if(!r){ toast('Copied cells are not visible','err'); return; }
+  const below=r.r1+1;
+  if(below>=r.rows.length){ toast('No row below','err'); return; }
+  selAnchor=lastFocusedCell={sid:r.rows[below],day:r.cols[r.c0]};
+  await pasteBlock(clip.block,true);
+  const h=r.r1-r.r0+1;
+  clip.range={a:{sid:r.rows[below],day:r.cols[r.c0]},b:{sid:r.rows[Math.min(r.rows.length-1,below+h-1)],day:r.cols[r.c1]}};
+  paintSelection();
 }
 
 function clearCopyMode(){
+  clip=null;
   copySource=null;
-  lastFocusedCell=null;
-  selectedCells=[];
   const ct=document.getElementById('copyToolbar');
   if(ct) ct.style.display='none';
   updateSidebarActionPanel();
-  renderSchedule();
+  paintSelection();
 }
 
 // ── ROW DRAG REORDER ──
@@ -4070,7 +4421,7 @@ function rowDrop(e, targetSid, targetRole){
   staffOrder.splice(fromIdx,1);
   staffOrder.splice(toIdx,0,dragSid);
   dragSid=null;
-  saveSettings();
+  saveSettings().catch(e=>toast("Save failed: "+e.message,"err"));
   renderSchedule();
 }
 
@@ -4097,7 +4448,7 @@ function sectionDrop(e, targetRole){
   sectionOrder.splice(from,1);
   sectionOrder.splice(to,0,dragSection);
   dragSection=null;
-  saveSettings();
+  saveSettings().catch(e=>toast("Save failed: "+e.message,"err"));
   renderSchedule();
 }
 
@@ -4832,7 +5183,7 @@ async function rejectRequest(rid){
 // Shift time ranges — maps shift code to working hours
 const SHIFT_HOURS={
   'M' :[8,17],   // Morning    8AM–5PM
-  'E' :[13,22],  // Evening    1PM–10PM
+  'E' :[11,20],  // Evening   11AM–8PM
   'MD':[10,19],  // Middle    10AM–7PM
   'A' :[11,20],  // Afternoon 11AM–8PM
   'C' :[8,20],   // Split      8AM–8PM
@@ -4841,6 +5192,14 @@ const SHIFT_HOURS={
 };
 // Timeoff and Off = not available
 const ABSENT_CODES=new Set(['AL','RL','MC','EL','PH','O']);
+
+// Livechat shifts (LCM/LCMD/LCE…) — staff are on chat, not on calls
+function isLCShift(code){
+  if(!code) return false;
+  const base=String(code).replace(/-H[12]AL$/,'');
+  const st=shiftTypes.find(s=>s.code===base);
+  return (st&&st.queue==='Livechat')||/^LC/.test(base);
+}
 
 function isWorkingDuringHour(shiftCode, hour, otObj){
   // Check if covered by OT
@@ -4864,7 +5223,7 @@ function isWorkingDuringHour(shiftCode, hour, otObj){
     // Per-shift half-day working hours (may have gap for lunch between halves)
     const HALF_HOURS={
       'M': {h2:[8,12],  h1:[13,17]}, // H2AL: 8AM-12PM, H1AL: 1PM-5PM
-      'E': {h2:[13,17], h1:[18,22]}, // H2AL: 1PM-5PM,  H1AL: 6PM-10PM
+      'E': {h2:[11,15], h1:[16,20]}, // H2AL: 11AM-3PM, H1AL: 4PM-8PM
       'MD':{h2:[10,14], h1:[15,19]}, // H2AL: 10AM-2PM, H1AL: 3PM-7PM
       'A': {h2:[11,15], h1:[16,20]}, // H2AL: 11AM-3PM, H1AL: 4PM-8PM
     };
@@ -4878,7 +5237,10 @@ function isWorkingDuringHour(shiftCode, hour, otObj){
   if(shiftCode==='H1AL'||shiftCode==='H2AL') return false;
 
   if(ABSENT_CODES.has(shiftCode)) return false;
-  const range=SHIFT_HOURS[shiftCode];
+  const stDef=shiftTypes.find(s=>s.code===shiftCode);
+  const range=(stDef&&stDef.start&&stDef.end)
+    ?[getShiftStart(shiftCode)/60,getShiftEnd(shiftCode)/60]
+    :SHIFT_HOURS[shiftCode];
   if(!range) return false;
   return hour>=range[0] && hour<range[1];
 }
@@ -4890,15 +5252,32 @@ function renderCoverage(){
 
   const posFil=document.getElementById('covPosFil')?.value||'';
   const viewDays=getViewDays();
-  const hours=Array.from({length:14},(_,i)=>i+8); // 8AM to 10PM
+  // Hour range = earliest shift start → latest shift end (from Settings), widened for any OT/support in view
+  let hFrom=24, hTo=0;
+  const usedCodes=new Set();
+  staffList.forEach(s=>viewDays.forEach(vd=>{ const sh=getS(s.id,vd.day,vd.month,vd.year); if(sh) usedCodes.add(String(sh).replace(/-H[12]AL$/,'')); }));
+  const rangeShifts=shiftTypes.filter(st=>usedCodes.has(st.code));
+  (rangeShifts.length?rangeShifts:shiftTypes).forEach(st=>{ if(!st.start||!st.end) return;
+    hFrom=Math.min(hFrom,Math.floor(getShiftStart(st.code)/60)); hTo=Math.max(hTo,Math.ceil(getShiftEnd(st.code)/60)); });
+  staffList.forEach(s=>viewDays.forEach(vd=>{
+    const o=getOT(s.id,vd.day);
+    if(o&&o.start&&o.end){ const a=parseInt(o.start), b=Math.ceil(toMin(o.end)/60); if(b>a){ hFrom=Math.min(hFrom,a); hTo=Math.max(hTo,b); } }
+    supportTasks(s.id,vd.year,vd.month,vd.day).forEach(t=>{ hFrom=Math.min(hFrom,Math.floor(toMin(t.start_time)/60)); hTo=Math.max(hTo,Math.ceil((toMin(t.start_time)+t.duration_mins)/60)); });
+  }));
+  if(hFrom>=hTo){ hFrom=8; hTo=22; }
+  const hours=Array.from({length:hTo-hFrom},(_,i)=>i+hFrom);
+  const fmtH=h=>h===0||h===24?'12AM':h===12?'12PM':h<12?h+'AM':(h-12)+'PM';
+  const sub=document.getElementById('covSubtitle');
+  if(sub) sub.textContent=`Staff headcount per hour slot — ${fmtH(hFrom)} to ${fmtH(hTo)}`;
 
   // Populate position filter — only the 4 coverage positions
   const covPos=document.getElementById('covPosFil');
   if(covPos){
     const current=covPos.value;
     covPos.innerHTML='<option value="">All positions</option>';
-    ['Inbound Agent','Outbound Agent','Quality Assurance','Team Leader'].forEach(p=>{
-      if(staffList.some(s=>s.staff_role===p)){
+    const anyLC=staffList.some(s=>viewDays.some(vd=>isLCShift(getS(s.id,vd.day,vd.month,vd.year))));
+    ['Inbound Agent','Livechat','Outbound Agent','Quality Assurance','Team Leader'].forEach(p=>{
+      if(p==='Livechat'?anyLC:staffList.some(s=>s.staff_role===p)){
         const o=document.createElement('option');
         o.value=p; o.textContent=p;
         if(p===current) o.selected=true;
@@ -4909,9 +5288,11 @@ function renderCoverage(){
 
   // Only show these positions in coverage
   const COVERAGE_POSITIONS=['Inbound Agent','Outbound Agent','Quality Assurance','Team Leader'];
+  const lcStaff=staffList.filter(s=>viewDays.some(vd=>isLCShift(getS(s.id,vd.day,vd.month,vd.year))));
   const positions=posFil
     ?[posFil]
     :COVERAGE_POSITIONS.filter(p=>staffList.some(s=>s.staff_role===p));
+  if(!posFil&&lcStaff.length) positions.splice(1,0,'Livechat'); // right after Inbound
 
   // Build table
   let html=`<table class="cov-table"><thead><tr>
@@ -4927,7 +5308,8 @@ function renderCoverage(){
   </tr></thead><tbody>`;
 
   positions.forEach(pos=>{
-    const posStaff=staffList.filter(s=>s.staff_role===pos);
+    const isLCrow=pos==='Livechat';
+    const posStaff=isLCrow?lcStaff:staffList.filter(s=>s.staff_role===pos);
     if(!posStaff.length) return;
 
     // Position header row
@@ -4942,13 +5324,27 @@ function renderCoverage(){
         // Count staff working during this hour and collect their names
         let count=0;
         const working=[];
+        const lent=[];   // own staff moved to another queue this hour
+        const uname=s=>appUsersList.find(u=>u.staff_id===s.id)?.username||s.name;
         posStaff.forEach(s=>{
           const sh=getS(s.id,vd.day,vd.month,vd.year);
           const otObj=getOT(s.id,vd.day);
+          const lc=isLCShift(sh);
+          if(isLCrow){ if(lc&&isWorkingDuringHour(sh,hour,otObj)){ count++; working.push(uname(s)+' 💬'); } return; }
+          if(lc){ if(isWorkingDuringHour(sh,hour,otObj)) lent.push(uname(s)+' → Livechat'); return; }
+          const cover=coverRoleAt(s.id,vd.year,vd.month,vd.day,hour);
+          if(cover&&cover!==pos){ lent.push(uname(s)+' → '+cover); return; }
           if(isWorkingDuringHour(sh,hour,otObj)){
             count++;
-            const userAcct=appUsersList.find(u=>u.staff_id===s.id);
-            working.push(userAcct?.username||s.name);
+            working.push(uname(s));
+          }
+        });
+        // Staff from other positions supporting this queue
+        if(!isLCrow) staffList.forEach(s=>{
+          if(s.staff_role===pos) return;
+          if(coverRoleAt(s.id,vd.year,vd.month,vd.day,hour)===pos){
+            count++;
+            working.push(uname(s)+' 🎧 ('+(s.staff_role||'support')+')');
           }
         });
         const total=posStaff.length;
@@ -4962,7 +5358,9 @@ function renderCoverage(){
           :`<div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">${timeLabel}</div>`+
            `<div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:6px">${count} of ${total} working</div>`+
            working.map(n=>`<div style="font-size:11px;color:var(--text2);padding:2px 0;white-space:nowrap">· ${n}</div>`).join('');
-        html+=`<td class="${cls} cov-hover-cell" data-popup="${encodeURIComponent(popupHtml)}" style="cursor:default">${count||'—'}</td>`;
+        const lentHtml=lent.length?`<div style="font-size:10px;color:var(--text3);margin-top:6px;border-top:1px solid var(--border);padding-top:5px">Not counted here:</div>`+lent.map(n=>`<div style="font-size:11px;color:var(--text3);padding:1px 0;white-space:nowrap">· ${n}</div>`).join(''):'';
+        const helped=working.filter(n=>n.includes('🎧')).length;
+        html+=`<td class="${cls} cov-hover-cell" data-popup="${encodeURIComponent(popupHtml+lentHtml)}" style="cursor:default">${count||'—'}${helped?`<sup style="font-size:8px;margin-left:1px" title="${helped} supporting">🎧</sup>`:''}</td>`;
       });
       html+='</tr>';
     });
@@ -5428,8 +5826,8 @@ document.addEventListener('click',e=>{
 
 // ── BREAK RULES ──
 // SHIFT_STARTS and SHIFT_END are now derived dynamically from shiftTypes
-const SHIFT_STARTS={M:8*60, E:13*60, MD:10*60, A:11*60, H1:8*60, H2:12*60};
-const SHIFT_END_MAP={M:17*60, E:22*60, MD:19*60, A:20*60, H1:12*60, H2:17*60};
+const SHIFT_STARTS={M:8*60, E:11*60, MD:10*60, A:11*60, H1:8*60, H2:12*60};
+const SHIFT_END_MAP={M:17*60, E:20*60, MD:19*60, A:20*60, H1:12*60, H2:17*60};
 function getShiftStart(code){
   const st=shiftTypes.find(s=>s.code===code);
   if(st&&st.start){const[h,m]=st.start.split(':').map(Number);return h*60+m;}
@@ -5442,7 +5840,7 @@ function getShiftEnd(code){
 }
 
 function getBreakTime(rule, shiftCode){
-  const start=SHIFT_STARTS[shiftCode]||8*60;
+  const start=getShiftStart(shiftCode);
   const offset=rule.shiftOffsets[shiftCode]??rule.shiftOffsets['M']??180;
   const breakStart=start+offset;
   const breakEnd=breakStart+rule.duration;
@@ -5508,7 +5906,7 @@ function renderBreakRulesList(){
               <input type="number" value="${r.shiftOffsets[sh]??180}" min="0" max="540" step="15"
                 onchange="breakRules[${i}].shiftOffsets['${sh}']=parseInt(this.value)"
                 style="width:55px;font-size:11px;border:0.5px solid var(--border2);border-radius:4px;padding:2px 5px;background:var(--surface);color:var(--text)">
-              <span style="font-size:10px;color:var(--text3)">min → ${minsToTime((SHIFT_STARTS[sh]||480)+(r.shiftOffsets[sh]??180))}</span>
+              <span style="font-size:10px;color:var(--text3)">min → ${minsToTime(getShiftStart(sh)+(r.shiftOffsets[sh]??r.shiftOffsets['M']??180))}</span>
             </div>
           </div>`).join('')}
       </div>
@@ -5644,7 +6042,7 @@ function openBreakOverride(staffId, day, name){
   box.innerHTML=`<h3>✏️ Assign breaks</h3>
   <div class="msub">${name} · ${day} ${MONTHS[cm]} ${cy} · 
     <span style="padding:2px 8px;border-radius:20px;background:${shiftDef?.color||'#888'}20;color:${shiftDef?.color||'#888'};font-weight:500">${sh}</span>
-    shift ${SHIFT_STARTS[sh]?'('+minsToTime(SHIFT_STARTS[sh])+'–'+minsToTime((SHIFT_STARTS[sh]||480)+540)+')':''}
+    shift ${shiftTypes.some(x=>x.code===sh)||SHIFT_STARTS[sh]?'('+minsToTime(getShiftStart(sh))+'–'+minsToTime(getShiftEnd(sh))+')':''}
   </div>
   <div style="margin:12px 0;display:flex;flex-direction:column;gap:8px">
     ${breaks.map((br,i)=>`
@@ -6453,7 +6851,7 @@ async function renderProfileCard(forceSid){
               ['🪪 Employee ID',   isAdminView ? inp('employee_id',s.employee_id) : txt(s.employee_id)],
               ['📞 3CX Ext',       isAdminView ? inp('cx',s.cx) : txt(s.cx)],
               ['👥 Team',          isAdminView ? sel('team',s.team,[...new Set(staffList.map(x=>x.team).filter(Boolean))]) : txt(s.team)],
-              ['💼 Position',      isAdminView ? sel('staff_role',s.staff_role,[...new Set(staffList.map(x=>x.staff_role).filter(Boolean))]) : txt(s.staff_role)],
+              ['💼 Position',      isAdminView ? `<select id="pf_staff_role_${s.id}" onchange="roleSelectChanged(this)" style="font-size:12px;font-weight:500;text-align:right;border:none;background:transparent;color:var(--text);outline:none;cursor:pointer;border-bottom:1px dashed var(--border2)">${roleOptionsHtml(s.staff_role)}</select>` : txt(s.staff_role)],
               ['📋 Status',        isAdminView ? sel('position_status',s.position_status,['Permanent','Contract','Probation']) : txt(s.position_status)],
               ['🖥️ Work mode',     isAdminView ? sel('work_mode',s.work_mode,['Work from office','WFH','Hybrid']) : txt(s.work_mode)],
               ['🎂 Birth date',    isAdminView ? inp('birth_date',dateVal(s.birth_date),'date') : txt(dateFmt(s.birth_date))],
@@ -6702,7 +7100,7 @@ async function submitOTOffer(){
 
   if(collShift&&!['AL','RL','MC','EL','PH'].includes(collShift)){
     // Check shift overlap
-    const shStart=SHIFT_STARTS[collShift]||8*60;
+    const shStart=getShiftStart(collShift);
     const shEnd=getShiftEnd(collShift);
     const otOverlapsShift=(otStartMins<shEnd&&otEndMins>shStart);
     if(otOverlapsShift){
@@ -6782,7 +7180,7 @@ async function submitOTSwap(){
     // Check against MY shift on THEIR day (after swap I'd be working their day)
     const myShiftOnTheirDay=getS(myId,theirDay,cm,cy);
     if(myShiftOnTheirDay&&!['AL','RL','MC','EL','PH'].includes(myShiftOnTheirDay)){
-      const shS=SHIFT_STARTS[myShiftOnTheirDay]||8*60;
+      const shS=getShiftStart(myShiftOnTheirDay);
       const shE=getShiftEnd(myShiftOnTheirDay);
       if(overlaps(otS,otE,shS,shE)){
         conflicts.push(`Your OT (${myOT.start}–${myOT.end}) conflicts with your own ${myShiftOnTheirDay} shift on day ${theirDay} (${minsToTime(shS)}–${minsToTime(shE)})`);
@@ -6803,7 +7201,7 @@ async function submitOTSwap(){
     const otS=toMins(theirOT.start), otE=toMins(theirOT.end);
     const myShiftOnMyDay=getS(myId,myDay,cm,cy);
     if(myShiftOnMyDay&&!['AL','RL','MC','EL','PH'].includes(myShiftOnMyDay)){
-      const shS=SHIFT_STARTS[myShiftOnMyDay]||8*60;
+      const shS=getShiftStart(myShiftOnMyDay);
       const shE=(SHIFT_END&&SHIFT_END[myShiftOnMyDay])||(shS+9*60);
       if(overlaps(otS,otE,shS,shE)){
         conflicts.push(`${collName}'s OT (${theirOT.start}–${theirOT.end}) conflicts with your ${myShiftOnMyDay} shift on day ${myDay} (${minsToTime(shS)}–${minsToTime(shE)})`);
@@ -6823,7 +7221,7 @@ async function submitOTSwap(){
     const otS=toMins(myOT.start), otE=toMins(myOT.end);
     const collShiftOnMyDay=getS(colleague,myDay,cm,cy);
     if(collShiftOnMyDay&&!['AL','RL','MC','EL','PH'].includes(collShiftOnMyDay)){
-      const shS=SHIFT_STARTS[collShiftOnMyDay]||8*60;
+      const shS=getShiftStart(collShiftOnMyDay);
       const shE=(SHIFT_END&&SHIFT_END[collShiftOnMyDay])||(shS+9*60);
       if(overlaps(otS,otE,shS,shE)){
         conflicts.push(`Your OT (${myOT.start}–${myOT.end}) conflicts with ${collName}'s ${collShiftOnMyDay} shift on day ${myDay} (${minsToTime(shS)}–${minsToTime(shE)})`);
@@ -8012,6 +8410,7 @@ async function renderAvailability(){
 
 // ── TASKS ──
 const TASK_TYPES=[
+  {code:'Support Inbound', color:'#0891b2', icon:'🎧', covers:'Inbound Agent'}, // counts toward Inbound coverage
   {code:'Quiz',    color:'#8b5cf6', icon:'📝'},
   {code:'Meeting', color:'#2563eb', icon:'🤝'},
   {code:'Huddle',  color:'#f59e0b', icon:'💬'},
@@ -8145,6 +8544,7 @@ async function doAssignTask(dateStr){
   if(error){errEl.textContent=error.message;return;}
   closeModal();
   toast(`${type} assigned to ${selected.length} staff ✓`,'ok');
+  await loadViewTasks();
   renderTasksTab();
 }
 
@@ -8153,6 +8553,7 @@ async function deleteTask(id){
   const {error}=await sb.from('tasks').delete().eq('id',id);
   if(error){toast(error.message,'err');return;}
   toast('Task removed','ok');
+  await loadViewTasks();
   renderTasksTab();
 }
 
