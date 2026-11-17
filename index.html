@@ -118,6 +118,27 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);fon
 .sidebar-logo span{color:var(--blue)}
 .sidebar-badge{font-size:9px;padding:2px 6px;border-radius:20px;background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-bd);font-weight:600}
 .sidebar-user{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.sidebar-avatar.has-photo{background-size:cover!important;background-position:center!important;color:transparent!important}
+.pf-photo{position:relative;width:72px;height:72px;border-radius:50%;background:rgba(255,255,255,.2) center/cover no-repeat;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:600;margin:0 auto 10px;border:2px solid rgba(255,255,255,.35)}
+.pf-photo.can-edit{cursor:pointer}
+.pf-photo .pf-cam{position:absolute;right:-2px;bottom:-2px;width:24px;height:24px;border-radius:50%;background:#fff;color:#1e3a5f;font-size:12px;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,.3)}
+.pf-photo.can-edit:hover::after{content:'Change';position:absolute;inset:0;border-radius:50%;background:rgba(0,0,0,.45);font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:center}
+.tsk-pick{border:1px solid var(--border2);border-radius:var(--r);overflow:hidden;margin-bottom:12px}
+.tsk-tools{display:flex;gap:6px;align-items:center;flex-wrap:wrap;padding:6px;background:var(--surface2);border-bottom:1px solid var(--border)}
+.tsk-tools input[type=text]{flex:1 1 140px;margin:0!important;font-size:12px!important;padding:6px 8px!important}
+.tsk-tools button,.tsk-grp-h button{font-size:11px;border:none;background:none;color:var(--blue);cursor:pointer;font-family:'DM Sans',sans-serif;padding:2px 4px}
+.tsk-only{display:flex!important;align-items:center;gap:4px;font-size:11px!important;color:var(--text2)!important;margin:0!important;text-transform:none!important;letter-spacing:0!important;font-weight:500!important;white-space:nowrap}
+.tsk-only input{width:auto!important;margin:0!important}
+.tsk-list{max-height:min(320px,40dvh);overflow-y:auto}
+.tsk-grp-h{position:sticky;top:0;z-index:1;display:flex;justify-content:space-between;align-items:center;padding:5px 10px;background:var(--surface);border-bottom:1px solid var(--border);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text3)}
+.tsk-row{display:flex!important;align-items:center;gap:10px;padding:6px 10px!important;min-height:34px;line-height:1.2;margin:0!important;cursor:pointer;border-bottom:1px solid var(--border);font-size:13px!important;color:var(--text)!important;text-transform:none!important;letter-spacing:0!important;font-weight:400!important}
+.tsk-row:hover{background:var(--surface2)}
+.tsk-row.on{background:var(--blue-bg)}
+.tsk-row input{width:16px!important;height:16px;margin:0!important;flex-shrink:0;accent-color:var(--blue)}
+.tsk-nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tsk-sh{font-size:10px;font-family:'DM Mono',monospace;padding:2px 6px;border-radius:4px;background:var(--surface2);color:var(--text2);flex-shrink:0}
+.tsk-row.away .tsk-nm{color:var(--text3)}
+.tsk-row.away .tsk-sh{background:#fef2f2;color:#b91c1c}
 .sidebar-avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--blue),#818cf8);color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .sidebar-user-info{min-width:0}
 .sidebar-user-name{font-size:12px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -221,6 +242,14 @@ td.wk-cell{border-left:2px solid var(--border2) !important}
 .ot-cell.editable-ot:hover{opacity:.75}
 .ot-cell.editable-empty{height:8px;background:var(--surface2)}
 /* OT day: the whole cell takes the OT colour */
+.cell.mc-rej{background-image:repeating-linear-gradient(135deg,rgba(255,255,255,.16) 0 3px,transparent 3px 7px)!important;font-size:8.5px!important;letter-spacing:-.02em;box-shadow:inset 0 0 0 1.5px #fecaca}
+.cell.hd-split{flex-direction:column;align-items:stretch;justify-content:stretch;padding:0;overflow:hidden;box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.9)}
+.cell.hd-split .hd-al,.cell.hd-split .hd-sh{flex:1;display:flex;align-items:center;justify-content:center;line-height:1;color:#fff;font-weight:800}
+.cell.hd-split .hd-al{font-size:8px;letter-spacing:.04em;background-image:repeating-linear-gradient(135deg,rgba(255,255,255,.18) 0 3px,transparent 3px 6px)}
+.cell.hd-split .hd-sh{font-size:9px}
+.cell.hd-split .hd-t{display:none}
+.week-view .cell.hd-split .hd-t{display:inline;font-size:8px;font-weight:600;margin-left:3px;opacity:.9}
+.week-view .cell.hd-split .hd-al{font-size:10px}
 .cell.ot-split{flex-direction:column;align-items:stretch;justify-content:stretch;position:relative;overflow:hidden}
 .cell.ot-split .ot-split-top{flex:1;display:flex;align-items:center;justify-content:center;font-size:9px;line-height:1}
 .cell.ot-split .ot-split-bot{flex:1;display:flex;align-items:center;justify-content:center;font-size:7px;font-weight:700;color:#fff;line-height:1;letter-spacing:-.02em;white-space:nowrap}
@@ -277,7 +306,9 @@ td.wk-cell{border-left:2px solid var(--border2) !important}
 /* ── MODAL ── */
 .overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.38);z-index:200;align-items:center;justify-content:center}
 .overlay.open{display:flex}
-.modal{background:var(--surface);border-radius:var(--rl);border:1px solid var(--border2);padding:22px;width:340px;max-width:95vw}
+.modal{background:var(--surface);border-radius:var(--rl);border:1px solid var(--border2);padding:22px;width:340px;max-width:95vw;
+  max-height:calc(100vh - 32px);max-height:calc(100dvh - 32px);overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+.overlay{padding:16px 0}
 .modal h3{font-size:15px;font-weight:600;margin-bottom:3px}
 .modal .msub{font-size:12px;color:var(--text2);margin-bottom:16px}
 .mf label{font-size:11px;font-weight:500;color:var(--text2);display:block;margin:10px 0 3px}
@@ -359,6 +390,16 @@ td.wk-cell{border-left:2px solid var(--border2) !important}
 .dv-name-header{min-width:150px;max-width:150px;padding:4px 8px;font-size:10px;font-weight:500;color:var(--text2);border-right:0.5px solid var(--border)}
 /* ── COVERAGE TABLE ── */
 .cov-table{border-collapse:collapse;font-size:11px;min-width:100%}
+#coverageGrid{cursor:grab;scrollbar-width:auto;scrollbar-color:var(--border2) transparent}
+#coverageGrid.dragging{cursor:grabbing;user-select:none}
+#coverageGrid::-webkit-scrollbar{height:12px;width:10px}
+#coverageGrid::-webkit-scrollbar-thumb{background:var(--border2);border-radius:6px;border:2px solid var(--surface)}
+#coverageGrid::-webkit-scrollbar-track{background:var(--surface2)}
+.cov-nav button{font-family:'DM Sans',sans-serif;font-size:12px;height:30px;padding:0 10px;border:1px solid var(--border2);background:var(--surface);color:var(--text2);cursor:pointer}
+.cov-nav button:first-child{border-radius:var(--r) 0 0 var(--r)}
+.cov-nav button:last-child{border-radius:0 var(--r) var(--r) 0}
+.cov-nav button+button{border-left:none}
+.cov-nav button:hover{background:var(--surface2);color:var(--text)}
 .cov-table thead{position:sticky;top:0;z-index:5}
 .cov-table th{padding:5px 8px;background:var(--surface2);border:1px solid var(--border);font-size:10px;font-weight:500;color:var(--text2);white-space:nowrap;text-align:center;position:sticky;top:0;z-index:4}
 .cov-table th.cov-slot{text-align:left;width:120px;position:sticky;left:0;top:0;background:var(--surface2);z-index:6}
@@ -387,6 +428,11 @@ body:not(.dark) .cov-cell-high{background:#bbf7d0;color:#14532d}
   overflow-y:auto;
   min-width:260px;
 }
+#covPopup.pinned{pointer-events:auto;max-height:min(60vh,460px);overscroll-behavior:contain}
+#covPopup .cov-pop-close{position:sticky;top:0;float:right;margin:-4px -6px 0 8px;width:22px;height:22px;border:none;border-radius:50%;background:var(--surface2);color:var(--text2);cursor:pointer;font-size:13px;line-height:22px;padding:0}
+#covPopup .cov-pop-close:hover{background:var(--border);color:var(--text)}
+.cov-hover-cell{cursor:pointer!important}
+.cov-table td.cov-cell-active{outline:2px solid var(--blue);outline-offset:-2px}
 .cov-pos-header{background:var(--surface2);font-weight:600;font-size:11px;color:var(--text);padding:6px 10px;border-top:2px solid var(--border2)}
 
 /* ── DRAG REORDER ── */
@@ -738,6 +784,15 @@ tr.section-drag-over td{border-top:3px solid var(--blue) !important}
         <div id="covSubtitle" style="font-size:12px;color:var(--text2);margin-top:2px">Staff headcount per hour slot</div>
       </div>
       <div style="display:flex;gap:8px;align-items:center">
+        <div class="cov-nav" role="group" aria-label="Scroll days" style="display:inline-flex">
+          <button onclick="covScroll(-1)" title="Earlier days">◀</button>
+          <button onclick="covScroll(0)" title="Jump to today">Today</button>
+          <button onclick="covScroll(1)" title="Later days">▶</button>
+        </div>
+        <div class="cov-mode" role="group" aria-label="Coverage mode" style="display:inline-flex;border:1px solid var(--border2);border-radius:var(--r);overflow:hidden;height:30px">
+          <button id="covModeBefore" onclick="setCovMode(false)" style="font-family:'DM Sans',sans-serif;font-size:12px;padding:0 12px;border:none;cursor:pointer">Before breaks</button>
+          <button id="covModeAfter" onclick="setCovMode(true)" style="font-family:'DM Sans',sans-serif;font-size:12px;padding:0 12px;border:none;border-left:1px solid var(--border2);cursor:pointer">After breaks</button>
+        </div>
         <select id="covPosFil" onchange="renderCoverage()" style="font-family:'DM Sans',sans-serif;font-size:12px;height:30px;padding:0 10px;border:1px solid var(--border2);border-radius:var(--r);background:var(--surface);color:var(--text)">
           <option value="">All positions</option>
         </select>
@@ -802,6 +857,7 @@ tr.section-drag-over td{border-top:3px solid var(--blue) !important}
           ⇄ Swap my break
         </button>
         <!-- Auto-assign button — admin/TL/manager only -->
+        <button id="autoAssignMonthBtn" class="btn autoAssignExtra" style="display:none;font-weight:500" onclick="if(confirm('Plan breaks for every inbound agent on every day of this month? Existing break times for those agents will be replaced.'))autoAssignBreaks('month')" title="Plan all days this month">⚡ Whole month</button>
         <button id="autoAssignBtn" class="btn" style="display:none;background:var(--amber-bg);color:var(--amber);border-color:var(--amber-bd);font-weight:500" onclick="autoAssignBreaks()">
           ⚡ Auto-assign all
         </button>
@@ -983,6 +1039,21 @@ tr.section-drag-over td{border-top:3px solid var(--blue) !important}
         </div>
       </div>
 
+      <!-- Task Types -->
+      <div class="settings-card" style="grid-column:1/-1">
+        <h4>🗂️ Task types</h4>
+        <div class="desc">Tasks you can assign in the shift window (e.g. QA supporting inbound) and in the Tasks tab. <b>Counts as</b>: pick a queue only if the person is answering that queue during the task (e.g. Support Inbound). Choose <b>🚫 Off calls</b> for Quiz, Training, Meeting, Coaching — the person is removed from Coverage for that time.</div>
+        <div style="display:grid;grid-template-columns:44px minmax(140px,1.4fr) 54px minmax(130px,1fr) 118px 118px 28px;gap:6px;font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;padding:0 8px 4px">
+          <span>Icon</span><span>Name</span><span>Colour</span><span>Counts as</span><span>Default start</span><span>Default end</span><span></span>
+        </div>
+        <div id="taskTypeList" style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px"></div>
+        <button class="btn btn-blue" onclick="addTaskType()" style="margin-bottom:10px">+ Add task type</button>
+        <div style="display:flex;justify-content:flex-end;gap:8px;border-top:1px solid var(--border);padding-top:10px">
+          <span id="taskTypeSaveStatus" style="font-size:11px;color:var(--text3);align-self:center"></span>
+          <button class="btn btn-blue" onclick="saveSettingsManual('tasks')">💾 Save task types</button>
+        </div>
+      </div>
+
       <!-- Time-off Types -->
       <div class="settings-card">
         <h4>📅 Time-off types</h4>
@@ -1092,6 +1163,29 @@ const SHIFTS=[{v:'M',bg:'#3b82f6',fg:'#fff'},{v:'E',bg:'#f97316',fg:'#fff'},{v:'
 const TOFFS=[{v:'AL',bg:'#22c55e',fg:'#fff'},{v:'MC',bg:'#eab308',fg:'#111'},{v:'OFF',bg:'#e5e7eb',fg:'#555'}];
 
 const _today=new Date();let cy=_today.getFullYear(),cm=_today.getMonth(),currentUser=null,currentProfile=null,staffList=[],schedData={},otData={};
+// allStaff = every staff record; staffList = only those still employed in the month being viewed
+let allStaff=[], lwdMap={};
+function refreshActiveStaff(){
+  if(!allStaff.length&&staffList.length) allStaff=staffList.slice();
+  const vds=getViewDays(); const f=vds[0]||{year:cy,month:cm,day:1};
+  const firstDay=`${f.year}-${String(f.month+1).padStart(2,'0')}-${String(f.day).padStart(2,'0')}`;
+  lwdMap={};
+  allStaff.forEach(x=>{ if(x.last_working_date&&(x.employment_status||'Resigned')==='Resigned') lwdMap[x.id]=String(x.last_working_date).slice(0,10); });
+  staffList=allStaff.filter(x=>!lwdMap[x.id]||lwdMap[x.id]>=firstDay);
+}
+// Resigned needs a last working date; Active clears it
+function checkEmployment(u){
+  if(!('employment_status' in u)) return null;
+  if(!u.employment_status) u.employment_status='Active';
+  if(u.employment_status==='Resigned'&&!u.last_working_date) return 'Set the last working date for a resigned staff member';
+  if(u.employment_status==='Active') u.last_working_date=null;
+  return null;
+}
+// true if this date is after the person's last working day
+function afterLastDay(sid,y,m0,d){
+  const l=lwdMap[sid]; if(!l) return false;
+  return `${y}-${String(m0+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`>l;
+}
 let viewMode='month'; // 'month', 'week', or 'day'
 let currentWeekStart=null; // Date object, Sunday of current week
 let currentDayView=null; // day number for day view
@@ -1370,6 +1464,7 @@ function updateUserUI(){
   // Sidebar user info
   document.getElementById('userLabel').textContent=name;
   document.getElementById('userAvatar').textContent=name[0].toUpperCase();
+  refreshMyAvatar();
   const roleLabel=document.getElementById('userRoleLabel');
   if(roleLabel) roleLabel.textContent=role+(currentProfile.team?' · '+currentProfile.team:'');
 
@@ -1409,7 +1504,7 @@ function updateUserUI(){
 
   // Request button for staff
   const reqWrap=document.getElementById('reqBtnWrap');
-  if(reqWrap) reqWrap.style.display=(!isAdmin&&!isApprover)?'':'none';
+  if(reqWrap) reqWrap.style.display=currentProfile&&currentProfile.staff_id?'':'none';
 
   // Add staff / import buttons — admin/managers only
   const addBtn=document.getElementById('addStaffBtn');
@@ -1458,13 +1553,16 @@ async function loadStaff(){
     console.log('loadStaff: loaded',data.length,'staff');
     staffList=data;
   }
+  allStaff=staffList.slice();
+  refreshActiveStaff();
+  refreshMyAvatar();
 
   // Load all app_users for cross-referencing
   const {data:usersData}=await sb.from('app_users').select('*').range(0,999);
   if(usersData) appUsersList=usersData;
 
-  // Sync team/role from app_users → staff (app_users is source of truth)
-  await syncStaffFromUsers();
+  // staff ↔ app_users are kept in step by database triggers (name / team / position),
+  // so we no longer copy login values over staff records here — that used to undo Profile edits.
   // Settings loaded separately in login flow — don't call here
 }
 
@@ -1484,13 +1582,14 @@ async function syncStaffFromUsers(){
 }
 
 async function loadSchedule(){
+  refreshActiveStaff();
   schedData={}; otData={};
   // Collect all month_keys needed (weekly view may span 2 months)
   const viewDays=getViewDays();
   const monthKeys=[...new Set(viewDays.map(d=>d.year+'-'+(d.month+1)))];
   if(viewMode==='month') monthKeys.splice(0,monthKeys.length,cy+'-'+(cm+1));
   for(const mk of monthKeys){
-    const {data,error}=await sb.from('schedule').select('*').eq('month_key',mk).range(0,9999);
+    const {data,error}=await fetchScheduleMonth(mk);
     if(!error&&data) data.forEach(r=>{
       const key=r.staff_id+'_'+r.day+'_'+r.month_key;
       const simpleKey=r.staff_id+'_'+r.day;
@@ -1511,6 +1610,17 @@ async function loadSchedule(){
 }
 
 // ── TASKS ON THE GRID (e.g. QA supporting inbound) ──
+// Supabase returns at most 1000 rows per request — page through so big months load completely
+async function fetchScheduleMonth(mk,cols='*'){
+  const PAGE=1000; let all=[];
+  for(let from=0;;from+=PAGE){
+    const {data,error}=await sb.from('schedule').select(cols).eq('month_key',mk).order('id').range(from,from+PAGE-1);
+    if(error) return {data:all.length?all:null,error};
+    all=all.concat(data||[]);
+    if(!data||data.length<PAGE) break;
+  }
+  return {data:all,error:null};
+}
 let tasksMap={}; // staffId_YYYY-MM-DD -> [task]
 const ymdStr=(y,m0,d)=>`${y}-${String(m0+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
 async function loadViewTasks(){
@@ -1526,8 +1636,19 @@ const toMin=t=>{ const [h,m]=String(t||'0:0').split(':').map(Number); return h*6
 function supportTasks(sid,y,m0,d){
   return (tasksMap[sid+'_'+ymdStr(y,m0,d)]||[]).filter(t=>TASK_TYPES.find(x=>x.code===t.task_type)?.covers);
 }
+// Tasks that take the person OFF calls (Quiz, Training, Coaching… — any type without "covers")
+function fmtHM(m){return String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0');}
+function offCallTasks(sid,y,m0,d){
+  return (tasksMap[sid+'_'+ymdStr(y,m0,d)]||[]).filter(t=>!TASK_TYPES.find(x=>x.code===t.task_type)?.covers);
+}
+function offCallInHour(sid,y,m0,d,hour){
+  return offCallTasks(sid,y,m0,d).map(t=>{const a=toMin(t.start_time),b=a+(t.duration_mins||0);
+    return {t,a,b,ov:Math.max(0,Math.min(b,(hour+1)*60)-Math.max(a,hour*60))};}).filter(x=>x.ov>0);
+}
 // Which position a staff member is covering in this hour slot (null = their own). Needs ≥30 min of the hour.
 function coverRoleAt(sid,y,m0,d,hour){
+  const sh=getS(sid,d,m0,y);
+  if(!sh||LEAVE_NO_OT.has(sh)||['OD','RD','O'].includes(sh)) return null;
   for(const t of supportTasks(sid,y,m0,d)){
     const a=toMin(t.start_time), b=a+(t.duration_mins||0);
     const ov=Math.min(b,(hour+1)*60)-Math.max(a,hour*60);
@@ -1776,8 +1897,8 @@ async function saveShift(staffId,day,val,monthOverride,noUnpublish=false){
     delete otData[simpleKey];
     delete otData[fullKey];
   } else {
-    // Preserve existing OT when reassigning shift
-    const existingOt=otData[simpleKey]||otData[fullKey];
+    // Preserve existing OT when reassigning shift — except full-day leave, which cancels that day's OT
+    const existingOt=LEAVE_NO_OT.has(val)?null:(otData[simpleKey]||otData[fullKey]);
     const {error}=await sb.from('schedule').upsert({
       staff_id:staffId, month_key, day:parseInt(day), shift:val,
       ot_hours:existingOt?.hours||null,
@@ -1788,6 +1909,8 @@ async function saveShift(staffId,day,val,monthOverride,noUnpublish=false){
     if(error) console.error('Upsert shift error:',error.message);
     schedData[simpleKey]=val;
     schedData[fullKey]=val;
+    if(!existingOt){ delete otData[simpleKey]; delete otData[fullKey]; }
+    if(LEAVE_NO_OT.has(val)&&prevOT) toast(`OT on day ${day} removed — ${staffName.split(' ')[0]} is on ${val}`,'ok');
   }
   renderSchedule();
 }
@@ -1828,6 +1951,7 @@ function isPH(d){return(PH[cm]||[]).includes(d)}
 function getDateRemark(d){return dateRemarks[cy+'-'+(cm+1)+'-'+d]||null;}
 function remarkKey(y,m,d){return y+'-'+(m+1)+'-'+d;}
 function getS(sid,d,m,y){
+  if(lwdMap[sid]&&afterLastDay(sid,y??cy,m??cm,d)) return '';
   if(m!==undefined&&y!==undefined){
     const mk=y+'-'+(m+1);
     return schedData[sid+'_'+d+'_'+mk]||schedData[sid+'_'+d]||'';
@@ -2130,7 +2254,9 @@ function renderSchedule(){
           const isOwnRow=currentProfile&&currentProfile.staff_id===x.id;
           const youBadge=isOwnRow?`<span style="font-size:9px;padding:1px 5px;border-radius:20px;background:var(--blue);color:#fff;margin-left:5px;font-weight:600">You</span>`:'';
           const nameStyle=isOwnRow?'color:var(--blue);font-weight:700':'';
-          if(isAdmin) return `<span style="${nameStyle};cursor:pointer;text-decoration:underline dotted;text-underline-offset:2px" onclick="openModal('editStaff','${x.id}')">${x.name}</span>${youBadge}${noLoginBadge}`;
+          const lw=lwdMap[x.id];
+          const lwBadge=lw?`<span title="Last working date" style="font-size:9px;padding:1px 6px;border-radius:20px;background:var(--surface2);color:var(--text2);border:1px solid var(--border2);margin-left:6px;white-space:nowrap">🚪 Last day ${+lw.slice(8,10)} ${MONTHS[+lw.slice(5,7)-1].slice(0,3)}</span>`:'';
+          if(isAdmin) return `<span style="${nameStyle};cursor:pointer;text-decoration:underline dotted;text-underline-offset:2px" onclick="openModal('editStaff','${x.id}')">${x.name}</span>${youBadge}${noLoginBadge}${lwBadge}`;
           return isOwnRow?`<span style="${nameStyle}">${x.name}</span>${youBadge}`:x.name;
         })()}</td>
         <td class="td-p td-c">
@@ -2163,21 +2289,26 @@ function renderSchedule(){
             }
           }
           const shiftDef=baseShift?shiftTypes.find(s=>s.code===baseShift):null;
-          const disp=halfDayPart?halfDayPart:(sh||(ph?'PH':''));
+          const disp=sh==='MCR'?'MC✕':(halfDayPart?halfDayPart:(sh||(ph?'PH':'')));
           const colorDef=shiftDef||(sh?timeoffTypes.find(t=>t.code===sh):null);
           // Half-day cells: diagonal split (shift colour / AL green)
           let cls=''; let cellStyle='';
+          let halfSplit='';
           if(halfDayPart){
             const shiftCol=shiftDef?shiftDef.color:'#3b82f6';
-            // H1AL: green (AL) top, shift colour bottom
-            // H2AL: shift colour top, green (AL) bottom
-            const grad=halfDayPart==='H1AL'
-              ?`to bottom,#22c55e 50%,${shiftCol} 50%`
-              :`to bottom,${shiftCol} 50%,#22c55e 50%`;
-            cls='';
-            cellStyle=`style="background:linear-gradient(${grad});color:#fff"`;
+            const alCol=(timeoffTypes.find(t=>t.code==='AL')||{}).color||'#16a34a';
+            const hh=baseShift?halfDayHours(baseShift,halfDayPart):null;
+            const work=hh?fmtClock(hh.start).replace(/(AM|PM)/,'')+'-'+fmtClock(hh.end):'';
+            const off=hh?(halfDayPart==='H1AL'?'1st half':'2nd half'):'';
+            const alHalf=`<div class="hd-al" style="background:${alCol}" title="Half-day AL (${off} off)">AL</div>`;
+            const shHalf=`<div class="hd-sh" style="background:${shiftCol}" title="Works ${work}">${baseShift||'?'}<span class="hd-t">${work}</span></div>`;
+            halfSplit=halfDayPart==='H1AL'?alHalf+shHalf:shHalf+alHalf;
+            cls='hd-split';
+            cellStyle=`style="background:${shiftCol};color:#fff"`;
           } else if(ph&&!sh){
             cls='s-PH'; cellStyle='';
+          } else if(sh==='MCR'){
+            cls='mc-rej'; cellStyle=`style="background:${colorDef?colorDef.color:'#7f1d1d'};color:#fff"`;
           } else if(colorDef){
             cls=''; cellStyle=`style="background:${colorDef.color};color:#fff"`;
           }
@@ -2211,7 +2342,8 @@ function renderSchedule(){
           const isPreShift=otObj&&(otObj.type==='OT-Pre'||(otObj.start&&parseInt(otObj.start)<12));
           const isWknd=(new Date(vd.year||cy,(vd.month!==undefined?vd.month:cm),d)).getDay()%6===0;
           const safeName=x.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-          const tdStyle='padding:0';
+          const gone=afterLastDay(x.id,vd.year??cy,vd.month??cm,d);
+          const tdStyle='padding:0'+(gone?';background:repeating-linear-gradient(135deg,var(--surface2) 0 4px,transparent 4px 8px);opacity:.55':'');
           // OT day: same-size cell split in two — shift colour + OT colour (OT on top if pre-shift)
           const otShort=otObj?(otObj.start&&otObj.end
             ?[otObj.start,otObj.end].map(t=>{const [h,m]=String(t).split(':');return +h+(m&&m!=='00'?':'+m:'');}).join('-')
@@ -2241,7 +2373,7 @@ function renderSchedule(){
                 onmousedown="handleCellMouseDown(this.dataset.sid,this.dataset.day,this.dataset.name,event)"
                 onmouseenter="handleCellMouseEnter(this.dataset.sid,this.dataset.day,event)"
                 ondblclick="handleCellDblClick(this.dataset.sid,this.dataset.day,this.dataset.name,event)"
-              `:''}>${otSplit?`<span class="ot-split-top">${disp}</span>${otSplit}`:disp}${remarkDot}</div>`
+              `:''}>${halfSplit||(otSplit?`<span class="ot-split-top">${disp}</span>${otSplit}`:disp)}${remarkDot}</div>`
             }
             <div class="ot-cell ${ot&&!isPreShift&&!otSplit?'has-ot ot-below editable-ot':(otClickable&&!ot?'no-ot editable-empty ot-below':'no-ot ot-below')}"
               style="${ot&&!isPreShift&&!otSplit?'background:'+otColor+';':''}"
@@ -2503,6 +2635,12 @@ function openModal(type,...args){
         <div><label>Team</label><select id="eT">${TEAMS.map(t=>`<option${t===x.team?' selected':''}>${t}</option>`).join('')}</select></div>
         <div><label>Role</label><select id="eR" onchange="roleSelectChanged(this)">${roleOptionsHtml(x.staff_role)}</select></div>
       </div>
+      <div class="mf-row">
+        <div><label>Employment</label><select id="eES" onchange="document.getElementById('eLWDwrap').style.display=this.value==='Resigned'?'':'none'">
+          ${['Active','Resigned'].map(v=>`<option${(x.employment_status||'Active')===v?' selected':''}>${v}</option>`).join('')}</select></div>
+        <div id="eLWDwrap" style="${(x.employment_status||'Active')==='Resigned'?'':'display:none'}"><label>Last working date</label><input id="eLWD" type="date" value="${x.last_working_date||''}"></div>
+      </div>
+      <div style="font-size:11px;color:var(--text3);margin:-4px 0 6px">Resigned staff are hidden from the schedule in months after their last working date.</div>
       <div class="merr" id="eErr"></div>
     </div>
     <div class="mbtns"><button class="btn btn-red" onclick="doRemoveStaff('${sid}')">Remove</button><button class="btn" onclick="closeModal()">Cancel</button><button class="btn btn-blue" onclick="doEditStaff('${sid}')">💾 Save changes</button></div>`;
@@ -2694,7 +2832,7 @@ async function doAddStaff(){
   if(!name){document.getElementById('aErr').textContent='Name is required.';return}
   const {data,error}=await sb.from('staff').insert({name,employee_id:eid,cx,team,staff_role}).select().single();
   if(error){document.getElementById('aErr').textContent=error.message;return}
-  staffList.push(data);closeModal();renderSchedule();toast('Staff added','ok');
+  staffList.push(data);allStaff.push(data);closeModal();renderSchedule();toast('Staff added','ok');
 }
 
 async function doEditStaff(sid){
@@ -2709,11 +2847,15 @@ async function doEditStaff(sid){
 
   document.getElementById('eErr').textContent='Saving…';
 
-  const {error}=await sb.from('staff').update({name,employee_id,cx,team,staff_role}).eq('id',sid);
+  const emp={employment_status:document.getElementById('eES')?.value||'Active', last_working_date:document.getElementById('eLWD')?.value||null};
+  const chk=checkEmployment(emp); if(chk){ document.getElementById('eErr').textContent=chk; return; }
+  const {employment_status,last_working_date}=emp;
+  const {error}=await sb.from('staff').update({name,employee_id,cx,team,staff_role,employment_status,last_working_date}).eq('id',sid);
   if(error){document.getElementById('eErr').textContent='Error: '+error.message;return;}
 
   // Update local staffList immediately
-  x.name=name; x.employee_id=employee_id; x.cx=cx; x.team=team; x.staff_role=staff_role;
+  x.name=name; x.employee_id=employee_id; x.cx=cx; x.team=team; x.staff_role=staff_role; x.last_working_date=last_working_date; x.employment_status=employment_status;
+  refreshActiveStaff();
 
   // Also sync to app_users if linked
   const u=appUsersList.find(u=>u.staff_id===sid);
@@ -2733,7 +2875,7 @@ async function doEditStaff(sid){
 async function doRemoveStaff(sid){
   if(!confirm('Remove this staff member?'))return;
   await sb.from('staff').delete().eq('id',sid);
-  staffList=staffList.filter(s=>s.id!==sid);closeModal();renderSchedule();toast('Removed','ok');
+  staffList=staffList.filter(s=>s.id!==sid);allStaff=allStaff.filter(s=>s.id!==sid);closeModal();renderSchedule();toast('Removed','ok');
 }
 
 async function doAddStaffAndUser(){
@@ -2760,7 +2902,7 @@ async function doAddStaffAndUser(){
   if(staffErr){ errEl.textContent = 'Staff error: '+staffErr.message; return; }
 
   // Update local staffList immediately
-  staffList.push(staffData);
+  staffList.push(staffData);allStaff.push(staffData);
   await mergeNewRolesFromStaff();
 
   // Step 2: Create login account if username provided
@@ -3223,6 +3365,7 @@ function handleOverlayBg(e){if(e.target===document.getElementById('overlay'))clo
 
 // ── PAGE SWITCHING ──
 function switchTab(t){
+  if(typeof closeCovPopup==='function') closeCovPopup();
   const isAdmin=currentProfile&&currentProfile.app_role==='admin';
   const isApprover=isAdmin||['Senior Manager','Assistant Manager','Team Leader','Supervisor','Manager'].includes(currentProfile?currentProfile.staff_role:'');
   if(!isAdmin&&(t==='users'||t==='settings')) t='schedule';
@@ -3464,7 +3607,7 @@ const PERM_LABELS={
 };
 
 async function saveSettings(){
-  const payload={roles:customRoles,teams:customTeams,positions:customPositions,permissions,sectionOrder,staffOrder,shiftTypes,timeoffTypes,otTypes,breakRules};
+  const payload={roles:customRoles,teams:customTeams,positions:customPositions,permissions,sectionOrder,staffOrder,shiftTypes,timeoffTypes,otTypes,breakRules,taskTypes:TASK_TYPES};
   const {error}=await sb.from('app_settings').upsert({key:'schedule_config',value:JSON.stringify(payload)},{onConflict:'key'});
   injectDynamicShiftCSS();
   if(error) throw new Error(error.message);
@@ -3527,12 +3670,14 @@ async function saveSettingsManual(section){
     roles:'rolesSaveStatus', teams:'teamsSaveStatus',
     pos:'posSaveStatus', perms:'permSaveStatus',
     shifts:'shiftSaveStatus', timeoffs:'toSaveStatus',
-    otTypes:'otTypeSaveStatus', breaks:'breakSaveStatus'
+    otTypes:'otTypeSaveStatus', breaks:'breakSaveStatus', tasks:'taskTypeSaveStatus'
   };
   const statusEl=document.getElementById(statusMap[section]);
   if(statusEl) statusEl.textContent='Saving…';
   try{
+    if(section==='tasks'){ const err=validateTaskTypes(); if(err) throw new Error(err); await applyTaskRenames(); }
     await saveSettings();
+    if(section==='tasks'){ renderTaskTypes(); if(typeof loadViewTasks==='function'){ await loadViewTasks(); renderSchedule(); } }
     if(statusEl){
       statusEl.textContent='✓ Saved';
       statusEl.style.color='var(--green)';
@@ -3625,6 +3770,7 @@ async function loadSettings(){
       if('timeoffTypes' in s && s.timeoffTypes.length) timeoffTypes=s.timeoffTypes;
       if('otTypes' in s && s.otTypes.length) otTypes=s.otTypes;
       if('breakRules' in s && s.breakRules.length) breakRules=s.breakRules;
+      if('taskTypes' in s && Array.isArray(s.taskTypes) && s.taskTypes.length) TASK_TYPES=s.taskTypes;
       injectDynamicShiftCSS();
     } else {
       // Nothing saved yet — build from staff table and save
@@ -3686,7 +3832,65 @@ function renderSettingsTab(){
   renderOtTypes();
   renderTimeoffTypes();
   renderBreakRulesList();
+  renderTaskTypes();
   renderPermTable();
+}
+
+// ── TASK TYPES (Settings) ──
+let taskRenames={};   // old name → new name, applied to existing tasks on save
+const TASK_QUEUES=['','Inbound Agent','Outbound Agent','Livechat'];
+function renderTaskTypes(){
+  const el=document.getElementById('taskTypeList'); if(!el) return;
+  const esc=v=>String(v??'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+  const inp='font-size:12px;border:1px solid var(--border2);border-radius:var(--r);padding:5px 7px;background:var(--surface);color:var(--text);font-family:\'DM Sans\',sans-serif;width:100%;min-width:0';
+  el.innerHTML=TASK_TYPES.map((t,i)=>`
+    <div style="display:grid;grid-template-columns:44px minmax(140px,1.4fr) 54px minmax(130px,1fr) 118px 118px 28px;gap:6px;align-items:center;padding:6px 8px;background:var(--surface2);border-radius:var(--r);border:1px solid var(--border);border-left:4px solid ${esc(t.color)}">
+      <input value="${esc(t.icon||'')}" maxlength="4" title="Icon (emoji)" onchange="TASK_TYPES[${i}].icon=this.value.trim()||'📋'" style="${inp};text-align:center;font-size:15px;padding:3px">
+      <input value="${esc(t.code)}" data-orig="${esc(t._orig??t.code)}" onchange="renameTaskType(${i},this.value)" style="${inp};font-weight:600">
+      <input type="color" value="${esc(t.color||'#64748b')}" onchange="TASK_TYPES[${i}].color=this.value;renderTaskTypes()" style="width:36px;height:28px;border:1px solid var(--border2);border-radius:4px;padding:1px;cursor:pointer">
+      <select onchange="TASK_TYPES[${i}].covers=this.value" style="${inp}">
+        ${TASK_QUEUES.map(q=>`<option value="${q}"${(t.covers||'')===q?' selected':''}>${q?'📞 On calls: '+q:'🚫 Off calls'}</option>`).join('')}
+      </select>
+      <input type="time" value="${esc(t.start||'')}" onchange="TASK_TYPES[${i}].start=this.value" style="${inp}">
+      <input type="time" value="${esc(t.end||'')}" onchange="TASK_TYPES[${i}].end=this.value" style="${inp}">
+      <button onclick="removeTaskType(${i})" title="Remove" style="background:none;border:none;cursor:pointer;color:var(--red);font-size:17px;line-height:1;padding:0">×</button>
+    </div>`).join('')||'<div style="font-size:11px;color:var(--text3)">No task types yet</div>';
+}
+function renameTaskType(i,val){
+  const t=TASK_TYPES[i]; const nv=(val||'').trim();
+  if(!nv){ toast('Name can\'t be empty','err'); renderTaskTypes(); return; }
+  if(TASK_TYPES.some((x,j)=>j!==i&&x.code.toLowerCase()===nv.toLowerCase())){ toast('That name is already used','err'); renderTaskTypes(); return; }
+  if(t._orig===undefined&&!t._isNew) t._orig=t.code;
+  t.code=nv;
+}
+function addTaskType(){
+  let n='New task', k=2; while(TASK_TYPES.some(t=>t.code===n)) n='New task '+(k++);
+  TASK_TYPES.push({code:n,color:'#0ea5e9',icon:'📋',covers:'',start:'',end:'',_isNew:true});
+  renderTaskTypes();
+  setTimeout(()=>{ const rows=document.querySelectorAll('#taskTypeList > div'); rows[rows.length-1]?.querySelector('input:nth-of-type(2)')?.select(); },0);
+}
+function removeTaskType(i){
+  const t=TASK_TYPES[i];
+  const used=Object.values(tasksMap||{}).flat().filter(x=>x.task_type===(t._orig??t.code)).length;
+  if(!confirm(`Remove "${t.code}"?${used?` ${used} task${used>1?'s':''} already assigned this month will keep the name but won't count in Coverage.`:''}`)) return;
+  TASK_TYPES.splice(i,1); renderTaskTypes();
+}
+function validateTaskTypes(){
+  for(const t of TASK_TYPES){
+    if(!t.code||!t.code.trim()) return 'Every task type needs a name';
+    if(t.start&&t.end&&toMin(t.end)<=toMin(t.start)) return `"${t.code}": end time must be after start time`;
+  }
+  return null;
+}
+// Renamed types: update tasks already assigned so they keep their type
+async function applyTaskRenames(){
+  for(const t of TASK_TYPES){
+    if(t._orig!==undefined&&t._orig!==t.code){
+      const {error}=await sb.from('tasks').update({task_type:t.code}).eq('task_type',t._orig);
+      if(error) throw new Error('Could not rename existing tasks: '+error.message);
+    }
+    delete t._orig; delete t._isNew;
+  }
 }
 
 function renderOtTypes(){
@@ -4023,12 +4227,13 @@ async function applyCells(changes,label,opts={}){
     const day=+c.day;
     let mk=c.mk;
     if(!mk){ const vd=vds.find(v=>v.day===day)||{month:cm,year:cy}; mk=vd.year+'-'+(vd.month+1); }
+    { const [yy,mm]=mk.split('-').map(Number); if(c.shift&&afterLastDay(c.sid,yy,mm-1,day)) continue; }   // can't schedule after last day
     const key=c.sid+'_'+day+'_'+mk; if(seen.has(key)) continue; seen.add(key);
     const sk=c.sid+'_'+day, fk=sk+'_'+mk;
     const prevShift=schedData[fk]??schedData[sk]??'';
     const prevOT=otData[fk]??otData[sk]??null;
     const newShift=c.shift||'';
-    const newOT=newShift?(c.ot===undefined?prevOT:c.ot):null;
+    const newOT=(newShift&&!LEAVE_NO_OT.has(newShift))?(c.ot===undefined?prevOT:c.ot):null;
     if(prevShift===newShift&&JSON.stringify(prevOT||null)===JSON.stringify(newOT||null)) continue;
     undo.push({staffId:c.sid,day,month_key:mk,prevShift:prevShift||null,prevOT:prevOT?{...prevOT}:null});
     if(!opts.noUndo){ const dk=mk+'-'+day; if(publishedDays[dk]){ delete publishedDays[dk]; pubChanged=true; } }
@@ -4124,6 +4329,7 @@ async function pasteBlock(block,internal){
 
 function handleCellMouseDown(sid, day, name, e){
   if(!canAssignShift()||e.button!==0) return;
+  if(afterLastDay(sid,cy,cm,+day)){ e.preventDefault(); toast('After this person\'s last working date','err'); return; }
   e.preventDefault();
   day=+day;
   if(e.shiftKey&&lastFocusedCell){ lastFocusedCell={sid,day}; }
@@ -4152,6 +4358,7 @@ function handleCellMouseEnter(sid, day, e){
 
 function handleCellDblClick(sid, day, name, e){
   if(!canAssignShift()) return;
+  if(afterLastDay(sid,cy,cm,+day)) return;
   e.preventDefault(); e.stopPropagation();
   selAnchor=lastFocusedCell={sid,day:+day};
   paintSelection();
@@ -4198,15 +4405,116 @@ document.addEventListener('mouseup',()=>{
   document.body.classList.remove('grid-dragging');
 });
 
+// ── MC rejection ──
+function mcRejectHtml(sid,day,sh){
+  if(sh!=='MC'&&sh!=='MCR') return '';
+  const rm=getR(sid,day)||'';
+  const inp='font-size:12px;border:1px solid var(--border2);border-radius:var(--r);padding:6px 8px;background:var(--surface);color:var(--text);font-family:\'DM Sans\',sans-serif';
+  if(sh==='MCR') return `<div style="margin:-2px 0 14px;padding:10px 12px;border-radius:var(--r);background:#fef2f2;border:1px solid #fecaca">
+      <div style="font-size:12px;font-weight:700;color:#991b1b">✕ MC rejected</div>
+      ${rm?`<div style="font-size:11px;color:#7f1d1d;margin-top:3px">${rm.replace(/</g,'&lt;')}</div>`:''}
+      <button onclick="acceptMC('${sid}',${day})" style="margin-top:8px;font-size:12px;padding:5px 10px;border-radius:var(--r);border:1px solid #fca5a5;background:#fff;color:#991b1b;cursor:pointer;font-family:'DM Sans',sans-serif">↩ Accept MC instead</button>
+    </div>`;
+  return `<div style="margin:-2px 0 14px;padding:10px 12px;border-radius:var(--r);background:var(--surface2);border:1px dashed #fca5a5">
+      <div style="font-size:11px;font-weight:700;color:#991b1b;margin-bottom:6px">Reject this MC?</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <select id="mcRejReason" style="${inp};flex:1 1 160px">
+          <option>Informed late</option><option>No supporting document</option><option>Invalid / unclear MC</option><option value="other">Other…</option>
+        </select>
+        <input id="mcRejNote" placeholder="Note (optional)" style="${inp};flex:1 1 140px">
+        <button onclick="rejectMC('${sid}',${day})" style="font-size:12px;padding:6px 12px;border-radius:var(--r);border:none;background:#b91c1c;color:#fff;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif">✕ Reject MC</button>
+      </div>
+    </div>`;
+}
+async function setCellRemark(sid,day,remark){
+  const mk=cy+'-'+(cm+1), sk=sid+'_'+day, fk=sk+'_'+mk;
+  const {error}=await sb.from('schedule').update({remark:remark||null}).eq('staff_id',sid).eq('month_key',mk).eq('day',parseInt(day));
+  if(error) throw new Error(error.message);
+  if(remark){remarkData[sk]=remark;remarkData[fk]=remark;} else {delete remarkData[sk];delete remarkData[fk];}
+}
+async function rejectMC(sid,day){
+  let reason=document.getElementById('mcRejReason').value;
+  const note=document.getElementById('mcRejNote').value.trim();
+  if(reason==='other'){ if(!note){ toast('Type the reason in the note','err'); return; } reason=note; }
+  const who=(currentProfile?.display_name||'').split(' ')[0]||'manager';
+  const t=new Date(); const when=t.getDate()+'/'+(t.getMonth()+1);
+  const old=getR(sid,day)||'';
+  const remark=`MC rejected — ${reason}${note&&reason!==note?' ('+note+')':''} · by ${who} ${when}${old&&!/^MC rejected/.test(old)?' · '+old:''}`;
+  await saveShift(sid,day,'MCR');
+  try{ await setCellRemark(sid,day,remark.slice(0,300)); }catch(e){ toast('Rejected, but the note failed to save: '+e.message,'err'); }
+  closeModal(); renderSchedule();
+  toast(`MC rejected for day ${day} ✓`,'ok');
+}
+async function acceptMC(sid,day){
+  const old=getR(sid,day)||'';
+  await saveShift(sid,day,'MC');
+  try{ await setCellRemark(sid,day,old.replace(/^MC rejected — [^·]*· by [^·]*(· )?/,'').trim()); }catch(_){}
+  closeModal(); renderSchedule();
+  toast(`Day ${day} set back to MC ✓`,'ok');
+}
+
+function swapSectionHtml(sid,day){
+  const me=staffList.find(x=>x.id===sid);
+  const others=staffList.filter(x=>x.id!==sid).sort((a,b)=>(a.staff_role===me?.staff_role?0:1)-(b.staff_role===me?.staff_role?0:1)||a.name.localeCompare(b.name));
+  const inp='font-size:12px;border:1px solid var(--border2);border-radius:var(--r);padding:6px 8px;background:var(--surface);color:var(--text);font-family:\'DM Sans\',sans-serif';
+  const dayOpts=Array.from({length:dim(cy,cm)},(_,i)=>i+1).map(d=>`<option value="${d}"${d===+day?' selected':''}>${d} ${MONTHS[cm].slice(0,3)}</option>`).join('');
+  return `<div style="margin-top:14px;border-top:1px solid var(--border);padding-top:12px">
+    <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">⇄ Swap shift with <span style="font-weight:400;text-transform:none;letter-spacing:0">(applies straight away)</span></div>
+    <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+      <select id="swDirStaff" onchange="previewDirectSwap('${sid}',${day})" style="${inp};width:auto;flex:1 1 180px;min-width:0">
+        <option value="">— Select staff —</option>
+        ${others.map(x=>`<option value="${x.id}">${x.name}${x.staff_role!==me?.staff_role?' · '+(x.staff_role||''):''}</option>`).join('')}
+      </select>
+      <select id="swDirDay" onchange="previewDirectSwap('${sid}',${day})" style="${inp};width:auto;flex:0 0 auto" title="Their day">${dayOpts}</select>
+      <button class="btn btn-blue" onclick="doDirectSwap('${sid}',${day})">⇄ Swap</button>
+    </div>
+    <label style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text2);margin-top:6px;cursor:pointer">
+      <input type="checkbox" id="swDirOT" checked style="width:auto;margin:0"> Move OT and breaks with the shift
+    </label>
+    <div id="swDirPreview" style="font-size:11px;color:var(--text2);margin-top:4px"></div>
+  </div>`;
+}
+function previewDirectSwap(sid,day){
+  const other=document.getElementById('swDirStaff')?.value, d2=+document.getElementById('swDirDay')?.value, el=document.getElementById('swDirPreview');
+  if(!el) return; if(!other){ el.textContent=''; return; }
+  const a=getS(sid,day)||'empty', b=getS(other,d2)||'empty';
+  const nA=staffList.find(x=>x.id===sid)?.name.split(' ')[0], nB=staffList.find(x=>x.id===other)?.name.split(' ')[0];
+  el.innerHTML=`After swap: <b>${nA}</b> day ${day} → <b>${b}</b> · <b>${nB}</b> day ${d2} → <b>${a}</b>`;
+}
+async function doDirectSwap(sid,day){
+  const other=document.getElementById('swDirStaff').value, d2=+document.getElementById('swDirDay').value;
+  const withOT=document.getElementById('swDirOT').checked;
+  if(!other){ toast('Select who to swap with','err'); return; }
+  const A=cellVal(sid,day), B=cellVal(other,d2);
+  if(!A.shift&&!B.shift){ toast('Both cells are empty','err'); return; }
+  if(A.shift===B.shift&&(!withOT||JSON.stringify(A.ot)===JSON.stringify(B.ot))){ toast('Both have the same shift — nothing to swap','err'); return; }
+  const nA=staffList.find(x=>x.id===sid)?.name, nB=staffList.find(x=>x.id===other)?.name;
+  const n=await applyCells([
+    {sid,day,shift:B.shift,ot:withOT?B.ot:(B.shift?A.ot:null)},
+    {sid:other,day:d2,shift:A.shift,ot:withOT?A.ot:(A.shift?B.ot:null)}
+  ],`Swapped ${nA.split(' ')[0]} ↔ ${nB.split(' ')[0]}`);
+  if(n<0) return;
+  if(withOT){
+    const mk=cy+'-'+(cm+1), kA=sid+'_'+day+'_'+mk, kB=other+'_'+d2+'_'+mk;
+    const bA=breakOverrides[kA], bB=breakOverrides[kB];
+    if(bA||bB){ if(bB) breakOverrides[kA]=bB; else delete breakOverrides[kA]; if(bA) breakOverrides[kB]=bA; else delete breakOverrides[kB];
+      await sb.from('app_settings').upsert({key:'break_overrides',value:JSON.stringify(breakOverrides)},{onConflict:'key'}); }
+  }
+  toast(`Swapped ✓ ${nA.split(' ')[0]} (day ${day}) ↔ ${nB.split(' ')[0]} (day ${d2})`,'ok');
+  closeModal();
+}
+
 function supportSectionHtml(sid,day,name){
   const vd=getViewDays().find(v=>v.day===+day)||{year:cy,month:cm};
   const dateStr=ymdStr(vd.year,vd.month,+day);
   const list=(tasksMap[sid+'_'+dateStr]||[]).slice().sort((a,b)=>toMin(a.start_time)-toMin(b.start_time));
   const nm=String(name).replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'&quot;');
   const types=TASK_TYPES.filter(t=>t.covers);
+  if(!types.length) return `<div style="margin-top:14px;border-top:1px solid var(--border);padding-top:12px;font-size:11px;color:var(--text3)">🎧 To let staff support another queue, add a task type with "Counts as" in Settings → Task types.</div>`;
+  const t0=types[0];
   const inp='font-size:12px;border:1px solid var(--border2);border-radius:var(--r);padding:6px 8px;background:var(--surface);color:var(--text);font-family:\'DM Sans\',sans-serif';
   return `<div style="margin-top:14px;border-top:1px solid var(--border);padding-top:12px">
-    <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">🎧 Support another queue <span style="font-weight:400;text-transform:none;letter-spacing:0">(counts in Coverage)</span></div>
+    <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">🎧 Support another queue <span style="font-weight:400;text-transform:none;letter-spacing:0">(counts in Coverage · edit types in Settings)</span></div>
     ${list.length?`<div style="display:flex;flex-direction:column;gap:4px;margin-bottom:8px">${list.map(t=>`
       <div style="display:flex;align-items:center;gap:8px;font-size:12px;padding:5px 8px;border-radius:var(--r);background:${getTaskColor(t.task_type)}18;border:1px solid ${getTaskColor(t.task_type)}40">
         <span>${getTaskIcon(t.task_type)}</span><span style="font-weight:600">${t.task_type}</span>
@@ -4214,10 +4522,10 @@ function supportSectionHtml(sid,day,name){
         <button onclick="removeSupportTask('${t.id}','${sid}',${day},'${dateStr}','${nm}')" style="margin-left:auto;font-size:11px;padding:1px 7px;border:1px solid var(--border2);border-radius:var(--r);background:none;color:var(--red);cursor:pointer">✕</button>
       </div>`).join('')}</div>`:''}
     <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
-      <select id="supType" style="${inp};width:auto;flex:1 1 140px;min-width:0">${types.map(t=>`<option value="${t.code}">${t.icon} ${t.code}</option>`).join('')}</select>
-      <input id="supStart" type="time" value="08:00" style="${inp};width:auto;flex:0 0 auto">
+      <select id="supType" onchange="const o=this.selectedOptions[0];if(o.dataset.s)document.getElementById('supStart').value=o.dataset.s;if(o.dataset.e)document.getElementById('supEnd').value=o.dataset.e;" style="${inp};width:auto;flex:1 1 140px;min-width:0">${types.map(t=>`<option value="${t.code}" data-s="${t.start||''}" data-e="${t.end||''}">${t.icon} ${t.code}</option>`).join('')}</select>
+      <input id="supStart" type="time" value="${t0.start||'08:00'}" style="${inp};width:auto;flex:0 0 auto">
       <span style="font-size:12px;color:var(--text3)">to</span>
-      <input id="supEnd" type="time" value="11:00" style="${inp};width:auto;flex:0 0 auto">
+      <input id="supEnd" type="time" value="${t0.end||'11:00'}" style="${inp};width:auto;flex:0 0 auto">
       <button class="btn btn-blue" onclick="addSupportTask('${sid}',${day},'${dateStr}','${nm}')">＋ Add</button>
     </div>
   </div>`;
@@ -4259,23 +4567,32 @@ function openShiftModal(sid, day, name){
       onmouseout="if('${sh}'!=='${s.code}')this.style.opacity='0.45'"
     >${s.code}</button>`).join('');
 
-  // Half-day AL buttons — combine with current shift
-  const baseShift=sh&&!sh.includes('-')&&!['AL','RL','MC','EL','PH','OD','RD'].includes(sh)?sh:'M';
-  const h1Code=baseShift+'-H1AL';
-  const h2Code=baseShift+'-H2AL';
-  const halfDayBtns=`
-    <button onclick="pickShiftFromModal('${sid}',${day},'${h1Code}')"
-      style="${btnStyle(h1Code,'#22c55e')}"
-      title="Half-day AL (1st half — morning off)"
-      onmouseover="this.style.opacity='1'"
-      onmouseout="if('${sh}'!=='${h1Code}')this.style.opacity='0.45'"
-    >H1AL</button>
-    <button onclick="pickShiftFromModal('${sid}',${day},'${h2Code}')"
-      style="${btnStyle(h2Code,'#16a34a')}"
-      title="Half-day AL (2nd half — afternoon off)"
-      onmouseover="this.style.opacity='1'"
-      onmouseout="if('${sh}'!=='${h2Code}')this.style.opacity='0.45'"
-    >H2AL</button>`;
+  // Half-day AL — every shift, with the hours actually worked
+  const curBase=sh&&!['AL','RL','MC','MCR','EL','PH','OD','RD','UL','CL','HOSP','TO'].includes(sh)?sh.replace(/-H[12]AL$/,''):'';
+  const hdShifts=shiftTypes.filter(t=>t.start&&t.end&&(t.hours||9)>=8);
+  hdShifts.sort((a,b)=>(a.code===curBase?-1:b.code===curBase?1:0));
+  const alColor=(timeoffTypes.find(t=>t.code==='AL')||{}).color||'#16a34a';
+  const hdBtn=(t,half)=>{
+    const code=t.code+'-'+half, hh=halfDayHours(t.code,half), on=sh===code;
+    const offTxt=half==='H1AL'?'1st half off':'2nd half off';
+    const top=half==='H1AL'?alColor:t.color, bot=half==='H1AL'?t.color:alColor;
+    return `<button onclick="pickShiftFromModal('${sid}',${day},'${code}')" title="${t.code} · ${offTxt} — works ${fmtClock(hh.start)}–${fmtClock(hh.end)}"
+      style="display:flex;align-items:center;gap:7px;width:100%;min-width:0;padding:5px 8px 5px 5px;border-radius:7px;cursor:pointer;font-family:'DM Sans',sans-serif;text-align:left;
+        border:2px solid ${on?'var(--blue)':'var(--border2)'};background:${on?'var(--blue-bg,rgba(37,99,235,.08))':'var(--surface)'};color:var(--text)">
+      <span style="display:flex;flex-direction:column;width:26px;height:26px;border-radius:5px;overflow:hidden;flex-shrink:0;font-size:8px;font-weight:800;color:#fff">
+        <span style="flex:1;background:${top};display:flex;align-items:center;justify-content:center">${half==='H1AL'?'AL':t.code}</span>
+        <span style="flex:1;background:${bot};display:flex;align-items:center;justify-content:center">${half==='H1AL'?t.code:'AL'}</span>
+      </span>
+      <span style="line-height:1.2;min-width:0"><span style="font-size:11.5px;font-weight:700;white-space:nowrap">${offTxt}</span><br>
+        <span style="font-size:10.5px;color:var(--text2);white-space:nowrap" title="Working hours">🕘 ${fmtRange(hh.start,hh.end)}</span></span>
+    </button>`;
+  };
+  const halfDayBtns=hdShifts.map(t=>`
+    <div style="display:grid;grid-template-columns:40px 1fr 1fr;align-items:center;gap:6px${t.code===curBase?';padding:5px;margin:-5px;border-radius:8px;background:var(--surface)':''}">
+      <span style="font-size:11px;font-weight:700;color:var(--text2);line-height:1.1">${t.code}${t.code===curBase?'<br><span style="font-size:9px;color:var(--blue);font-weight:600">current</span>':''}</span>
+      ${hdBtn(t,'H1AL')}${hdBtn(t,'H2AL')}
+    </div>`).join('');
+  const baseShift=curBase||'—';
 
   box.innerHTML=`
     <h3>Assign — day ${day}</h3>
@@ -4289,10 +4606,10 @@ function openShiftModal(sid, day, name){
       <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px;padding:12px;background:var(--surface2);border-radius:var(--r)">
         ${leaveBtns}
       </div>
-      <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Half-day AL <span style="font-size:10px;color:var(--text3);font-weight:400">(based on current shift: ${baseShift})</span></div>
-      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;padding:12px;background:var(--surface2);border-radius:var(--r)">
+      ${mcRejectHtml(sid,day,sh)}
+      <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Half-day AL <span style="font-weight:400;text-transform:none;letter-spacing:0">— pick the shift and which half is off</span></div>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px;padding:12px;background:var(--surface2);border-radius:var(--r);max-height:280px;overflow-y:auto">
         ${halfDayBtns}
-        <span style="font-size:10px;color:var(--text3);align-self:center">H1AL = 1st half off · H2AL = 2nd half off</span>
       </div>
       <button onclick="pickShiftFromModal('${sid}',${day},'')"
         style="width:100%;padding:7px;font-size:12px;border-radius:5px;border:2px solid var(--red);background:transparent;color:var(--red);cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:600"
@@ -4300,6 +4617,7 @@ function openShiftModal(sid, day, name){
         onmouseout="this.style.background='transparent'">
         ✕ Clear cell
       </button>
+      ${swapSectionHtml(sid,day)}
       ${supportSectionHtml(sid,day,name)}
       <div style="margin-top:14px;border-top:1px solid var(--border);padding-top:12px">
         <label style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;display:flex;align-items:center;gap:6px;margin-bottom:6px">
@@ -5191,7 +5509,23 @@ const SHIFT_HOURS={
   'RL':[8,17],   // Replacement
 };
 // Timeoff and Off = not available
-const ABSENT_CODES=new Set(['AL','RL','MC','EL','PH','O']);
+const ABSENT_CODES=new Set(['AL','RL','MC','MCR','EL','PH','O']);
+// Full-day leave: the person isn't working at all that day — any OT or support block on that day doesn't count
+const LEAVE_NO_OT=new Set(['AL','RL','MC','MCR','EL','UL','CL','HOSP','TO','PH']);
+
+// Half-day AL working hours for any shift: H2AL (2nd half off) works the first 4h,
+// H1AL (1st half off) works the last 4h. Returns minutes {start,end} or null.
+function halfDayHours(base,half){
+  const st=shiftTypes.find(s=>s.code===base);
+  let S, E;
+  if(st&&st.start&&st.end){ S=getShiftStart(base); E=getShiftEnd(base); }
+  else if(SHIFT_HOURS[base]){ S=SHIFT_HOURS[base][0]*60; E=SHIFT_HOURS[base][1]*60; }
+  else return null;
+  const halfLen=Math.min(240,Math.floor((E-S)/2));
+  return half==='H2AL'?{start:S,end:S+halfLen}:{start:E-halfLen,end:E};
+}
+const fmtRange=(a,b)=>{ const A=fmtClock(a), B=fmtClock(b); const sa=A.slice(-2), sb=B.slice(-2); return (sa===sb?A.slice(0,-2):A)+'–'+B; };   // 1–5PM, 8AM–12PM
+const fmtClock=m=>{ const h=Math.floor(m/60), mm=m%60, h12=((h+11)%12)+1; return h12+(mm?':'+String(mm).padStart(2,'0'):'')+(h<12?'AM':'PM'); };
 
 // Livechat shifts (LCM/LCMD/LCE…) — staff are on chat, not on calls
 function isLCShift(code){
@@ -5202,6 +5536,7 @@ function isLCShift(code){
 }
 
 function isWorkingDuringHour(shiftCode, hour, otObj){
+  if(shiftCode&&LEAVE_NO_OT.has(shiftCode)) return false;   // on leave — ignore any leftover OT
   // Check if covered by OT
   if(otObj && otObj.start && otObj.end){
     const otStart=parseInt(otObj.start.split(':')[0]);
@@ -5212,25 +5547,11 @@ function isWorkingDuringHour(shiftCode, hour, otObj){
   if(!shiftCode) return false;
 
   // Handle composite half-day codes e.g. M-H1AL, E-H2AL
-  const halfMatch=shiftCode.match(/^([A-Z]+)-(H[12]AL)$/);
+  const halfMatch=shiftCode.match(/^([A-Z][A-Z0-9]*)-(H[12]AL)$/);
   if(halfMatch){
-    const base=halfMatch[1];
-    const half=halfMatch[2];
-    const range=SHIFT_HOURS[base];
-    if(!range) return false;
-    const start=range[0], end=range[1];
-    // Fixed split times per shift (not calculated midpoints)
-    // Per-shift half-day working hours (may have gap for lunch between halves)
-    const HALF_HOURS={
-      'M': {h2:[8,12],  h1:[13,17]}, // H2AL: 8AM-12PM, H1AL: 1PM-5PM
-      'E': {h2:[11,15], h1:[16,20]}, // H2AL: 11AM-3PM, H1AL: 4PM-8PM
-      'MD':{h2:[10,14], h1:[15,19]}, // H2AL: 10AM-2PM, H1AL: 3PM-7PM
-      'A': {h2:[11,15], h1:[16,20]}, // H2AL: 11AM-3PM, H1AL: 4PM-8PM
-    };
-    const hrs=HALF_HOURS[base];
-    if(!hrs) return false;
-    if(half==='H1AL') return hour>=hrs.h1[0] && hour<hrs.h1[1];
-    if(half==='H2AL') return hour>=hrs.h2[0] && hour<hrs.h2[1];
+    const hh=halfDayHours(halfMatch[1],halfMatch[2]);   // e.g. M-H1AL works 1PM–5PM, M-H2AL works 8AM–12PM
+    if(!hh) return false;
+    return hour*60>=hh.start && hour*60<hh.end;
   }
 
   // Plain H1AL / H2AL without base shift — treat as absent
@@ -5245,10 +5566,88 @@ function isWorkingDuringHour(shiftCode, hour, otObj){
   return hour>=range[0] && hour<range[1];
 }
 
+// Coverage mode: false = scheduled headcount, true = minus staff on their assigned breaks
+let covAfterBreaks=(()=>{try{return localStorage.getItem('covAfterBreaks')==='1';}catch(_){return false;}})();
+function setCovMode(after){
+  covAfterBreaks=!!after;
+  try{localStorage.setItem('covAfterBreaks',covAfterBreaks?'1':'0');}catch(_){}
+  renderCoverage();
+}
+function paintCovMode(){
+  [['covModeBefore',!covAfterBreaks],['covModeAfter',covAfterBreaks]].forEach(([id,on])=>{
+    const b=document.getElementById(id); if(!b) return;
+    b.style.background=on?'var(--blue)':'var(--surface)'; b.style.color=on?'#fff':'var(--text2)'; b.style.fontWeight=on?'600':'400';
+    b.setAttribute('aria-pressed',on);
+  });
+}
+// Horizontal navigation for the Coverage table
+function covScroll(dir,instant){
+  const g=document.getElementById('coverageGrid'); if(!g) return;
+  const ths=[...g.querySelectorAll('thead th')].slice(1);
+  if(!ths.length) return;
+  const stickyW=g.querySelector('thead th')?.offsetWidth||120;
+  const colW=ths[0].offsetWidth||60;
+  if(dir===0){
+    const t=new Date(); const vds=getViewDays();
+    let idx=vds.findIndex(v=>v.year===t.getFullYear()&&v.month===t.getMonth()&&v.day===t.getDate());
+    if(idx<0) idx=0;
+    const target=Math.max(0,ths[idx].offsetLeft-stickyW-colW);   // one day of context on the left
+    g.scrollTo({left:target,behavior:instant?'auto':'smooth'});
+  } else g.scrollBy({left:dir*7*colW,behavior:'smooth'});
+}
+function covEnableDrag(g){
+  if(g.dataset.dragReady) return; g.dataset.dragReady='1';
+  let sx=0,sy=0,sl=0,st=0,down=false,moved=false;
+  g.addEventListener('mousedown',e=>{ if(e.button!==0) return;
+    // ignore clicks on the scrollbars
+    if(e.offsetX>g.clientWidth||e.offsetY>g.clientHeight) return;
+    down=true;moved=false;sx=e.clientX;sy=e.clientY;sl=g.scrollLeft;st=g.scrollTop; });
+  window.addEventListener('mousemove',e=>{ if(!down) return;
+    const dx=e.clientX-sx, dy=e.clientY-sy;
+    if(!moved&&Math.abs(dx)+Math.abs(dy)<4) return;
+    moved=true; g.classList.add('dragging');
+    closeCovPopup();
+    g.scrollLeft=sl-dx; g.scrollTop=st-dy; e.preventDefault(); });
+  window.addEventListener('mouseup',()=>{ if(down&&moved){ g.dataset.justDragged='1'; setTimeout(()=>{g.dataset.justDragged='';},0); }
+    down=false; g.classList.remove('dragging'); });
+  // Hide the hover card while scrolling so it never sits over the table
+  g.addEventListener('scroll',()=>closeCovPopup(),{passive:true});
+  // Shift + wheel already scrolls sideways; also scroll sideways when the wheel is over the date header
+  g.addEventListener('wheel',e=>{ if(e.target.closest('thead')&&Math.abs(e.deltaY)>Math.abs(e.deltaX)){ g.scrollLeft+=e.deltaY; e.preventDefault(); } },{passive:false});
+}
+
+function openCovPopup(td){
+  const popup=document.getElementById('covPopup'); if(!popup) return;
+  document.querySelectorAll('.cov-cell-active').forEach(c=>c.classList.remove('cov-cell-active'));
+  td.classList.add('cov-cell-active');
+  popup.innerHTML=`<button class="cov-pop-close" onclick="closeCovPopup()" title="Close" aria-label="Close">✕</button>`+decodeURIComponent(td.dataset.popup||'');
+  popup.classList.add('pinned');
+  popup.style.display='block'; popup.style.width='auto'; popup.scrollTop=0;
+  const r=td.getBoundingClientRect(), pw=popup.offsetWidth, ph=popup.offsetHeight;
+  let left=r.right+10, top=r.top-4;
+  if(left+pw>window.innerWidth-8) left=r.left-pw-10;
+  if(top+ph>window.innerHeight-8) top=window.innerHeight-ph-8;
+  popup.style.left=Math.max(4,left)+'px'; popup.style.top=Math.max(4,top)+'px';
+}
+function closeCovPopup(){
+  const popup=document.getElementById('covPopup'); if(popup){ popup.style.display='none'; popup.classList.remove('pinned'); }
+  document.querySelectorAll('.cov-cell-active').forEach(c=>c.classList.remove('cov-cell-active'));
+}
+document.addEventListener('mousedown',e=>{
+  const popup=document.getElementById('covPopup');
+  if(!popup||popup.style.display!=='block') return;
+  if(popup.contains(e.target)||e.target.closest('.cov-hover-cell')) return;
+  closeCovPopup();
+});
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeCovPopup(); });
+
+function savedBreaksOn(sid,vd){ return breakOverrides[sid+'_'+vd.day+'_'+vd.year+'-'+(vd.month+1)]||[]; }
+
 function renderCoverage(){
   const grid=document.getElementById('coverageGrid');
   const legend=document.getElementById('covLegend');
   if(!grid) return;
+  paintCovMode();
 
   const posFil=document.getElementById('covPosFil')?.value||'';
   const viewDays=getViewDays();
@@ -5326,92 +5725,103 @@ function renderCoverage(){
         const working=[];
         const lent=[];   // own staff moved to another queue this hour
         const uname=s=>appUsersList.find(u=>u.staff_id===s.id)?.username||s.name;
+        const brSlots=[0,0,0,0,0,0];  // staff on break in each 10-min slot of this hour
+        const onBreak=[];
+        const trackBreak=s=>{ if(!covAfterBreaks) return;
+          const brs=savedBreaksOn(s.id,vd).filter(b=>b.startMins<(hour+1)*60&&b.endMins>hour*60);
+          if(!brs.length) return;
+          for(let j=0;j<6;j++){ const t=hour*60+j*10; if(brs.some(b=>t>=b.startMins&&t<b.endMins)) brSlots[j]++; }
+          onBreak.push(uname(s)+' — '+brs.map(b=>(b.icon||'☕')+' '+b.start+'–'+b.end).join(', '));
+        };
         posStaff.forEach(s=>{
           const sh=getS(s.id,vd.day,vd.month,vd.year);
           const otObj=getOT(s.id,vd.day);
           const lc=isLCShift(sh);
-          if(isLCrow){ if(lc&&isWorkingDuringHour(sh,hour,otObj)){ count++; working.push(uname(s)+' 💬'); } return; }
+          if(isLCrow){ if(lc&&isWorkingDuringHour(sh,hour,otObj)){ count++; working.push(uname(s)+' 💬'); trackBreak(s); } return; }
           if(lc){ if(isWorkingDuringHour(sh,hour,otObj)) lent.push(uname(s)+' → Livechat'); return; }
           const cover=coverRoleAt(s.id,vd.year,vd.month,vd.day,hour);
           if(cover&&cover!==pos){ lent.push(uname(s)+' → '+cover); return; }
           if(isWorkingDuringHour(sh,hour,otObj)){
+            const offs=offCallInHour(s.id,vd.year,vd.month,vd.day,hour);
+            const tl=x=>(TASK_TYPES.find(y=>y.code===x.t.task_type)?.icon||'📋')+' '+x.t.task_type+' '+fmtHM(x.a)+'–'+fmtHM(x.b);
+            if(offs.reduce((n,x)=>n+x.ov,0)>=30){ lent.push(uname(s)+' → '+offs.map(tl).join(', ')); return; }
             count++;
             working.push(uname(s));
+            trackBreak(s);
+            if(offs.length&&covAfterBreaks){   // short task inside the hour: treat like a break
+              for(let j=0;j<6;j++){ const t=hour*60+j*10; if(offs.some(x=>t>=x.a&&t<x.b)) brSlots[j]++; }
+              onBreak.push(uname(s)+' — '+offs.map(tl).join(', '));
+            }
           }
         });
         // Staff from other positions supporting this queue
-        if(!isLCrow) staffList.forEach(s=>{
+        staffList.forEach(s=>{
           if(s.staff_role===pos) return;
+          if(isLCrow&&isLCShift(getS(s.id,vd.day,vd.month,vd.year))) return;   // already counted on their Livechat shift
           if(coverRoleAt(s.id,vd.year,vd.month,vd.day,hour)===pos){
             count++;
             working.push(uname(s)+' 🎧 ('+(s.staff_role||'support')+')');
+            trackBreak(s);
           }
         });
         const total=posStaff.length;
+        const scheduled=count;
+        if(covAfterBreaks) count=scheduled-Math.max(...brSlots);   // lowest headcount at any point in the hour
         const pct=total>0?count/total:0;
         const cls=count===0?'cov-cell-0':pct<0.3?'cov-cell-low':pct<0.7?'cov-cell-mid':'cov-cell-high';
         const tooltip=count===0
           ?`No ${pos} working at ${timeLabel}`
           :`${count}/${total} working at ${timeLabel}:\n${working.join(', ')}`;
-        const popupHtml=count===0
+        const popupHtml=scheduled===0
           ?`<div style="font-size:11px;color:var(--text3);font-style:italic">Nobody working</div>`
           :`<div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">${timeLabel}</div>`+
-           `<div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:6px">${count} of ${total} working</div>`+
-           working.map(n=>`<div style="font-size:11px;color:var(--text2);padding:2px 0;white-space:nowrap">· ${n}</div>`).join('');
+           (covAfterBreaks
+             ?`<div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:2px">${count} on calls at the lowest point</div><div style="font-size:11px;color:var(--text3);margin-bottom:6px">${scheduled} scheduled · ${Math.max(...brSlots)} on break at once (max)</div>`
+             :`<div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:6px">${count} of ${total} working</div>`)+
+           working.map(n=>`<div style="font-size:11px;color:var(--text2);padding:2px 0;white-space:nowrap">· ${n}</div>`).join('')+
+           (onBreak.length?`<div style="font-size:10px;color:var(--amber);margin-top:6px;border-top:1px solid var(--border);padding-top:5px">On break this hour:</div>`+onBreak.map(n=>`<div style="font-size:11px;color:var(--text2);padding:1px 0;white-space:nowrap">· ${n}</div>`).join(''):'');
         const lentHtml=lent.length?`<div style="font-size:10px;color:var(--text3);margin-top:6px;border-top:1px solid var(--border);padding-top:5px">Not counted here:</div>`+lent.map(n=>`<div style="font-size:11px;color:var(--text3);padding:1px 0;white-space:nowrap">· ${n}</div>`).join(''):'';
         const helped=working.filter(n=>n.includes('🎧')).length;
-        html+=`<td class="${cls} cov-hover-cell" data-popup="${encodeURIComponent(popupHtml+lentHtml)}" style="cursor:default">${count||'—'}${helped?`<sup style="font-size:8px;margin-left:1px" title="${helped} supporting">🎧</sup>`:''}</td>`;
+        html+=`<td class="${cls} cov-hover-cell" data-popup="${encodeURIComponent(popupHtml+lentHtml)}" style="cursor:default">${scheduled?count:'—'}${covAfterBreaks&&scheduled&&count<scheduled?`<span style="font-size:9px;opacity:.6;margin-left:2px" title="${scheduled} scheduled">/${scheduled}</span>`:''}${helped?`<sup style="font-size:8px;margin-left:1px" title="${helped} supporting">🎧</sup>`:''}</td>`;
       });
       html+='</tr>';
     });
   });
 
   html+='</tbody></table>';
+  const keepL=grid.scrollLeft, keepT=grid.scrollTop, firstRender=!grid.dataset.rendered;
   grid.innerHTML=html;
+  grid.dataset.rendered='1';
+  if(firstRender) covScroll(0,true); else { grid.scrollLeft=keepL; grid.scrollTop=keepT; }
+  covEnableDrag(grid);
 
-  // Hover popup using event delegation — more reliable than per-cell listeners
+  // Click a cell → names card (scrollable). Click elsewhere / Esc / scroll the table → close. Hover = crosshair only.
   const popup=document.getElementById('covPopup');
+  const clearHover=()=>{ document.querySelectorAll('.cov-row-hover').forEach(r=>r.classList.remove('cov-row-hover'));
+    document.querySelectorAll('.cov-col-hover').forEach(c=>c.classList.remove('cov-col-hover')); };
   grid.onmouseover=e=>{
-    const td=e.target.closest('.cov-hover-cell');
-    if(!td){popup.style.display='none';return;}
-    popup.innerHTML=decodeURIComponent(td.dataset.popup||'');
-    popup.style.display='block';
-    popup.style.width='auto';
-    requestAnimationFrame(()=>{
-      const r=td.getBoundingClientRect();
-      const pw=popup.offsetWidth;
-      const ph=popup.offsetHeight;
-      let left=r.right+10;
-      let top=r.top-4;
-      if(left+pw>window.innerWidth-8) left=r.left-pw-10;
-      if(top+ph>window.innerHeight-8) top=window.innerHeight-ph-8;
-      popup.style.left=Math.max(4,left)+'px';
-      popup.style.top=Math.max(4,top)+'px';
-    });
-    // Crosshair highlight
-    const tbl=td.closest('table');
-    if(tbl){
-      const row=td.parentElement;
-      const colIdx=[...row.children].indexOf(td);
-      tbl.querySelectorAll('tr').forEach(r=>r.classList.remove('cov-row-hover'));
-      tbl.querySelectorAll('.cov-col-hover').forEach(c=>c.classList.remove('cov-col-hover'));
-      row.classList.add('cov-row-hover');
-      tbl.querySelectorAll(`tr td:nth-child(${colIdx+1}),tr th:nth-child(${colIdx+1})`).forEach(c=>c.classList.add('cov-col-hover'));
-    }
+    const td=e.target.closest('.cov-hover-cell'); if(!td) return;
+    const tbl=td.closest('table'); if(!tbl) return;
+    const row=td.parentElement, colIdx=[...row.children].indexOf(td);
+    clearHover();
+    row.classList.add('cov-row-hover');
+    tbl.querySelectorAll(`tr td:nth-child(${colIdx+1}),tr th:nth-child(${colIdx+1})`).forEach(c=>c.classList.add('cov-col-hover'));
   };
-  grid.onmouseleave=()=>{
-    popup.style.display='none';
-    document.querySelectorAll('.cov-row-hover').forEach(r=>r.classList.remove('cov-row-hover'));
-    document.querySelectorAll('.cov-col-hover').forEach(c=>c.classList.remove('cov-col-hover'));
+  grid.onmouseleave=clearHover;
+  grid.onclick=e=>{
+    if(grid.dataset.justDragged==='1') return;              // that was a drag, not a click
+    const td=e.target.closest('.cov-hover-cell'); if(!td) return;
+    e.stopPropagation();
+    if(td.classList.contains('cov-cell-active')&&popup.style.display==='block'){ closeCovPopup(); return; }
+    openCovPopup(td);
   };
-
   // Legend
   legend.innerHTML=`
     <span style="display:flex;align-items:center;gap:4px"><span class="cov-cell-high" style="width:14px;height:14px;border-radius:2px;display:inline-block"></span>High coverage (≥70%)</span>
     <span style="display:flex;align-items:center;gap:4px"><span class="cov-cell-mid" style="width:14px;height:14px;border-radius:2px;display:inline-block"></span>Medium (30–69%)</span>
     <span style="display:flex;align-items:center;gap:4px"><span class="cov-cell-low" style="width:14px;height:14px;border-radius:2px;display:inline-block"></span>Low (&lt;30%)</span>
     <span style="display:flex;align-items:center;gap:4px"><span class="cov-cell-0" style="width:14px;height:14px;border-radius:2px;display:inline-block;border:1px solid var(--border)"></span>None</span>
-    <span style="color:var(--text3);margin-left:8px">Numbers show staff count per hour slot</span>`;
+    <span style="color:var(--text3);margin-left:8px">${covAfterBreaks?'After breaks: lowest number on calls within each hour (small number = scheduled). Uses breaks saved in the Breaks tab.':'Numbers show staff count per hour slot (before breaks)'}</span>`;
 }
 
 // ── DARK MODE ──
@@ -5475,7 +5885,7 @@ async function loadHoursMonthData(){
   // Load schedule data for this month if not already loaded
   const hasData=Object.keys(schedData).some(k=>k.includes('_'+mk));
   if(!hasData){
-    const {data}=await sb.from('schedule').select('*').eq('month_key',mk);
+    const {data}=await fetchScheduleMonth(mk);
     if(data) data.forEach(r=>{
       const key=r.staff_id+'_'+r.day+'_'+mk;
       const simple=r.staff_id+'_'+r.day;
@@ -5527,8 +5937,7 @@ function renderHours(){
     // Fetch this month's schedule data first, then re-render
     const container=document.getElementById('hoursTable');
     if(container) container.innerHTML='<div style="padding:20px;text-align:center"><div class="spinner"></div><div style="font-size:11px;color:var(--text3);margin-top:6px">Loading schedule data…</div></div>';
-    sb.from('schedule').select('staff_id,day,shift,month_key,ot_hours,ot_start,ot_end,ot_type')
-      .eq('month_key',mk)
+    fetchScheduleMonth(mk,'id,staff_id,day,shift,month_key,ot_hours,ot_start,ot_end,ot_type')
       .then(({data,error})=>{
         if(!error&&data) data.forEach(r=>{
           const key=r.staff_id+'_'+r.day+'_'+r.month_key;
@@ -5860,7 +6269,7 @@ function minsToTime(m){
 
 function getAutoBreaks(shiftCode){
   if(!shiftCode||['AL','RL','MC','EL','PH','O'].includes(shiftCode)) return [];
-  return breakRules.map(rule=>({
+  return breakRules.filter(rule=>!rule.eaOnly).map(rule=>({
     ...rule,
     ...getBreakTime(rule,shiftCode)
   }));
@@ -6078,14 +6487,14 @@ function openBreakOverride(staffId, day, name){
 
 async function saveBreakOverride(staffId,day,count){
   const key=staffId+'_'+day+'_'+cy+'-'+(cm+1);
-  const sh=getS(staffId,day);
-  const autoBreaks=getAutoBreaks(sh);
+  const autoBreaks=getStaffBreaksOrAuto(staffId,day);
   const overrides=autoBreaks.map((br,i)=>{
     const start=document.getElementById('brStart_'+i)?.value||br.start;
     const end=document.getElementById('brEnd_'+i)?.value||br.end;
     const [sh2,sm]=start.split(':').map(Number);
     const [eh,em]=end.split(':').map(Number);
-    return{...br,start,end,startMins:sh2*60+sm,endMins:eh*60+em};
+    const changed=start!==br.start||end!==br.end;
+    return{...br,start,end,startMins:sh2*60+sm,endMins:eh*60+em,auto:br.auto&&!changed};
   });
   breakOverrides[key]=overrides;
   // Persist to Supabase — also write timestamp so staff clients auto-reload
@@ -6103,6 +6512,7 @@ async function saveBreakOverride(staffId,day,count){
       ['Senior Manager','Assistant Manager','Team Leader','Supervisor','Manager'].includes(currentProfile.staff_role||'')||
       can('assign_breaks'));
     autoBtn.style.display=canAutoAssign?'flex':'none';
+    const mb=document.getElementById('autoAssignMonthBtn'); if(mb) mb.style.display=canAutoAssign?'flex':'none';
   }
 
   // Auto-select today or first day, then render
@@ -6211,6 +6621,7 @@ function renderBreaksTab(){
       ['Senior Manager','Assistant Manager','Team Leader','Supervisor','Manager'].includes(currentProfile.staff_role||'')||
       can('assign_breaks'));
     autoBtn.style.display=canAutoAssign?'flex':'none';
+    const mb=document.getElementById('autoAssignMonthBtn'); if(mb) mb.style.display=canAutoAssign?'flex':'none';
   }
   const dayVal=parseInt(document.getElementById('breakDayFilter')?.value||0);
   const posFilter=document.getElementById('breakPosFilter')?.value||'';
@@ -6259,7 +6670,7 @@ function renderBreaksTab(){
     const shiftCounts={};
     onShift.forEach(s=>{const sh=getS(s.id,dayVal,cm,cy);shiftCounts[sh]=(shiftCounts[sh]||0)+1;});
     const mk=cy+'-'+(cm+1);
-    const overrideCount=onShift.filter(s=>breakOverrides[s.id+'_'+dayVal+'_'+mk]).length;
+    const overrideCount=onShift.filter(s=>(breakOverrides[s.id+'_'+dayVal+'_'+mk]||[]).some(b=>!b.auto)).length;
     summary.innerHTML=`
       <div class="scard">On shift<strong>${onShift.length}</strong></div>
       ${Object.entries(shiftCounts).map(([k,v])=>`<div class="scard">${k} shift<strong>${v}</strong></div>`).join('')}
@@ -6311,7 +6722,7 @@ function renderBreaksTab(){
   const positions=[...new Set(onShift.map(s=>s.staff_role))];
   const mk=cy+'-'+(cm+1);
 
-  let html=`<div style="border:0.5px solid var(--border);border-radius:var(--rl);overflow:hidden;background:var(--surface)">
+  let html=breaksCoverageStrip(dayVal)+`<div style="border:0.5px solid var(--border);border-radius:var(--rl);overflow:hidden;background:var(--surface)">
   <table style="border-collapse:collapse;font-size:11px;width:100%">
     <thead><tr style="background:var(--surface2)">
       <th style="padding:8px 12px;text-align:left;border-bottom:0.5px solid var(--border);font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:var(--text2);min-width:170px">Staff</th>
@@ -6340,15 +6751,22 @@ function renderBreaksTab(){
       const sh=getS(s.id,dayVal,cm,cy);
       const shiftDef=shiftTypes.find(x=>x.code===sh);
       const breaks=getStaffBreaks(s.id,dayVal);
-      const hasOverride=!!breakOverrides[s.id+'_'+dayVal+'_'+mk];
+      const ovr=breakOverrides[s.id+'_'+dayVal+'_'+mk];
+      const hasOverride=!!ovr&&ovr.some(b=>!b.auto);
       const shStart=getShiftStart(sh);
-      const shEnd=shStart+9*60;
+      const shEnd=getShiftEnd(sh);
       const rowBg=ri%2?'var(--surface2)':'var(--surface)';
+      let eaFlag='';
+      if(shiftTypes.some(t=>t.code===sh&&t.start&&t.end)){
+        const win=workWindow(s.id,dayVal,sh);
+        const lr=longestRun(win,breaks.map(b=>({st:b.startMins,dur:b.endMins-b.startMins})));
+        if(lr>BREAK_CFG.maxRun) eaFlag=`<span title="Works ${Math.floor(lr/60)}h${lr%60?(' '+lr%60+'m'):''} in a row without a 30-min break (Employment Act s60A: max 5h)" style="font-size:9px;padding:1px 5px;border-radius:20px;background:var(--red-bg);color:var(--red);border:0.5px solid var(--red);margin-left:5px">⚠ 5h+</span>`;
+      }
 
       html+=`<tr style="background:${rowBg}">
         <td style="padding:7px 12px;border-bottom:0.5px solid var(--border);font-weight:${currentProfile?.staff_id===s.id?'700':'500'};font-size:11px;background:${currentProfile?.staff_id===s.id?'var(--blue-bg)':''}">
           ${currentProfile?.staff_id===s.id?`<span style="color:var(--blue)">${s.name} <span style="font-size:9px;padding:1px 5px;border-radius:20px;background:var(--blue);color:#fff;margin-left:4px">You</span></span>`:s.name}
-          ${hasOverride?`<span style="font-size:9px;padding:1px 5px;border-radius:20px;background:var(--amber-bg);color:var(--amber);border:0.5px solid var(--amber-bd);margin-left:5px">custom</span>`:''}
+          ${hasOverride?`<span style="font-size:9px;padding:1px 5px;border-radius:20px;background:var(--amber-bg);color:var(--amber);border:0.5px solid var(--amber-bd);margin-left:5px">custom</span>`:''}${eaFlag}
         </td>
         <td style="padding:7px 8px;border-bottom:0.5px solid var(--border);text-align:center">
           <span style="font-size:11px;padding:3px 8px;border-radius:20px;background:${shiftDef?.color||'#888'};color:#fff;font-weight:500">${sh}</span>
@@ -6386,31 +6804,198 @@ function renderBreaksTab(){
   grid.innerHTML=html;
 }
 
-async function autoAssignBreaks(){
+// ── SMART BREAK SCHEDULER ──
+// Rules: inbound-call staff only (not TL onwards) · 9h shift = 1h Meal + 20min Short ·
+// max 1 break starting in the first 2h of the shift · a person's breaks never overlap (≥30 min apart) ·
+// EA 1955 s60A(1)(a): no run of work > 5h without a break of ≥30 min (counts contiguous OT) ·
+// peak 10AM–4PM is protected: breaks go off-peak where possible, otherwise spread thin.
+const BREAK_CFG={peakFrom:10*60, peakTo:16*60, firstWin:120, earliest:60, gap:30, tailGuard:30,
+  maxRun:300, step:10, peakW:1.0, floor:0.75, shortEarliest:180,
+  blackout:[[19*60,20*60]]};   // no breaks 7PM–8PM
+const CALL_ROLES=new Set(['Inbound Agent','New Staff','Agent']);
+const ABSENT_FOR_BREAKS=new Set(['AL','RL','MC','MCR','EL','PH','O','OD','RD','UL','CL','HOSP','TO','H1','H2']);
+
+function breakRuleOf(kind){
+  const r=kind==='meal'?breakRules.find(b=>!b.eaOnly&&(/meal|lunch/i.test(b.name)||b.duration>=60))
+    :kind==='short'?breakRules.find(b=>!b.eaOnly&&/short/i.test(b.name)&&b.duration<60)
+    :breakRules.find(b=>b.eaOnly);
+  if(r) return r;
+  return kind==='meal'?{id:'meal',name:'Meal Break',duration:60,color:'#808000',icon:'🍽️'}
+    :kind==='short'?{id:'short',name:'Short Break',duration:20,color:'#808080',icon:'☕'}
+    :{id:'ea_rest',name:'EA Rest Break',duration:30,color:'#dc2626',icon:'⚖️',eaOnly:true};
+}
+function isCallStaff(s,sh){
+  return CALL_ROLES.has(s.staff_role)&&sh&&!ABSENT_FOR_BREAKS.has(sh)&&!/-H[12]AL$/.test(sh)&&!isLCShift(sh)
+    &&shiftTypes.some(t=>t.code===sh&&t.start&&t.end);
+}
+// Working window incl. OT that touches the shift (pre or post) — that's one continuous run for EA purposes
+function workWindow(sid,day,sh){
+  const S=getShiftStart(sh), E=getShiftEnd(sh);
+  let wS=S, wE=E; const o=getOT(sid,day);
+  if(o&&o.start&&o.end){ const a=toMin(o.start), b=toMin(o.end);
+    if(b>a){ if(b===S) wS=a; else if(a===E) wE=b; } }
+  return {S,E,wS,wE};
+}
+function eaRunsOK(win,brs){
+  const q=brs.filter(b=>b.dur>=30).sort((x,y)=>x.st-y.st);
+  let t=win.wS;
+  for(const b of q){ if(b.st-t>BREAK_CFG.maxRun) return false; t=b.st+b.dur; }
+  return win.wE-t<=BREAK_CFG.maxRun;
+}
+function longestRun(win,brs){
+  const q=brs.filter(b=>b.dur>=30).sort((x,y)=>x.st-y.st);
+  let t=win.wS, mx=0;
+  for(const b of q){ mx=Math.max(mx,b.st-t); t=b.st+b.dur; }
+  return Math.max(mx,win.wE-t);
+}
+function breakSetOK(win,brs){
+  const C=BREAK_CFG; const sorted=brs.slice().sort((a,b)=>a.st-b.st);
+  for(let i=0;i<sorted.length;i++){
+    const b=sorted[i];
+    if(b.st<win.S+C.earliest) return false;
+    if(b.k==='short'&&b.st<win.S+C.shortEarliest) return false;
+    if(C.blackout.some(([x,y])=>b.st<y&&b.st+b.dur>x)) return false;
+    if(b.st+b.dur>(b.ea?win.wE:win.E)-C.tailGuard) return false;
+    if(i&&sorted[i-1].st+sorted[i-1].dur+C.gap>b.st) return false;
+  }
+  if(sorted.filter(b=>b.st<win.S+C.firstWin).length>1) return false;
+  return eaRunsOK(win,brs);
+}
+// All valid break sets for one person (meal+short for a 9h shift; EA rest only if the run still exceeds 5h)
+function breakOptions(win){
+  const C=BREAK_CFG, out=[];
+  const shiftLen=win.E-win.S;
+  const meal=breakRuleOf('meal'), short=breakRuleOf('short'), ea=breakRuleOf('ea');
+  const blocked=(t,dur)=>C.blackout.some(([a,b])=>t<b&&t+dur>a);
+  const starts=(dur,limitEnd)=>{const a=[];for(let t=win.S+C.earliest;t+dur<=limitEnd-C.tailGuard;t+=C.step) if(!blocked(t,dur)) a.push(t);return a;};
+  const base=[];
+  if(shiftLen>=9*60){
+    for(const m of starts(meal.duration,win.E)) for(const sh of starts(short.duration,win.E).filter(t=>t>=win.S+C.shortEarliest))
+      base.push([{k:'meal',st:m,dur:meal.duration},{k:'short',st:sh,dur:short.duration}]);
+  } else base.push([]);
+  base.forEach(set=>{ if(breakSetOK(win,set)) out.push(set); });
+  if(out.length) return out;
+  // Needs an extra 30-min EA rest break (before or during OT)
+  base.forEach(set=>{ for(const e of starts(ea.duration,win.wE)){
+      const s2=[...set,{k:'ea',st:e,dur:ea.duration,ea:true}]; if(breakSetOK(win,s2)) out.push(s2); } });
+  return out;
+}
+
+function planBreaksForDay(day){
+  const C=BREAK_CFG, SL=1440/C.step;
+  const people=[]; const warnings=[];
+  staffList.forEach(s=>{
+    const sh=getS(s.id,day,cm,cy);
+    if(!isCallStaff(s,sh)) return;
+    const win=workWindow(s.id,day,sh);
+    let opts=breakOptions(win);
+    if(!opts.length){ warnings.push(`${s.name}: no break plan fits the rules`); return; }
+    const offs=offCallTasks(s.id,cy,cm,day).map(t=>[toMin(t.start_time),toMin(t.start_time)+(t.duration_mins||0)]);
+    if(offs.length){   // keep breaks clear of Quiz / Training etc. when possible
+      const clear=opts.filter(set=>set.every(b=>offs.every(([a,e])=>b.st>=e||b.st+b.dur<=a)));
+      if(clear.length) opts=clear; else warnings.push(`${s.name}: a break overlaps their task`);
+    }
+    people.push({s,sh,win,opts,offs});
+  });
+  // Headcount per 10-min slot — per Coverage group (role) and in total (incl. contiguous OT; QA support adds to total)
+  const grpOf=p=>p.s.staff_role||'Agent';
+  const groups=[...new Set(people.map(grpOf))];
+  const mk0=()=>new Array(SL).fill(0);
+  const wkG={}, obG={}; groups.forEach(g=>{wkG[g]=mk0();obG[g]=mk0();});
+  const working=mk0(), onBreak=mk0();
+  people.forEach(p=>{ for(let t=p.win.wS;t<p.win.wE;t+=C.step){ if(p.offs.some(([a,e])=>t>=a&&t<e)) continue; const i=t/C.step; working[i]++; wkG[grpOf(p)][i]++; } });
+  staffList.forEach(s=>{ if(people.some(p=>p.s.id===s.id)) return;
+    const ssh=getS(s.id,day,cm,cy); if(!ssh||LEAVE_NO_OT.has(ssh)||['OD','RD','O'].includes(ssh)) return;
+    supportTasks(s.id,cy,cm,day).forEach(t=>{ const a=toMin(t.start_time); for(let m=a;m<a+t.duration_mins;m+=C.step) working[Math.floor(m/C.step)]++; }); });
+  const hw=h=>(h*60>=C.peakFrom&&h*60<C.peakTo)?C.peakW:1;
+  // Cost of adding a break set: how much it lowers the *lowest* on-calls figure of each hour it touches
+  // (what Coverage → After breaks shows), relative to that hour's headcount — for the person's group and overall.
+  // Squared, so taking the 4th person off an hour hurts far more than the 2nd. Plus the 75% floor.
+  const hourCost=(wk,ob,inc,h)=>{
+    let wmax=0, oldMax=0, newMax=0;
+    for(let j=0;j<6;j++){ const i=h*6+j; wmax=Math.max(wmax,wk[i]); oldMax=Math.max(oldMax,ob[i]); newMax=Math.max(newMax,ob[i]+(inc[i]||0)); }
+    if(newMax===oldMax||!wmax) return 0;
+    const f=x=>100*(x/wmax)*(x/wmax);
+    return hw(h)*(f(newMax)-f(oldMax));
+  };
+  const cost=(p,set)=>{
+    const inc={}; const hrs=new Set();
+    set.forEach(b=>{ for(let m=b.st;m<b.st+b.dur;m+=C.step){ const i=m/C.step; inc[i]=(inc[i]||0)+1; hrs.add(Math.floor(m/60)); } });
+    const g=grpOf(p); let c=0;
+    hrs.forEach(h=>{ c+=4*hourCost(wkG[g],obG[g],inc,h)+hourCost(working,onBreak,inc,h); });
+    Object.keys(inc).forEach(k=>{ const i=+k, wk=Math.max(1,working[i]), ob=onBreak[i]+inc[i];
+      c+=0.5*(ob/wk)*(ob/wk);                        // smooth tie-break inside the hour
+      if(wk-ob<Math.ceil(wk*C.floor)) c+=200; });
+    return c;
+  };
+  const apply=(p,set,d)=>set.forEach(b=>{ for(let m=b.st;m<b.st+b.dur;m+=C.step){ const i=m/C.step; onBreak[i]+=d; obG[grpOf(p)][i]+=d; } });
+  // Most constrained first, then refinement passes until nothing improves
+  people.sort((a,b)=>a.opts.length-b.opts.length||a.win.S-b.win.S);
+  const pick=p=>{ let best=null,bc=Infinity; for(const o of p.opts){ const c=cost(p,o); if(c<bc-1e-9){bc=c;best=o;} } return best; };
+  people.forEach(p=>{ p.plan=pick(p); apply(p,p.plan,1); });
+  for(let pass=0;pass<8;pass++){ let moved=false;
+    people.forEach(p=>{ apply(p,p.plan,-1); const np=pick(p); if(np!==p.plan) moved=true; p.plan=np; apply(p,p.plan,1); });
+    if(!moved) break; }
+  return {people,working,onBreak,warnings};
+}
+
+function planToOverrides(plan){
+  const rules={meal:breakRuleOf('meal'),short:breakRuleOf('short'),ea:breakRuleOf('ea')};
+  return plan.slice().sort((a,b)=>a.st-b.st).map(b=>({...rules[b.k],start:minsToTime(b.st),end:minsToTime(b.st+b.dur),startMins:b.st,endMins:b.st+b.dur,auto:true}));
+}
+
+async function autoAssignBreaks(scope){
   const dayVal=parseInt(document.getElementById('breakDayFilter')?.value||0);
-  if(!dayVal){toast('Select a day first','err');return;}
-  const posFilter=document.getElementById('breakPosFilter')?.value||'';
-  const shiftFilter=document.getElementById('breakShiftFilter')?.value||'';
-  let targets=staffList.filter(s=>{
-    const sh=getS(s.id,dayVal,cm,cy);
-    if(!sh||['AL','RL','MC','EL','PH'].includes(sh)) return false;
-    if(posFilter&&s.staff_role!==posFilter) return false;
-    if(shiftFilter&&sh!==shiftFilter) return false;
-    return true;
+  if(scope!=='month'&&!dayVal){toast('Select a day first','err');return;}
+  const mk=cy+'-'+(cm+1);
+  const days=scope==='month'?Array.from({length:dim(cy,cm)},(_,i)=>i+1):[dayVal];
+  let n=0, eaN=0; const warn=[];
+  days.forEach(d=>{
+    const r=planBreaksForDay(d);
+    r.people.forEach(p=>{ breakOverrides[p.s.id+'_'+d+'_'+mk]=planToOverrides(p.plan); n++; if(p.plan.some(b=>b.k==='ea')) eaN++; });
+    r.warnings.forEach(x=>warn.push(`${d} ${MONTHS[cm].slice(0,3)} — ${x}`));
   });
-  if(!targets.length){toast('No staff on shift for this day','err');return;}
-  // Clear any overrides for these staff on this day
-  const mk=(new Date(cy,cm,dayVal)).getFullYear()+'-'+((new Date(cy,cm,dayVal)).getMonth()+1);
-  // Auto-assign breaks for each target
-  targets.forEach(s=>{
-    const sh=getS(s.id,dayVal,cm,cy);
-    const key=s.id+'_'+dayVal+'_'+mk;
-    const autoBreaks=getAutoBreaks(sh);
-    if(autoBreaks.length) breakOverrides[key]=autoBreaks;
-  });
-  await sb.from('app_settings').upsert({key:'break_overrides',value:JSON.stringify(breakOverrides)},{onConflict:'key'});
-  toast(`Auto-assigned breaks for ${targets.length} staff ✓`,'ok');
+  if(!n){toast('No inbound staff on shift to assign','err');return;}
+  const {error}=await sb.from('app_settings').upsert({key:'break_overrides',value:JSON.stringify(breakOverrides)},{onConflict:'key'});
+  if(error){toast('Save failed: '+error.message,'err');return;}
+  await sb.from('app_settings').upsert({key:'last_breaks_updated_at',value:new Date().toISOString()},{onConflict:'key'});
+  toast(`Breaks planned for ${n} shift${n>1?'s':''} ✓${eaN?` · ${eaN} with an EA rest break`:''}${warn.length?` · ${warn.length} need attention`:''}`,'ok');
+  if(warn.length) console.warn('Break planner:',warn.join('\n'));
   renderBreaksTab();
+}
+
+// Peak-hour headcount strip for the Breaks tab
+function breaksCoverageStrip(day){
+  const r={working:new Array(144).fill(0),onBreak:new Array(144).fill(0)};
+  const mk=cy+'-'+(cm+1);
+  staffList.forEach(s=>{
+    const sh=getS(s.id,day,cm,cy); if(!isCallStaff(s,sh)) return;
+    const win=workWindow(s.id,day,sh);
+    for(let t=win.wS;t<win.wE;t+=10) r.working[t/10]++;
+    (breakOverrides[s.id+'_'+day+'_'+mk]||[]).forEach(b=>{ for(let m=b.startMins;m<b.endMins;m+=10) r.onBreak[Math.floor(m/10)]++; });
+  });
+  const slots=[]; for(let m=8*60;m<20*60;m+=30){ const i=m/10;
+    const avail=Math.min(...[0,1,2].map(k=>r.working[i+k]-r.onBreak[i+k])); const brk=Math.max(...[0,1,2].map(k=>r.onBreak[i+k]));
+    slots.push({m,avail,brk,peak:m>=BREAK_CFG.peakFrom&&m<BREAK_CFG.peakTo}); }
+  if(!slots.some(x=>x.avail>0||x.brk>0)) return '';
+  const peakMin=Math.min(...slots.filter(x=>x.peak).map(x=>x.avail));
+  const mx=Math.max(1,...slots.map(x=>x.avail+x.brk));
+  return `<div style="margin-bottom:12px;padding:10px 12px;border:0.5px solid var(--border);border-radius:var(--rl);background:var(--surface)">
+    <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;flex-wrap:wrap;gap:6px">
+      <span style="font-size:12px;font-weight:600">📞 Inbound agents on calls after breaks</span>
+      <span style="font-size:11px;color:var(--text2)">Lowest during peak (10AM–4PM): <b style="color:var(--text)">${peakMin}</b></span>
+    </div>
+    <div style="display:flex;gap:2px;align-items:flex-end;height:54px">
+      ${slots.map(x=>`<div title="${minsToTime(x.m)}–${minsToTime(x.m+30)}: ${x.avail} on calls, ${x.brk} on break" style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;height:100%">
+        <div style="height:${x.brk/mx*100}%;background:#f59e0b88;border-radius:2px 2px 0 0"></div>
+        <div style="height:${x.avail/mx*100}%;background:${x.peak?'var(--blue)':'#94a3b8'};${x.brk?'':'border-radius:2px 2px 0 0'}"></div></div>`).join('')}
+    </div>
+    <div style="display:flex;gap:2px;margin-top:2px">${slots.map(x=>`<div style="flex:1;text-align:center;font-size:8px;color:var(--text3)">${x.m%60===0?(x.m/60>12?x.m/60-12:x.m/60):''}</div>`).join('')}</div>
+    <div style="display:flex;gap:12px;font-size:10px;color:var(--text3);margin-top:4px">
+      <span><span style="display:inline-block;width:8px;height:8px;background:var(--blue);border-radius:2px"></span> On calls (peak)</span>
+      <span><span style="display:inline-block;width:8px;height:8px;background:#94a3b8;border-radius:2px"></span> On calls (off-peak)</span>
+      <span><span style="display:inline-block;width:8px;height:8px;background:#f59e0b88;border-radius:2px"></span> On break</span>
+    </div></div>`;
 }
 
 // ── PUBLISH SCHEDULE ──
@@ -6703,18 +7288,24 @@ function renderProfile(){
     // Team Leader / Supervisor / Manager → own team only
     const isSenior=isAdmin||['Senior Manager','Assistant Manager'].includes(currentProfile?.staff_role||'');
     const myTeam=currentProfile?.team||'';
+    // Profiles list everyone, including people who have left (so their details can still be viewed/edited)
+    const everyone=allStaff.length?allStaff:staffList;
     const visibleStaff=isSenior
-      ? [...staffList]
-      : staffList.filter(s=>s.team&&s.team===myTeam);
+      ? [...everyone]
+      : everyone.filter(s=>s.team&&s.team===myTeam);
 
     const sorted=visibleStaff.sort((a,b)=>{
       if(a.staff_role!==b.staff_role) return (a.staff_role||'').localeCompare(b.staff_role||'');
       return a.name.localeCompare(b.name);
     });
-    const positions=[...new Set(sorted.map(s=>s.staff_role||'Other'))];
+    const isGone=x=>x.employment_status==='Resigned';
+    const positions=[...new Set(sorted.filter(x=>!isGone(x)).map(s=>s.staff_role||'Other'))];
+    if(sorted.some(isGone)) positions.push('__resigned');
     const opts=positions.map(pos=>{
-      const group=sorted.filter(s=>s.staff_role===pos);
-      return`<optgroup label="${pos}">${group.map(s=>`<option value="${s.id}">${s.name}</option>`).join('')}</optgroup>`;
+      const group=pos==='__resigned'?sorted.filter(isGone):sorted.filter(s=>s.staff_role===pos&&!isGone(s));
+      if(pos==='__resigned') pos='Resigned';
+      const left=x=>x.last_working_date&&isGone(x)?` (left ${+String(x.last_working_date).slice(8,10)} ${MONTHS[+String(x.last_working_date).slice(5,7)-1].slice(0,3)} ${String(x.last_working_date).slice(0,4)})`:'';
+      return`<optgroup label="${pos}">${group.map(s=>`<option value="${s.id}">${s.name}${left(s)}</option>`).join('')}</optgroup>`;
     }).join('');
     el.innerHTML=`
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap">
@@ -6737,13 +7328,64 @@ function renderProfile(){
   }
 }
 
+// ── Staff photos ──
+function canEditPhoto(sid){
+  if(!currentProfile) return false;
+  if(currentProfile.app_role==='admin') return true;
+  if(currentProfile.staff_id===sid) return true;
+  return ['Senior Manager','Assistant Manager','Manager','Team Leader','Supervisor'].includes(currentProfile.staff_role||'');
+}
+function refreshMyAvatar(){
+  const el=document.getElementById('userAvatar'); if(!el||!currentProfile) return;
+  const me=(allStaff||[]).find(x=>x.id===currentProfile.staff_id);
+  if(me&&me.photo){ el.style.backgroundImage=`url('${me.photo}')`; el.classList.add('has-photo'); }
+  else { el.style.backgroundImage=''; el.classList.remove('has-photo'); }
+}
+function pickStaffPhoto(sid){
+  const inp=document.createElement('input'); inp.type='file'; inp.accept='image/*';
+  inp.onchange=async()=>{
+    const f=inp.files&&inp.files[0]; if(!f) return;
+    if(!/^image\//.test(f.type)){ toast('Please choose an image file','err'); return; }
+    try{ await saveStaffPhoto(sid, await shrinkPhoto(f)); }
+    catch(e){ toast('Photo upload failed: '+(e.message||e),'err'); }
+  };
+  inp.click();
+}
+function shrinkPhoto(file){
+  return new Promise((res,rej)=>{
+    const url=URL.createObjectURL(file); const img=new Image();
+    img.onload=()=>{
+      const S=240, side=Math.min(img.naturalWidth,img.naturalHeight);
+      const c=document.createElement('canvas'); c.width=c.height=S;
+      const g=c.getContext('2d'); g.fillStyle='#fff'; g.fillRect(0,0,S,S);
+      g.drawImage(img,(img.naturalWidth-side)/2,(img.naturalHeight-side)/2,side,side,0,0,S,S);
+      URL.revokeObjectURL(url);
+      let q=0.85, out=c.toDataURL('image/jpeg',q);
+      while(out.length>120000&&q>0.4){ q-=0.1; out=c.toDataURL('image/jpeg',q); }
+      res(out);
+    };
+    img.onerror=()=>{URL.revokeObjectURL(url);rej(new Error('Could not read that image'));};
+    img.src=url;
+  });
+}
+async function saveStaffPhoto(sid,photo){
+  const {error}=await sb.rpc('sched_set_staff_photo',{p_staff_id:sid,p_photo:photo||''});
+  if(error) throw new Error(error.message);
+  [staffList,allStaff].forEach(l=>{const x=(l||[]).find(y=>y.id===sid); if(x) x.photo=photo||null;});
+  refreshMyAvatar(); renderProfileCard(sid);
+  toast(photo?'Photo updated ✓':'Photo removed','ok');
+}
+async function removeStaffPhoto(sid){
+  try{ await saveStaffPhoto(sid,''); }catch(e){ toast('Could not remove photo: '+e.message,'err'); }
+}
+
 async function renderProfileCard(forceSid){
   const cardEl=document.getElementById('profileCard');
   if(!cardEl) return;
   const sid=forceSid||(document.getElementById('profileStaffSel')?.value||currentProfile?.staff_id);
   if(!sid){cardEl.innerHTML='<div style="padding:30px;text-align:center;color:var(--text3)">Select a staff member above</div>';return;}
 
-  const s=staffList.find(x=>x.id===sid);
+  const s=staffList.find(x=>x.id===sid)||allStaff.find(x=>x.id===sid);
   if(!s){cardEl.innerHTML='<div style="padding:20px;color:var(--red)">Staff not found</div>';return;}
 
   // Find linked login account
@@ -6755,7 +7397,7 @@ async function renderProfileCard(forceSid){
   // Load month data if not cached
   const _hasData=Object.keys(schedData).some(k=>k.endsWith('_'+_pmk));
   if(!_hasData){
-    const {data:_md}=await sb.from('schedule').select('*').eq('month_key',_pmk);
+    const {data:_md}=await fetchScheduleMonth(_pmk);
     if(_md) _md.forEach(r=>{
       schedData[r.staff_id+'_'+r.day+'_'+_pmk]=r.shift||'';
       if(r.ot_hours||r.ot_start) otData[r.staff_id+'_'+r.day+'_'+_pmk]={hours:r.ot_hours||0,start:r.ot_start||'',end:r.ot_end||'',type:r.ot_type||'OT'};
@@ -6802,9 +7444,11 @@ async function renderProfileCard(forceSid){
       <div style="background:var(--surface);border:0.5px solid var(--border);border-radius:var(--rl);overflow:hidden">
         <!-- Header -->
         <div style="padding:20px;background:linear-gradient(135deg,#1e3a5f,#2d6a9f);color:#fff;text-align:center">
-          <div style="width:60px;height:60px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:600;margin:0 auto 10px">
-            ${s.name.split(' ').map(w=>w[0]).slice(0,2).join('')}
+          ${(()=>{const ed=canEditPhoto(s.id);return `<div class="pf-photo${ed?' can-edit':''}" ${s.photo?`style="background-image:url('${s.photo}')"`:''} ${ed?`onclick="pickStaffPhoto('${s.id}')" title="Change photo"`:''}>
+            ${s.photo?'':s.name.split(' ').map(w=>w[0]).slice(0,2).join('')}
+            ${ed?'<span class="pf-cam">📷</span>':''}
           </div>
+          ${ed&&s.photo?`<div style="margin:-4px 0 8px"><button onclick="removeStaffPhoto('${s.id}')" style="font-size:10px;background:none;border:none;color:#fff;opacity:.7;cursor:pointer;text-decoration:underline;font-family:'DM Sans',sans-serif">Remove photo</button></div>`:''}`;})()}
           <div style="font-size:15px;font-weight:600;margin-bottom:4px">${s.name}</div>
           <div style="font-size:11px;opacity:.8;background:rgba(255,255,255,.15);padding:3px 10px;border-radius:20px;display:inline-block">${s.staff_role}</div>
         </div>
@@ -6856,6 +7500,8 @@ async function renderProfileCard(forceSid){
               ['🖥️ Work mode',     isAdminView ? sel('work_mode',s.work_mode,['Work from office','WFH','Hybrid']) : txt(s.work_mode)],
               ['🎂 Birth date',    isAdminView ? inp('birth_date',dateVal(s.birth_date),'date') : txt(dateFmt(s.birth_date))],
               ['📅 Date joined',   isAdminView ? inp('contract_start',dateVal(s.contract_start),'date') : txt(dateFmt(s.contract_start))],
+              ['🟢 Employment',   isAdminView ? sel('employment_status',s.employment_status||'Active',['Active','Resigned']) : txt(s.employment_status||'Active')],
+              ['🚪 Last working date', isAdminView ? inp('last_working_date',dateVal(s.last_working_date),'date') : txt(s.last_working_date?dateFmt(s.last_working_date):'—')],
               ['⏳ Duration',      txt(duration)],
               ...(s.position_status==='Permanent'?[]:[
                 ['🔄 Contract end', isAdminView ? inp('contract_end',dateVal(s.contract_end),'date') : txt(dateFmt(s.contract_end))],
@@ -7690,7 +8336,7 @@ async function hardRefresh(){
 
 // ── HALF DAY INFO MODAL ──
 function openHalfDayInfo(sid, day, code){
-  const staff=staffList.find(s=>s.id===sid);
+  const staff=(staffList.find(s=>s.id===sid)||allStaff.find(s=>s.id===sid));
   // Try to find their base shift from surrounding days or default to M
   let baseSh='M';
   for(let d=1;d<=dim(cy,cm);d++){
@@ -7865,6 +8511,7 @@ async function renderLeaveBalance(staff, container){
 
   // MC: calendar year
   const mcTaken=countLeaveTaken(staff.id,['MC'],mcYear.start,mcYear.end);
+  const mcRejected=countLeaveTaken(staff.id,['MCR'],mcYear.start,mcYear.end);
   const mcBal=staff.mc_entitlement-mcTaken;
 
   // RL: separate tracking
@@ -7943,6 +8590,7 @@ async function renderLeaveBalance(staff, container){
         <div onclick="showLeaveDates('${staff.id}','MC')" style="text-align:center;padding:6px;background:var(--surface2);border-radius:var(--r);cursor:pointer;border:1px solid transparent" onmouseover="this.style.borderColor='var(--amber)'" onmouseout="this.style.borderColor='transparent'">
           <div style="font-size:13px;font-weight:500;color:var(--amber)">${mcTaken} days</div>
           <div style="font-size:10px;color:var(--text3)">MC taken 👆</div>
+          ${mcRejected?`<div onclick="event.stopPropagation();showLeaveDates('${staff.id}','MCR')" style="margin-top:4px;font-size:10px;font-weight:600;color:#b91c1c;cursor:pointer" title="Rejected MCs — not counted as MC taken">✕ ${mcRejected} rejected</div>`:''}
         </div>
         <div style="text-align:center;padding:6px;background:var(--surface2);border-radius:var(--r)">
           <div style="font-size:13px;font-weight:500;color:${mcBal<3?'var(--red)':'var(--green)'}">${mcBal} days</div>
@@ -8026,11 +8674,11 @@ async function renderLeaveBalance(staff, container){
 }
 
 function showLeaveDates(staffId, leaveType){
-  const staff=staffList.find(s=>s.id===staffId);
+  const staff=(staffList.find(s=>s.id===staffId)||allStaff.find(s=>s.id===staffId));
   if(!staff){toast('Staff not found','err');return;}
   // Derive year range from staff data
   let yearStart, yearEnd;
-  if(leaveType==='MC'){
+  if(leaveType==='MC'||leaveType==='MCR'){
     const r=getMCYear();yearStart=r.start;yearEnd=r.end;
   } else {
     const r=getLeaveYear(staff);yearStart=r.start;yearEnd=r.end;
@@ -8058,12 +8706,13 @@ function showLeaveDates(staffId, leaveType){
         }
         else if(leaveType==='EL'&&sh==='EL'){match=true;label='EL';}
         else if(leaveType==='MC'&&sh==='MC'){match=true;label='MC';}
+        else if(leaveType==='MCR'&&sh==='MCR'){match=true;label='MC rejected';}
         if(match) dates.push({d,m,y,dt,label,days});
       }
     }
   }
 
-  const typeLabel=leaveType==='AL'?'Annual Leave':leaveType==='EL'?'Emergency Leave':leaveType==='MC'?'Medical Leave':'Half-day AL';
+  const typeLabel=leaveType==='AL'?'Annual Leave':leaveType==='EL'?'Emergency Leave':leaveType==='MC'?'Medical Leave':leaveType==='MCR'?'Rejected MC':'Half-day AL';
   const box=document.getElementById('modalBox');
   box.innerHTML=`<h3>${typeLabel} — dates taken</h3>
   <div class="msub">${staff?staff.name:''} · ${dates.length} occurrence${dates.length!==1?'s':''} · ${dates.reduce((a,x)=>a+x.days,0).toFixed(1)} days total</div>
@@ -8109,21 +8758,18 @@ function countHalfDays(staffId, yearStart, yearEnd){
 }
 
 async function saveProfileDetails(staffId){
-  const g=(id)=>document.getElementById('pf_'+id+'_'+staffId)?.value.trim()||null;
   const statusEl=document.getElementById('pfSaveStatus_'+staffId);
   if(statusEl) statusEl.textContent='Saving…';
 
-  const updates={
-    employee_id: g('employee_id')||null,
-    cx: g('cx')||null,
-    team: g('team')||null,
-    staff_role: g('staff_role')||null,
-    position_status: g('position_status')||null,
-    work_mode: g('work_mode')||null,
-    birth_date: g('birth_date')||null,
-    contract_start: g('contract_start')||null,
-    contract_end: g('contract_end')||null,
-  };
+  // Only send fields that are actually on the card (e.g. Contract end is hidden for Permanent staff —
+  // a hidden field must not be saved as blank)
+  const updates={};
+  ['employee_id','cx','team','staff_role','position_status','work_mode','birth_date','contract_start','contract_end','last_working_date','employment_status'].forEach(f=>{
+    const el=document.getElementById('pf_'+f+'_'+staffId);
+    if(el) updates[f]=(el.value||'').trim()||null;
+  });
+  const chk=checkEmployment(updates);
+  if(chk){ if(statusEl) statusEl.textContent=chk; toast(chk,'err'); return; }
 
   const {error}=await sb.from('staff').update(updates).eq('id',staffId);
   if(error){
@@ -8133,14 +8779,18 @@ async function saveProfileDetails(staffId){
   }
 
   // Update local cache
-  const s=staffList.find(x=>x.id===staffId);
+  const s=staffList.find(x=>x.id===staffId)||allStaff.find(x=>x.id===staffId);
   if(s) Object.assign(s,updates);
+  refreshActiveStaff();
 
-  // Also sync app_users if role/team changed
-  const {error:ue}=await sb.from('app_users').update({
-    staff_role: updates.staff_role,
-    team: updates.team,
-  }).eq('staff_id',staffId);
+  // Login record (app_users) is updated by a database trigger — mirror locally so the Users tab matches
+  appUsersList.filter(u=>u.staff_id===staffId).forEach(u=>{
+    if('team' in updates) u.team=updates.team;
+    if('staff_role' in updates) u.staff_role=updates.staff_role;
+  });
+  // Show the change on the schedule straight away
+  renderSchedule();
+  if(typeof refreshFilterDropdowns==='function') refreshFilterDropdowns();
 
   if(statusEl){statusEl.textContent='Saved ✓';setTimeout(()=>statusEl.textContent='',3000);}
   toast('Profile updated ✓','ok');
@@ -8165,7 +8815,7 @@ async function saveLeaveEntitlement(staffId){
     birth_date:bd||null, position_status:ps, work_mode:wm
   }).eq('id',staffId);
   if(error){if(st) st.textContent='Error: '+error.message;return;}
-  const s=staffList.find(x=>x.id===staffId);
+  const s=(staffList.find(x=>x.id===staffId)||allStaff.find(x=>x.id===staffId));
   if(s){s.contract_start=cs;s.contract_end=ce;s.al_entitlement=al;s.mc_entitlement=mc;s.birth_date=bd;s.position_status=ps;s.work_mode=wm;}
   if(st) st.textContent='Saved ✓';
   toast('Leave entitlement saved ✓','ok');
@@ -8409,8 +9059,10 @@ async function renderAvailability(){
 }
 
 // ── TASKS ──
-const TASK_TYPES=[
-  {code:'Support Inbound', color:'#0891b2', icon:'🎧', covers:'Inbound Agent'}, // counts toward Inbound coverage
+// Task types — editable in Settings → Task types (saved in schedule_config.taskTypes).
+// covers: queue the person counts toward in Coverage while on this task ('' = none). start/end: default hours.
+let TASK_TYPES=[
+  {code:'Support Inbound', color:'#0891b2', icon:'🎧', covers:'Inbound Agent', start:'08:00', end:'11:00'},
   {code:'Quiz',    color:'#8b5cf6', icon:'📝'},
   {code:'Meeting', color:'#2563eb', icon:'🤝'},
   {code:'Huddle',  color:'#f59e0b', icon:'💬'},
@@ -8489,6 +9141,27 @@ async function renderTasksTab(){
   grid.innerHTML=html+'</div>';
 }
 
+function taskPickCount(){
+  const n=document.querySelectorAll('#taskStaff input:checked').length;
+  const el=document.getElementById('taskPickN'); if(el) el.textContent=n?`· ${n} selected`:'· tick one or more';
+  document.querySelectorAll('#taskStaff .tsk-row').forEach(r=>r.classList.toggle('on',r.querySelector('input').checked));
+}
+function taskPickFilter(q){
+  q=(q||'').trim().toLowerCase(); const only=document.getElementById('taskOnlyWorking')?.checked;
+  document.querySelectorAll('#taskStaff .tsk-grp').forEach(g=>{
+    let vis=0;
+    g.querySelectorAll('.tsk-row').forEach(r=>{const show=(!q||r.dataset.name.includes(q))&&!(only&&r.classList.contains('away'));r.style.display=show?'':'none';if(show)vis++;});
+    g.style.display=vis?'':'none';
+  });
+}
+function taskPickGroup(btn){
+  const rows=[...btn.closest('.tsk-grp').querySelectorAll('.tsk-row')].filter(r=>r.style.display!=='none');
+  const all=rows.every(r=>r.querySelector('input').checked);
+  rows.forEach(r=>r.querySelector('input').checked=!all);
+  taskPickCount();
+}
+function taskPickClear(){ document.querySelectorAll('#taskStaff input:checked').forEach(i=>i.checked=false); taskPickCount(); }
+
 function addMins(timeStr,mins){
   const [h,m]=(timeStr||'00:00').split(':').map(Number);
   const total=h*60+m+mins;
@@ -8500,7 +9173,18 @@ function openAddTaskModal(){
   if(!dayVal){toast('Select a day first','err');return;}
   const dateStr=`${cy}-${String(cm+1).padStart(2,'0')}-${String(dayVal).padStart(2,'0')}`;
   const box=document.getElementById('modalBox');
-  const staffOpts=staffList.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
+  const groups={};
+  staffList.forEach(st=>{(groups[st.staff_role||'Other']=groups[st.staff_role||'Other']||[]).push(st);});
+  const order=[...(typeof sectionOrder!=='undefined'?sectionOrder:[]),...Object.keys(groups)].filter((r,i,a)=>groups[r]&&a.indexOf(r)===i);
+  const staffOpts=order.map(role=>`<div class="tsk-grp" data-role="${role}">
+      <div class="tsk-grp-h"><span>${role}</span><button type="button" onclick="taskPickGroup(this)">select all</button></div>
+      ${groups[role].map(st=>{
+        const sh=getS(st.id,dayVal)||''; const away=!sh||ABSENT_FOR_BREAKS.has(sh)||LEAVE_NO_OT.has(sh);
+        return `<label class="tsk-row${away?' away':''}" data-name="${st.name.toLowerCase()}">
+          <input type="checkbox" value="${st.id}" onchange="taskPickCount()">
+          <span class="tsk-nm">${st.name}</span>
+          <span class="tsk-sh">${sh||'—'}</span></label>`;}).join('')}
+    </div>`).join('');
   const typeOpts=TASK_TYPES.map(t=>`<option value="${t.code}">${t.icon} ${t.code}</option>`).join('');
   box.innerHTML=`
     <h3>✅ Assign Task</h3>
@@ -8508,8 +9192,15 @@ function openAddTaskModal(){
     <div class="mf">
       <label>Task type</label>
       <select id="taskType" style="font-family:'DM Sans',sans-serif">${typeOpts}</select>
-      <label>Staff <span style="font-size:10px;color:var(--text3)">(hold Ctrl/Cmd for multiple)</span></label>
-      <select id="taskStaff" multiple size="7" style="font-family:'DM Sans',sans-serif;font-size:12px;border:1px solid var(--border2);border-radius:var(--r);padding:4px">${staffOpts}</select>
+      <label>Staff <span id="taskPickN" style="font-size:10px;color:var(--text3)">· tick one or more</span></label>
+      <div class="tsk-pick">
+        <div class="tsk-tools">
+          <input id="taskSearch" type="text" placeholder="🔍 Search name…" oninput="taskPickFilter(this.value)">
+          <label class="tsk-only"><input type="checkbox" id="taskOnlyWorking" onchange="taskPickFilter(document.getElementById('taskSearch').value)"> Working today only</label>
+          <button type="button" onclick="taskPickClear()">Clear</button>
+        </div>
+        <div id="taskStaff" class="tsk-list">${staffOpts}</div>
+      </div>
       <label>Start time</label>
       <input id="taskStart" type="time" value="10:00">
       <label>Duration (minutes)</label>
@@ -8527,7 +9218,7 @@ function openAddTaskModal(){
 
 async function doAssignTask(dateStr){
   const type=document.getElementById('taskType').value;
-  const selected=[...document.getElementById('taskStaff').selectedOptions].map(o=>o.value);
+  const selected=[...document.querySelectorAll('#taskStaff input[type=checkbox]:checked')].map(o=>o.value);
   const start=document.getElementById('taskStart').value;
   const duration=parseInt(document.getElementById('taskDuration').value);
   const notes=document.getElementById('taskNotes').value.trim();
