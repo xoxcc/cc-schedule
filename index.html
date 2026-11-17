@@ -1867,11 +1867,7 @@ async function saveShift(staffId,day,val,monthOverride,noUnpublish=false){
   const _mo=monthOverride?parseInt(monthOverride.split('-')[1])-1:cm;
   const _mk=_yr+'-'+(_mo+1);
   const _dayKey=_yr+'-'+(_mo+1)+'-'+day;
-  if(!noUnpublish && publishedDays[_dayKey]){
-    delete publishedDays[_dayKey];
-    await savePublishedDays();
-    updatePublishBtn();
-  }
+  if(publishedDays[_dayKey]) touchPublished();   // day is live: staff screens refresh with the change
   // In week view, a day may belong to a different month
   const vd=getViewDays().find(v=>v.day===parseInt(day))||{month:cm,year:cy};
   const month_key=monthOverride||(vd.year+'-'+(vd.month+1));
@@ -1950,8 +1946,18 @@ function fday(y,m){return new Date(y,m,1).getDay()}
 function isPH(d){return(PH[cm]||[]).includes(d)}
 function getDateRemark(d){return dateRemarks[cy+'-'+(cm+1)+'-'+d]||null;}
 function remarkKey(y,m,d){return y+'-'+(m+1)+'-'+d;}
+// Staff without schedule rights only see days that have been published
+function viewerRestricted(){
+  if(!currentProfile) return false;
+  if(currentProfile.app_role==='admin') return false;
+  const role=currentProfile.staff_role||'';
+  if(['Senior Manager','Assistant Manager','Team Leader','Supervisor','Manager','Sup','TL'].includes(role)) return false;
+  const p=permissions[role];
+  return !(p&&(p.publish_schedule===true||p.assign_shift===true||p.edit_schedule===true));
+}
 function getS(sid,d,m,y){
   if(lwdMap[sid]&&afterLastDay(sid,y??cy,m??cm,d)) return '';
+  if(viewerRestricted()&&!isDayPublished(d,m??cm,y??cy)) return '';
   if(m!==undefined&&y!==undefined){
     const mk=y+'-'+(m+1);
     return schedData[sid+'_'+d+'_'+mk]||schedData[sid+'_'+d]||'';
@@ -2108,7 +2114,7 @@ function renderSchedule(){
       canPublish=_p&&_p.publish_schedule===true;
     }
   }
-  const restrictView=!isAdmin&&!isApproverRole&&!canPublish;
+  const restrictView=viewerRestricted();
 
   // Determine visibility from permissions matrix
   const canViewAll = isAdmin || can('view_team');
@@ -4236,7 +4242,7 @@ async function applyCells(changes,label,opts={}){
     const newOT=(newShift&&!LEAVE_NO_OT.has(newShift))?(c.ot===undefined?prevOT:c.ot):null;
     if(prevShift===newShift&&JSON.stringify(prevOT||null)===JSON.stringify(newOT||null)) continue;
     undo.push({staffId:c.sid,day,month_key:mk,prevShift:prevShift||null,prevOT:prevOT?{...prevOT}:null});
-    if(!opts.noUndo){ const dk=mk+'-'+day; if(publishedDays[dk]){ delete publishedDays[dk]; pubChanged=true; } }
+    { const dk=mk+'-'+day; if(publishedDays[dk]) pubChanged=true; }
     if(newShift){
       const hasOT=newOT&&(newOT.hours||newOT.start);
       ups.push({staff_id:c.sid,month_key:mk,day,shift:newShift,
@@ -4266,7 +4272,7 @@ async function applyCells(changes,label,opts={}){
     const sk=d.sid+'_'+d.day, fk=sk+'_'+d.mk;
     [schedData,otData,remarkData].forEach(m=>{ delete m[sk]; delete m[fk]; });
   });
-  if(pubChanged){ await savePublishedDays(); updatePublishBtn(); }
+  if(pubChanged) touchPublished();
   if(!opts.noUndo&&canAssignShift()){
     undoStack.push({batch:undo,desc:label});
     if(undoStack.length>UNDO_MAX) undoStack.shift();
@@ -7014,25 +7020,40 @@ async function loadPublishedMonths(){
 
 async function savePublishedDays(){
   const val=JSON.stringify(publishedDays);
-  const now=new Date().toISOString();
-  const {error}=await sb.from('app_settings')
-    .upsert({key:'published_days', value:val}, {onConflict:'key'});
+  const {data,error}=await sb.rpc('sched_set_published_days',{p_value:val});
   if(error){
     console.error('savePublishedDays error:',error.message);
-    toast('Error: '+error.message,'err');
+    toast('Publish failed: '+error.message,'err');
+    await loadPublishedMonths();   // show what is really live
     return false;
   }
-  // Write a publish timestamp so staff clients detect the change via polling
-  await sb.from('app_settings')
-    .upsert({key:'last_published_at', value:now}, {onConflict:'key'});
+  if(data) _lastPublishedAt=data;   // our own change — no need to reload
   return true;
+}
+let _touchT=null;
+function touchPublished(){   // debounced: one signal per burst of edits
+  clearTimeout(_touchT);
+  _touchT=setTimeout(async()=>{ try{ const {data}=await sb.rpc('sched_touch_published'); if(data) _lastPublishedAt=data; }catch(_){ } },800);
 }
 
 // ── LIVE SCHEDULE POLLING ──
 let _lastPublishedAt=null;
 let _lastBreaksUpdatedAt=null;
 let _pollInterval=null;
-const POLL_INTERVAL_MS=30000;
+const POLL_INTERVAL_MS=15000;
+let _pubChannel=null, _checking=null;
+function startPublishRealtime(){
+  try{
+    if(_pubChannel||!sb.channel) return;
+    _pubChannel=sb.channel('cc-publish-watch')
+      .on('postgres_changes',{event:'*',schema:'public',table:'app_settings'},pl=>{
+        const k=(pl.new&&pl.new.key)||(pl.old&&pl.old.key);
+        if(!k||['published_days','last_published_at','last_breaks_updated_at'].includes(k)) checkForScheduleUpdate(true);
+      }).subscribe();
+  }catch(e){ console.warn('realtime off:',e); }
+}
+document.addEventListener('visibilitychange',()=>{ if(!document.hidden&&currentProfile) checkForScheduleUpdate(true); });
+window.addEventListener('focus',()=>{ if(currentProfile) checkForScheduleUpdate(true); });
 
 async function startSchedulePoll(){
   try{
@@ -7045,11 +7066,17 @@ async function startSchedulePoll(){
     });
   } catch(e){}
   if(_pollInterval) clearInterval(_pollInterval);
-  _pollInterval=setInterval(checkForScheduleUpdate, POLL_INTERVAL_MS);
+  _pollInterval=setInterval(()=>checkForScheduleUpdate(), POLL_INTERVAL_MS);
+  startPublishRealtime();
 }
 
-async function checkForScheduleUpdate(){
-  if(document.hidden) return;
+async function checkForScheduleUpdate(force){
+  if(document.hidden&&!force) return;
+  if(_checking) return _checking;
+  _checking=_checkForScheduleUpdate().finally(()=>{_checking=null;});
+  return _checking;
+}
+async function _checkForScheduleUpdate(){
   try{
     const {data}=await sb.from('app_settings')
       .select('key,value')
@@ -7068,10 +7095,17 @@ async function checkForScheduleUpdate(){
     const isAdmin=currentProfile&&currentProfile.app_role==='admin';
 
     if(schedChanged){
+      const before=JSON.stringify(publishedDays);
       await loadPublishedMonths();
       await loadSchedule();
       await loadPendingRequests();
-      if(!isAdmin) showUpdateBanner('📢 Schedule updated');
+      try{
+        if(currentTab==='coverage') renderCoverage();
+        else if(currentTab==='profile') renderProfileCard();
+        else if(currentTab==='breaks') renderBreaksTab();
+        if(viewMode==='day') renderDayView();
+      }catch(_){}
+      if(viewerRestricted()) showUpdateBanner(JSON.stringify(publishedDays)!==before?'📢 Published schedule changed':'📢 Schedule updated');
     }
 
     if(breaksChanged){
@@ -7127,7 +7161,10 @@ function updatePublishBtn(){
   // DO NOT set btn.style.display here
 }
 
+let _pubSnapshot=null;
+function cancelPublishModal(){ if(_pubSnapshot){ publishedDays=JSON.parse(_pubSnapshot); _pubSnapshot=null; } closeModal(); }
 function openPublishModal(){
+  _pubSnapshot=JSON.stringify(publishedDays);
   const totalDays=dim(cy,cm);
   const dow=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
   const box=document.getElementById('modalBox');
@@ -7179,19 +7216,18 @@ function openPublishModal(){
   </table>
 
   <div style="font-size:11px;color:var(--text3);margin-bottom:12px;padding:8px 10px;background:var(--surface2);border-radius:var(--r)">
-    💡 Blue dot = shifts assigned. Green = published (staff can see). Click any date to toggle.
+    💡 Blue dot = shifts assigned. Green = published — staff see it within seconds of saving. Untick a day and save to hide it again straight away. Edits to a published day show to staff automatically.
   </div>
 
   <div class="mbtns">
-    <button class="btn" onclick="closeModal()">Cancel</button>
+    <button class="btn" onclick="cancelPublishModal()">Cancel</button>
     <button class="btn btn-blue" onclick="savePublishAndClose()">💾 Save & close</button>
   </div>`;
   document.getElementById('overlay').classList.add('open');
 }
 
 function toggleDayPublish(d){
-  const pcy=pickerCy!==null?pickerCy:cy;
-  const pcm=pickerCm!==null?pickerCm:cm;
+  const pcy=cy, pcm=cm;
   const k=pcy+'-'+(pcm+1)+'-'+d;
   const el=document.getElementById('pubDay_'+d);
   if(publishedDays[k]){
@@ -7216,8 +7252,7 @@ function toggleDayPublish(d){
 }
 
 function publishSelectAll(pub){
-  const pcy=pickerCy!==null?pickerCy:cy;
-  const pcm=pickerCm!==null?pickerCm:cm;
+  const pcy=cy, pcm=cm;
   const totalDays=dim(pcy,pcm);
   for(let d=1;d<=totalDays;d++){
     const k=pcy+'-'+(pcm+1)+'-'+d;
@@ -7248,7 +7283,9 @@ function publishSelectWeek(){
 }
 
 async function savePublishAndClose(){
-  await savePublishedDays();
+  const ok=await savePublishedDays();
+  if(!ok){ updatePublishBtn(); renderSchedule(); return; }
+  _pubSnapshot=null;
   closeModal();
   updatePublishBtn();
   renderSchedule();
@@ -8074,7 +8111,7 @@ function renderDayView(){
   const isAdmin=currentProfile&&currentProfile.app_role==='admin';
   const isApproverRole=['Senior Manager','Assistant Manager','Team Leader','Supervisor','Manager'].includes(currentProfile?.staff_role||'');
   const canPublishRole=isAdmin||can('publish_schedule');
-  const restrictView=!isAdmin&&!isApproverRole&&!canPublishRole;
+  const restrictView=viewerRestricted();
   const dayPub=!restrictView||isDayPublished(day,cm,cy);
 
 
