@@ -1197,7 +1197,9 @@ let staffOrder=[]; // array of staff ids in preferred order
 let copySource=null;
 let remarkData={}; // key: staffId_day_monthKey → remark string
 
+function hiddenDay(d,m,y){ return viewerRestricted()&&!isDayPublished(d,m??cm,y??cy); }
 function getR(sid,day){
+  if(hiddenDay(day)) return '';
   const mk=cy+'-'+(cm+1);
   return remarkData[sid+'_'+day+'_'+mk]||remarkData[sid+'_'+day]||'';
 } // {sid, day, shift}
@@ -1634,11 +1636,13 @@ async function loadViewTasks(){
 }
 const toMin=t=>{ const [h,m]=String(t||'0:0').split(':').map(Number); return h*60+(m||0); };
 function supportTasks(sid,y,m0,d){
+  if(hiddenDay(d,m0,y)) return [];
   return (tasksMap[sid+'_'+ymdStr(y,m0,d)]||[]).filter(t=>TASK_TYPES.find(x=>x.code===t.task_type)?.covers);
 }
 // Tasks that take the person OFF calls (Quiz, Training, Coaching… — any type without "covers")
 function fmtHM(m){return String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0');}
 function offCallTasks(sid,y,m0,d){
+  if(hiddenDay(d,m0,y)) return [];
   return (tasksMap[sid+'_'+ymdStr(y,m0,d)]||[]).filter(t=>!TASK_TYPES.find(x=>x.code===t.task_type)?.covers);
 }
 function offCallInHour(sid,y,m0,d,hour){
@@ -1937,7 +1941,7 @@ async function saveOT(staffId,day,hours,start,end,otType){
   renderSchedule();
 }
 
-function getOT(sid,d){return otData[sid+'_'+d]||null;}
+function getOT(sid,d){ if(hiddenDay(d)) return null; return otData[sid+'_'+d]||null;}
 function getOTHours(sid,d){const o=getOT(sid,d);return o?o.hours:0;}
 
 // ── SCHEDULE RENDER ──
@@ -4513,7 +4517,7 @@ async function doDirectSwap(sid,day){
 function supportSectionHtml(sid,day,name){
   const vd=getViewDays().find(v=>v.day===+day)||{year:cy,month:cm};
   const dateStr=ymdStr(vd.year,vd.month,+day);
-  const list=(tasksMap[sid+'_'+dateStr]||[]).slice().sort((a,b)=>toMin(a.start_time)-toMin(b.start_time));
+  const list=(hiddenDay(day)?[]:(tasksMap[sid+'_'+dateStr]||[])).slice().sort((a,b)=>toMin(a.start_time)-toMin(b.start_time));
   const nm=String(name).replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'&quot;');
   const types=TASK_TYPES.filter(t=>t.covers);
   if(!types.length) return `<div style="margin-top:14px;border-top:1px solid var(--border);padding-top:12px;font-size:11px;color:var(--text3)">🎧 To let staff support another queue, add a task type with "Counts as" in Settings → Task types.</div>`;
@@ -5647,7 +5651,7 @@ document.addEventListener('mousedown',e=>{
 });
 document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeCovPopup(); });
 
-function savedBreaksOn(sid,vd){ return breakOverrides[sid+'_'+vd.day+'_'+vd.year+'-'+(vd.month+1)]||[]; }
+function savedBreaksOn(sid,vd){ if(hiddenDay(vd.day,vd.month,vd.year)) return []; return breakOverrides[sid+'_'+vd.day+'_'+vd.year+'-'+(vd.month+1)]||[]; }
 
 function renderCoverage(){
   const grid=document.getElementById('coverageGrid');
@@ -9134,6 +9138,7 @@ async function renderTasksTab(){
   if(!grid) return;
   const dayVal=parseInt(document.getElementById('taskDayFilter')?.value||0);
   if(!dayVal){grid.innerHTML='<div style="padding:20px;text-align:center;color:var(--text3)">Select a day to view tasks</div>';return;}
+  if(hiddenDay(dayVal)){grid.innerHTML='<div style="padding:20px;text-align:center;color:var(--text3)">🔒 This day isn\'t published yet</div>';return;}
   grid.innerHTML='<div class="spinner" style="margin:20px auto"></div>';
   const dateStr=`${cy}-${String(cm+1).padStart(2,'0')}-${String(dayVal).padStart(2,'0')}`;
   const {data:tasks,error}=await sb.from('tasks').select('*').eq('date',dateStr).order('start_time');
