@@ -139,6 +139,51 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);fon
 .tsk-sh{font-size:10px;font-family:'DM Mono',monospace;padding:2px 6px;border-radius:4px;background:var(--surface2);color:var(--text2);flex-shrink:0}
 .tsk-row.away .tsk-nm{color:var(--text3)}
 .tsk-row.away .tsk-sh{background:#fef2f2;color:#b91c1c}
+/* ── MOBILE ── */
+.m-burger{display:none}
+#navScrim,#mBottomNav{display:none}
+@media (max-width:760px){
+  .m-burger{display:flex;align-items:center;justify-content:center;width:34px;height:34px;flex-shrink:0;border:1px solid var(--border2);border-radius:var(--r);background:var(--surface);color:var(--text);font-size:17px;cursor:pointer;margin-right:4px}
+  .app-sidebar{position:fixed!important;left:0;top:0;bottom:0;height:100%!important;width:270px;max-width:85vw;transform:translateX(-102%);transition:transform .22s ease;z-index:1001;box-shadow:4px 0 24px rgba(0,0,0,.18)}
+  body.nav-open .app-sidebar{transform:none}
+  #navScrim{position:fixed;inset:0;background:rgba(15,23,42,.38);z-index:1000}
+  body.nav-open #navScrim{display:block}
+  .snav-item{padding:11px 16px;font-size:14px}
+  #appPage,.app-main{height:100dvh!important}
+  .app-topbar{height:auto;min-height:52px;padding:6px 10px;gap:6px;flex-wrap:wrap}
+  .app-topbar-title{display:flex;align-items:center;min-width:0}
+  .app-topbar-title .sched-title{width:auto!important;max-width:46vw;font-size:14px!important;text-overflow:ellipsis}
+  #roleBadge{display:none}
+  .app-topbar-actions{gap:5px;flex-wrap:wrap;justify-content:flex-end}
+  .app-topbar-actions button,.app-topbar-actions .btn{height:32px!important;font-size:12px!important;padding:0 10px!important}
+  #myDayBtn{display:none!important}
+  .app-body{padding:10px 10px calc(70px + env(safe-area-inset-bottom))}
+  .toolbar{gap:6px!important;flex-wrap:wrap}
+  .toolbar>input,.toolbar>select{flex:1 1 30%;min-width:0;width:auto!important;height:34px;font-size:13px}
+  #addStaffBtn,#ioWrap{display:none!important}
+  .toolbar>div[style*="margin-left:auto"]{margin-left:0!important;width:100%;justify-content:space-between}
+  #mLabel{min-width:0!important;flex:1;font-size:14px!important}
+  .sum-row{display:flex;flex-wrap:nowrap!important;overflow-x:auto;gap:6px;padding-bottom:4px;-webkit-overflow-scrolling:touch}
+  .sum-row .scard{flex:0 0 auto;min-width:76px;padding:6px 10px!important}
+  .mhide{display:none!important}
+  .td-name,.th-name{min-width:104px!important;max-width:120px!important;font-size:11px}
+  .tbl-wrap{max-height:calc(100dvh - 250px);-webkit-overflow-scrolling:touch}
+  .legend{gap:6px!important;font-size:10px}
+  .modal{width:calc(100vw - 20px)!important;max-width:calc(100vw - 20px)!important;padding:16px!important;max-height:calc(100dvh - 20px)!important}
+  #mBottomNav{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:900;background:var(--surface);border-top:1px solid var(--border);padding:4px 4px calc(4px + env(safe-area-inset-bottom));box-shadow:0 -2px 12px rgba(0,0,0,.06)}
+  #mBottomNav button{flex:1;display:flex;flex-direction:column;align-items:center;gap:1px;border:none;background:none;font-size:10px;font-weight:600;color:var(--text3);padding:5px 0;cursor:pointer;font-family:'DM Sans',sans-serif}
+  #mBottomNav button span{font-size:19px;line-height:1.1}
+  #mBottomNav button.on{color:var(--blue)}
+  table{font-size:10px}
+  #covPopup{max-width:calc(100vw - 20px)!important}
+  td.section-hd>span:nth-last-child(2){position:sticky;left:10px}
+  .req-status-tab{padding:7px 9px!important;white-space:nowrap}
+  *:has(> .req-status-tab){overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch}
+  .app-body table{max-width:none}
+  #tab-profile .pf-grid,#tab-profile [style*="grid-template-columns"]{grid-template-columns:1fr!important}
+}
+body.view-as{padding-top:34px}
+body.view-as #appPage,body.view-as .app-main,body.view-as .app-sidebar{height:calc(100vh - 34px)!important}
 .sidebar-avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--blue),#818cf8);color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .sidebar-user-info{min-width:0}
 .sidebar-user-name{font-size:12px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -242,6 +287,7 @@ td.wk-cell{border-left:2px solid var(--border2) !important}
 .ot-cell.editable-ot:hover{opacity:.75}
 .ot-cell.editable-empty{height:8px;background:var(--surface2)}
 /* OT day: the whole cell takes the OT colour */
+.cell.mc-pend{background-image:repeating-linear-gradient(135deg,rgba(255,255,255,.22) 0 3px,transparent 3px 7px)!important;font-size:8.5px!important;letter-spacing:-.02em;box-shadow:inset 0 0 0 1.5px #fde68a}
 .cell.mc-rej{background-image:repeating-linear-gradient(135deg,rgba(255,255,255,.16) 0 3px,transparent 3px 7px)!important;font-size:8.5px!important;letter-spacing:-.02em;box-shadow:inset 0 0 0 1.5px #fecaca}
 .cell.hd-split{flex-direction:column;align-items:stretch;justify-content:stretch;padding:0;overflow:hidden;box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.9)}
 .cell.hd-split .hd-al,.cell.hd-split .hd-sh{flex:1;display:flex;align-items:center;justify-content:center;line-height:1;color:#fff;font-weight:800}
@@ -498,6 +544,10 @@ tr.section-drag-over td{border-top:3px solid var(--blue) !important}
 </style>
 </head>
 <body>
+<div id="viewAsBar" style="display:none;position:fixed;top:0;left:0;right:0;z-index:9999;background:#7c3aed;color:#fff;font-size:12px;font-family:'DM Sans',sans-serif;padding:7px 14px;align-items:center;justify-content:center;gap:12px;box-shadow:0 2px 8px rgba(0,0,0,.25)">
+  <span id="viewAsText">👁 Viewing as …</span>
+  <button onclick="exitViewAs()" style="font-size:11px;font-weight:700;padding:4px 12px;border-radius:999px;border:none;background:#fff;color:#7c3aed;cursor:pointer;font-family:'DM Sans',sans-serif">✕ Back to my account</button>
+</div>
 
 
 
@@ -552,6 +602,14 @@ tr.section-drag-over td{border-top:3px solid var(--blue) !important}
 <div id="appPage" style="display:none;flex-direction:row">
 
   <!-- SIDEBAR -->
+  <div id="navScrim" onclick="toggleNav(false)"></div>
+  <nav id="mBottomNav">
+    <button data-mt="schedule" onclick="mNav('schedule')"><span>🗓</span>Schedule</button>
+    <button data-mt="myday" onclick="mNav('myday')"><span>📋</span>My day</button>
+    <button data-mt="requests" onclick="mNav('requests')"><span>🔔</span>Requests</button>
+    <button data-mt="profile" onclick="mNav('profile')"><span>👤</span>Profile</button>
+    <button data-mt="menu" onclick="toggleNav()"><span>☰</span>More</button>
+  </nav>
   <div class="app-sidebar" id="appSidebar">
     <div class="sidebar-header">
       <div>
@@ -635,6 +693,7 @@ tr.section-drag-over td{border-top:3px solid var(--blue) !important}
   <div class="app-main">
     <div class="app-topbar">
       <div class="app-topbar-title">
+        <button class="m-burger" onclick="toggleNav()" aria-label="Menu">☰</button>
         <input class="sched-title" id="schedTitle" value="CC Schedule" style="font-size:14px;font-weight:600;border:none;background:transparent;color:var(--text);outline:none;padding:0;width:180px">
         <span class="chip chip-admin" id="roleBadge" style="margin-left:8px">Admin</span>
       </div>
@@ -644,6 +703,8 @@ tr.section-drag-over td{border-top:3px solid var(--blue) !important}
             📋 Request
           </button>
         </div>
+        <button id="myDayBtn" onclick="openMyDay()" style="display:none;font-size:12px;height:30px;padding:0 12px;border-radius:var(--r);cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:600;align-items:center;gap:5px;background:var(--blue);color:#fff;border:none">📋 My day</button>
+        <button id="mcPendBtn" onclick="openMcPendingList()" style="display:none;font-size:12px;height:30px;padding:0 12px;border-radius:var(--r);cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:600;align-items:center;gap:5px;background:#fffbeb;color:#b45309;border:0.5px solid #fcd34d">⏳ MC pending</button>
         <button id="publishBtn" onclick="openPublishModal()" style="display:none;font-size:12px;height:30px;padding:0 12px;border-radius:var(--r);cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:500;align-items:center;gap:5px;background:var(--blue-bg);color:var(--blue);border:0.5px solid var(--blue-bd)">📢 Publish</button>
         <button onclick="hardRefresh()" class="btn" style="font-size:12px" title="Refresh">
           <span id="refreshIcon">↻</span>
@@ -903,11 +964,13 @@ tr.section-drag-over td{border-top:3px solid var(--blue) !important}
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
       <div>
         <div style="font-size:15px;font-weight:600">Agent Availability</div>
-        <div style="font-size:12px;color:var(--text2);margin-top:2px">Available agents per 10-min slot — weekly view, minus breaks &amp; tasks</div>
+        <div style="font-size:12px;color:var(--text2);margin-top:2px">People free to take calls in each 10-min slot — after breaks, off-call tasks (Quiz, Training…) and leave; includes QA/others on Support Inbound</div>
       </div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
         <select id="availPosFil" onchange="renderAvailability()" style="font-family:'DM Sans',sans-serif;font-size:12px;height:30px;padding:0 10px;border:0.5px solid var(--border2);border-radius:var(--r);background:var(--surface);color:var(--text)">
-          <option value="">All positions</option>
+          <option value="__calls" selected>📞 Answering inbound calls</option>
+          <option value="__lc">💬 On Livechat</option>
+          <option value="">All staff working</option>
         </select>
         <button class="btn" style="width:26px;padding:0;justify-content:center" onclick="availNavWeek(-1)">←</button>
         <span id="availWeekLabel" style="font-size:12px;font-weight:500;min-width:160px;text-align:center;color:var(--text)">Week</span>
@@ -1413,6 +1476,7 @@ async function doLogin(){
 async function doLogout(){
   if(_pollInterval){ clearInterval(_pollInterval); _pollInterval=null; }
   localStorage.removeItem('cc_session');
+  if(typeof viewAs!=="undefined"&&viewAs){viewAs=null;document.body.classList.remove("view-as");const _vb=document.getElementById("viewAsBar");if(_vb)_vb.style.display="none";}
   currentUser=null; currentProfile=null; staffList=[]; schedData={};
   await sb.auth.signOut();
   showPage('login');
@@ -1455,6 +1519,73 @@ async function doPasswordReset(){
   history.replaceState(null,'',window.location.pathname);
   toast('Password updated — please sign in ✓','ok');
   setTimeout(()=>window.location.reload(),1500);
+}
+
+// ── MOBILE NAV ──
+const isMobile=()=>window.matchMedia('(max-width:760px)').matches;
+function toggleNav(force){ document.body.classList.toggle('nav-open',force===undefined?!document.body.classList.contains('nav-open'):force); }
+function mNav(t){
+  toggleNav(false);
+  if(t==='myday'){ openMyDay(); markBottomNav('myday'); return; }
+  switchTab(t); markBottomNav(t);
+}
+function markBottomNav(t){ document.querySelectorAll('#mBottomNav button').forEach(b=>b.classList.toggle('on',b.dataset.mt===t)); }
+// close the drawer whenever a menu item is picked
+document.addEventListener('click',e=>{ if(e.target.closest&&e.target.closest('.snav-item')&&isMobile()) toggleNav(false); });
+// on a phone, scroll the grid so today's column is in view
+function scrollGridToToday(){
+  if(!isMobile()) return;
+  const now=new Date(); if(now.getFullYear()!==cy||now.getMonth()!==cm) return;
+  const wrap=document.querySelector('#scheduleTableWrap .tbl-wrap'); if(!wrap) return;
+  const ths=wrap.querySelectorAll('thead tr:first-child th.th-day'); const th=ths[now.getDate()-1]; if(!th) return;
+  const name=wrap.querySelector('thead th.sticky'); const off=name?name.offsetWidth:110;
+  wrap.scrollLeft=Math.max(0,th.offsetLeft-off-26*2);
+}
+let _mydayAutoShown=false;
+function mobileLanding(){
+  if(!isMobile()||_mydayAutoShown||!currentProfile||!currentProfile.staff_id||!viewerRestricted()) return;
+  _mydayAutoShown=true; setTimeout(()=>{ openMyDay(); markBottomNav('myday'); },400);
+}
+
+// ── VIEW AS (admin impersonation, read-only) ──
+// Shows the app exactly as another user sees it. Uses the admin's own login, so nothing can be
+// changed while viewing: every save is blocked until "Back to my account".
+let viewAs=null, _realProfile=null, _realUser=null;
+const VIEW_AS_MSG='Read-only: you are viewing as another user. Go back to your account to make changes.';
+(function guardWrites(){
+  const blocked=()=>{ toast('👁 '+VIEW_AS_MSG,'err'); const res={data:null,error:{message:VIEW_AS_MSG}};
+    const p=new Proxy(function(){},{get:(t,k)=>k==='then'?(f,r)=>Promise.resolve(res).then(f,r):()=>p, apply:()=>p}); return p; };
+  const _from=sb.from.bind(sb);
+  sb.from=t=>{ const q=_from(t); if(!viewAs) return q;
+    ['insert','update','upsert','delete'].forEach(m=>{ q[m]=()=>blocked(); }); return q; };
+  const _rpc=sb.rpc.bind(sb);
+  sb.rpc=(...a)=>viewAs?blocked():_rpc(...a);
+})();
+async function startViewAs(userId){
+  if(!currentProfile||currentProfile.app_role!=='admin'||viewAs) return;
+  const u=(appUsersList||[]).find(x=>x.id===userId); if(!u) return;
+  _realProfile=currentProfile; _realUser=currentUser;
+  viewAs=u;
+  currentProfile={app_role:u.app_role,display_name:u.display_name,staff_role:u.staff_role,team:u.team,staff_id:u.staff_id,username:u.username,id:u.id,email:u.email,_viewAs:true};
+  currentUser={...currentUser,id:u.id,username:u.username};
+  document.body.classList.add('view-as');
+  const bar=document.getElementById('viewAsBar');
+  document.getElementById('viewAsText').innerHTML=`👁 Viewing as <b>${u.display_name||u.username}</b> · ${u.app_role==='admin'?'Admin':(u.staff_role||'Staff')}${u.team?' · '+u.team:''} — read-only`;
+  bar.style.display='flex';
+  updateUserUI();
+  try{ await loadPendingRequests(); }catch(_){}
+  switchTab('schedule'); renderSchedule();
+  if(!u.staff_id) toast('This login is not linked to a staff record, so My day / Profile will be empty','err');
+}
+async function exitViewAs(){
+  if(!viewAs) return;
+  currentProfile=_realProfile; currentUser=_realUser; viewAs=null; _realProfile=_realUser=null;
+  document.body.classList.remove('view-as');
+  document.getElementById('viewAsBar').style.display='none';
+  closeModal&&closeModal();
+  updateUserUI();
+  try{ await loadPendingRequests(); }catch(_){}
+  renderSchedule(); switchTab('users');
 }
 
 function updateUserUI(){
@@ -2097,6 +2228,7 @@ function getViewDays(){
 }
 
 function renderSchedule(){
+  try{ updateMcPendingBtn(); updateMyDayBtn(); setTimeout(scrollGridToToday,0); mobileLanding(); }catch(_){}
   const srch=document.getElementById('srch').value.toLowerCase();
   const tf=document.getElementById('tfil').value;
   const rf=document.getElementById('rfil').value;
@@ -2142,11 +2274,11 @@ function renderSchedule(){
   // Row 1: fixed cols (all rowspan=2) + day numbers
   let h='<tr>';
 
-  h+=`<th rowspan="2" style="text-align:center;width:24px;font-size:9px">No</th>`;
-  h+=`<th rowspan="2" style="text-align:center;width:42px">ID</th>`;
-  h+=`<th rowspan="2" class="sticky" style="min-width:140px;max-width:180px">Name</th>`;
-  h+=`<th rowspan="2" style="text-align:center;width:46px">Team</th>`;
-  h+=`<th rowspan="2" style="text-align:center;width:80px">Role</th>`;
+  h+=`<th rowspan="2" class="mhide" style="text-align:center;width:24px;font-size:9px">No</th>`;
+  h+=`<th rowspan="2" class="mhide" style="text-align:center;width:42px">ID</th>`;
+  h+=`<th rowspan="2" class="sticky th-name" style="min-width:140px;max-width:180px">Name</th>`;
+  h+=`<th rowspan="2" class="mhide" style="text-align:center;width:46px">Team</th>`;
+  h+=`<th rowspan="2" class="mhide" style="text-align:center;width:80px">Role</th>`;
   // Request button moved to top bar
   viewDays.forEach(vd=>{
     const d=vd.day; const vfd=fday(vd.year,vd.month);
@@ -2252,10 +2384,10 @@ function renderSchedule(){
         ondragover="rowDragOver(event)"
         ondrop="rowDrop(event,'${x.id}','${role}')"
         ondragleave="rowDragLeave(event)"`:'draggable="false"'}>
-        <td class="td-p td-num" style="display:flex;align-items:center;gap:2px">
+        <td class="td-p td-num mhide" style="display:flex;align-items:center;gap:2px">
           ${isAdmin?`<span class="drag-handle" title="Drag to reorder">⠿</span>`:''}${rowNum}
         </td>
-        <td class="td-p td-id">${x.employee_id||'-'}</td>
+        <td class="td-p td-id mhide">${x.employee_id||'-'}</td>
         <td class="td-p td-name sticky">${(()=>{
           const hasLogin=appUsersList.some(u=>u.staff_id===x.id);
           const noLoginBadge=isAdmin&&!hasLogin
@@ -2269,12 +2401,12 @@ function renderSchedule(){
           if(isAdmin) return `<span style="${nameStyle};cursor:pointer;text-decoration:underline dotted;text-underline-offset:2px" onclick="openModal('editStaff','${x.id}')">${x.name}</span>${youBadge}${noLoginBadge}${lwBadge}`;
           return isOwnRow?`<span style="${nameStyle}">${x.name}</span>${youBadge}`:x.name;
         })()}</td>
-        <td class="td-p td-c">
+        <td class="td-p td-c mhide">
           ${isAdmin?`<div class="badge-wrap"><span class="team-badge badge-click" onclick="togglePop('t','${x.id}',event)">${x.team||'—'} ▾</span>
           <div class="inline-popup" id="tp-${x.id}">${TEAMS.map(t=>`<div class="pop-opt${t===x.team?' cur':''}" onclick="setField('${x.id}','team','${t}')">${t}</div>`).join('')}</div></div>`
           :`<span class="team-badge">${x.team||'—'}</span>`}
         </td>
-        <td class="td-p td-c">
+        <td class="td-p td-c mhide">
           <span class="role-badge role-${x.staff_role}">${x.staff_role}</span>
         </td>
 
@@ -2299,7 +2431,7 @@ function renderSchedule(){
             }
           }
           const shiftDef=baseShift?shiftTypes.find(s=>s.code===baseShift):null;
-          const disp=sh==='MCR'?'MC✕':(halfDayPart?halfDayPart:(sh||(ph?'PH':'')));
+          const disp=sh==='MCR'?'MC✕':sh==='MCP'?'MC⏳':(halfDayPart?halfDayPart:(sh||(ph?'PH':'')));
           const colorDef=shiftDef||(sh?timeoffTypes.find(t=>t.code===sh):null);
           // Half-day cells: diagonal split (shift colour / AL green)
           let cls=''; let cellStyle='';
@@ -2317,6 +2449,8 @@ function renderSchedule(){
             cellStyle=`style="background:${shiftCol};color:#fff"`;
           } else if(ph&&!sh){
             cls='s-PH'; cellStyle='';
+          } else if(sh==='MCP'){
+            cls='mc-pend'; cellStyle=`style="background:${colorDef?colorDef.color:'#b45309'};color:#fff"`;
           } else if(sh==='MCR'){
             cls='mc-rej'; cellStyle=`style="background:${colorDef?colorDef.color:'#7f1d1d'};color:#fff"`;
           } else if(colorDef){
@@ -2383,7 +2517,7 @@ function renderSchedule(){
                 onmousedown="handleCellMouseDown(this.dataset.sid,this.dataset.day,this.dataset.name,event)"
                 onmouseenter="handleCellMouseEnter(this.dataset.sid,this.dataset.day,event)"
                 ondblclick="handleCellDblClick(this.dataset.sid,this.dataset.day,this.dataset.name,event)"
-              `:''}>${halfSplit||(otSplit?`<span class="ot-split-top">${disp}</span>${otSplit}`:disp)}${remarkDot}</div>`
+              `:((currentProfile&&currentProfile.staff_id===x.id&&(vd.month??cm)===cm)?`onclick="openMyDay(${d})" onmouseover="this.style.cursor='pointer'"`:'')}>${halfSplit||(otSplit?`<span class="ot-split-top">${disp}</span>${otSplit}`:disp)}${remarkDot}</div>`
             }
             <div class="ot-cell ${ot&&!isPreShift&&!otSplit?'has-ot ot-below editable-ot':(otClickable&&!ot?'no-ot editable-empty ot-below':'no-ot ot-below')}"
               style="${ot&&!isPreShift&&!otSplit?'background:'+otColor+';':''}"
@@ -2511,7 +2645,10 @@ async function renderUsersTab(){
         </label>
       </td>
       <td style="padding:6px 8px">
-        <button class="btn" style="height:26px;font-size:11px;white-space:nowrap" onclick="openModal('resetPw','${u.id}','${(u.display_name||'').replace(/'/g,"\'")}')">🔑 Reset pw</button>
+        <div style="display:flex;gap:4px">
+          <button class="btn" style="height:26px;font-size:11px;white-space:nowrap" onclick="openModal('resetPw','${u.id}','${(u.display_name||'').replace(/'/g,"\'")}')">🔑 Reset pw</button>
+          ${!isMe&&u.is_active?`<button class="btn" style="height:26px;font-size:11px;white-space:nowrap;color:#7c3aed;border-color:#c4b5fd" title="See the app exactly as this person sees it (read-only)" onclick="startViewAs('${u.id}')">👁 View as</button>`:''}
+        </div>
       </td>
       <td style="padding:6px 8px">
         ${!isMe?`<button class="btn btn-red" style="height:26px;font-size:11px" onclick="deleteUser('${u.id}','${(u.display_name||'').replace(/'/g,"\'")}')">Remove</button>`:'<span style="font-size:10px;color:var(--text3)">—</span>'}
@@ -3370,12 +3507,13 @@ async function doSaveOT(sid,day,hours,start,end){
   else toast('OT removed','ok');
 }
 
-function closeModal(){document.getElementById('overlay').classList.remove('open')}
+function closeModal(){document.getElementById('overlay').classList.remove('open'); if(typeof markBottomNav==='function'&&typeof currentTab!=='undefined') markBottomNav(currentTab);}
 function handleOverlayBg(e){if(e.target===document.getElementById('overlay'))closeModal()}
 
 // ── PAGE SWITCHING ──
 function switchTab(t){
   if(typeof closeCovPopup==='function') closeCovPopup();
+  if(typeof markBottomNav==='function') markBottomNav(t);
   const isAdmin=currentProfile&&currentProfile.app_role==='admin';
   const isApprover=isAdmin||['Senior Manager','Assistant Manager','Team Leader','Supervisor','Manager'].includes(currentProfile?currentProfile.staff_role:'');
   if(!isAdmin&&(t==='users'||t==='settings')) t='schedule';
@@ -4416,17 +4554,32 @@ document.addEventListener('mouseup',()=>{
 });
 
 // ── MC rejection ──
+const MC_REJ_REASONS=['Informed late','No supporting document','Invalid / unclear MC'];
 function mcRejectHtml(sid,day,sh){
-  if(sh!=='MC'&&sh!=='MCR') return '';
+  if(sh!=='MC'&&sh!=='MCR'&&sh!=='MCP') return '';
+  if(viewerRestricted()) return '';
   const rm=getR(sid,day)||'';
   const inp='font-size:12px;border:1px solid var(--border2);border-radius:var(--r);padding:6px 8px;background:var(--surface);color:var(--text);font-family:\'DM Sans\',sans-serif';
+  if(sh==='MCP') return `<div style="margin:-2px 0 14px;padding:10px 12px;border-radius:var(--r);background:#fffbeb;border:1px solid #fcd34d">
+      <div style="font-size:12px;font-weight:700;color:#92400e">⏳ MC pending — waiting for document / approval</div>
+      ${rm?`<div style="font-size:11px;color:#92400e;margin-top:3px">${rm.replace(/</g,'&lt;')}</div>`:''}
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">
+        <button onclick="approveMC('${sid}',${day})" style="font-size:12px;padding:6px 12px;border-radius:var(--r);border:none;background:#15803d;color:#fff;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif">✓ Approve MC</button>
+        <select id="mcRejReason" style="${inp};flex:1 1 150px">${MC_REJ_REASONS.map(r=>`<option>${r}</option>`).join('')}<option value="other">Other…</option></select>
+        <input id="mcRejNote" placeholder="Note (optional)" style="${inp};flex:1 1 120px">
+        <button onclick="rejectMC('${sid}',${day})" style="font-size:12px;padding:6px 12px;border-radius:var(--r);border:none;background:#b91c1c;color:#fff;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif">✕ Reject</button>
+      </div>
+    </div>`;
   if(sh==='MCR') return `<div style="margin:-2px 0 14px;padding:10px 12px;border-radius:var(--r);background:#fef2f2;border:1px solid #fecaca">
       <div style="font-size:12px;font-weight:700;color:#991b1b">✕ MC rejected</div>
       ${rm?`<div style="font-size:11px;color:#7f1d1d;margin-top:3px">${rm.replace(/</g,'&lt;')}</div>`:''}
       <button onclick="acceptMC('${sid}',${day})" style="margin-top:8px;font-size:12px;padding:5px 10px;border-radius:var(--r);border:1px solid #fca5a5;background:#fff;color:#991b1b;cursor:pointer;font-family:'DM Sans',sans-serif">↩ Accept MC instead</button>
     </div>`;
   return `<div style="margin:-2px 0 14px;padding:10px 12px;border-radius:var(--r);background:var(--surface2);border:1px dashed #fca5a5">
-      <div style="font-size:11px;font-weight:700;color:#991b1b;margin-bottom:6px">Reject this MC?</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;gap:8px">
+        <div style="font-size:11px;font-weight:700;color:#991b1b">Reject this MC?</div>
+        <button onclick="pendMC('${sid}',${day})" style="font-size:11px;padding:3px 8px;border-radius:var(--r);border:1px solid #fcd34d;background:#fffbeb;color:#b45309;cursor:pointer;font-family:'DM Sans',sans-serif">⏳ Mark pending document</button>
+      </div>
       <div style="display:flex;gap:6px;flex-wrap:wrap">
         <select id="mcRejReason" style="${inp};flex:1 1 160px">
           <option>Informed late</option><option>No supporting document</option><option>Invalid / unclear MC</option><option value="other">Other…</option>
@@ -4442,25 +4595,175 @@ async function setCellRemark(sid,day,remark){
   if(error) throw new Error(error.message);
   if(remark){remarkData[sk]=remark;remarkData[fk]=remark;} else {delete remarkData[sk];delete remarkData[fk];}
 }
-async function rejectMC(sid,day){
-  let reason=document.getElementById('mcRejReason').value;
-  const note=document.getElementById('mcRejNote').value.trim();
+function mcStamp(){ const t=new Date(); return ((currentProfile?.display_name||'').split(' ')[0]||'manager')+' '+t.getDate()+'/'+(t.getMonth()+1); }
+const stripMcTag=r=>(r||'').replace(/^(MC rejected — [^·]*· by [^·]*|MC pending[^·]*· [^·]*|MC approved · by [^·]*)(· )?/,'').trim();
+async function pendMC(sid,day){
+  const old=stripMcTag(getR(sid,day));
+  await saveShift(sid,day,'MCP');
+  try{ await setCellRemark(sid,day,('MC pending — waiting for document · '+mcStamp()+(old?' · '+old:'')).slice(0,300)); }catch(_){}
+  closeModal(); renderSchedule(); toast(`Day ${day}: MC marked pending ⏳`,'ok');
+}
+async function approveMC(sid,day,fromList){
+  const old=stripMcTag(getR(sid,day));
+  await saveShift(sid,day,'MC');
+  try{ await setCellRemark(sid,day,('MC approved · by '+mcStamp()+(old?' · '+old:'')).slice(0,300)); }catch(_){}
+  if(fromList) openMcPendingList(); else closeModal();
+  renderSchedule(); toast(`MC approved for day ${day} ✓`,'ok');
+}
+async function rejectMC(sid,day,fromList){
+  const pre=fromList?'_'+sid+'_'+day:'';
+  let reason=document.getElementById('mcRejReason'+pre).value;
+  const note=(document.getElementById('mcRejNote'+pre)?.value||'').trim();
   if(reason==='other'){ if(!note){ toast('Type the reason in the note','err'); return; } reason=note; }
   const who=(currentProfile?.display_name||'').split(' ')[0]||'manager';
   const t=new Date(); const when=t.getDate()+'/'+(t.getMonth()+1);
-  const old=getR(sid,day)||'';
-  const remark=`MC rejected — ${reason}${note&&reason!==note?' ('+note+')':''} · by ${who} ${when}${old&&!/^MC rejected/.test(old)?' · '+old:''}`;
+  const old=stripMcTag(getR(sid,day));
+  const remark=`MC rejected — ${reason}${note&&reason!==note?' ('+note+')':''} · by ${who} ${when}${old?' · '+old:''}`;
   await saveShift(sid,day,'MCR');
   try{ await setCellRemark(sid,day,remark.slice(0,300)); }catch(e){ toast('Rejected, but the note failed to save: '+e.message,'err'); }
-  closeModal(); renderSchedule();
+  if(fromList) openMcPendingList(); else closeModal();
+  renderSchedule();
   toast(`MC rejected for day ${day} ✓`,'ok');
 }
 async function acceptMC(sid,day){
   const old=getR(sid,day)||'';
   await saveShift(sid,day,'MC');
-  try{ await setCellRemark(sid,day,old.replace(/^MC rejected — [^·]*· by [^·]*(· )?/,'').trim()); }catch(_){}
+  try{ await setCellRemark(sid,day,stripMcTag(old)); }catch(_){}
   closeModal(); renderSchedule();
   toast(`Day ${day} set back to MC ✓`,'ok');
+}
+
+// ── MC awaiting approval (this month) ──
+function mcPendingItems(){
+  const out=[], n=dim(cy,cm);
+  staffList.forEach(st=>{ for(let d=1;d<=n;d++) if(getS(st.id,d,cm,cy)==='MCP') out.push({st,d}); });
+  return out.sort((a,b)=>a.d-b.d||a.st.name.localeCompare(b.st.name));
+}
+// ── MY DAY: what an agent does today — shift, Support Inbound / Quiz, breaks, OT, notes ──
+let myDaySel=null;
+function updateMyDayBtn(){
+  const b=document.getElementById('myDayBtn'); if(!b) return;
+  b.style.display=currentProfile&&currentProfile.staff_id?'flex':'none';
+}
+function myDayTimeline(sid,d){
+  const vd={day:d,month:cm,year:cy};
+  if(hiddenDay(d,cm,cy)) return {state:'hidden'};
+  const sh=getS(sid,d,cm,cy);
+  const mk=cy+'-'+(cm+1);
+  const remark=getR(sid,d);
+  if(!sh) return {state:'none',remark};
+  const lbl=(timeoffTypes.find(t=>t.code===sh)||{}).label;
+  if(sh==='OD'||sh==='RD'||sh==='O') return {state:'off',sh,label:lbl||'Off day',remark};
+  if(LEAVE_NO_OT.has(sh)) return {state:'leave',sh,label:sh==='MCP'?'MC — waiting for approval':sh==='MCR'?'MC rejected':(lbl||sh),remark};
+  const ev=[];
+  let S,E,base=sh;
+  const hd=sh.match(/^(.+)-(H[12]AL)$/);
+  if(hd){ base=hd[1]; const h=halfDayHours(base,hd[2]); if(h){S=h.start;E=h.end;} }
+  else { S=getShiftStart(sh); E=getShiftEnd(sh); }
+  const lc=isLCShift(base);
+  const me=staffList.find(x=>x.id===sid)||{};
+  const ownQueue=lc?'Livechat':(CALL_ROLES.has(me.staff_role)?'Inbound calls':(me.staff_role||'Own work'));
+  if(S!=null){
+    ev.push({t:S,end:E,icon:'🟢',title:`${base} shift${hd?' (half day — '+(hd[2]==='H1AL'?'1st':'2nd')+' half on leave)':''}`,sub:fmtRange(S,E)+' · '+ownQueue,kind:'shift'});
+  }
+  const ot=otData[sid+'_'+d+'_'+mk];
+  if(ot&&(ot.start||ot.hours)){
+    const a=ot.start?toMin(ot.start):(E||0), b=ot.end?toMin(ot.end):a+Math.round((+ot.hours||0)*60);
+    ev.push({t:a,end:b,icon:'⏱️',title:(ot.type==='RH'?'Rest-day hours':'Overtime')+' ('+(ot.type||'OT')+')',sub:fmtRange(a,b)+' · '+(Math.round((b-a)/6)/10)+'h',kind:'ot'});
+  }
+  (tasksMap[sid+'_'+ymdStr(cy,cm,d)]||[]).forEach(t=>{
+    const a=toMin(t.start_time), b=a+(t.duration_mins||0);
+    const cov=TASK_TYPES.find(x=>x.code===t.task_type)?.covers;
+    ev.push({t:a,end:b,icon:getTaskIcon(t.task_type),title:t.task_type,sub:fmtRange(a,b)+' · '+(cov?'📞 answering '+(cov==='Inbound Agent'?'inbound calls':cov):'🚫 off calls')+(t.notes?' · '+t.notes:''),kind:'task',color:getTaskColor(t.task_type)});
+  });
+  savedBreaksOn(sid,vd).forEach(b=>{
+    const a=b.startMins??toMin(b.start), e=b.endMins??(b.end?toMin(b.end):a+(b.duration||0));
+    ev.push({t:a,end:e,icon:b.icon||'☕',title:b.name||'Break',sub:fmtRange(a,e)+' · '+(e-a)+' min',kind:'break'});
+  });
+  ev.sort((x,y)=>x.t-y.t||(x.kind==='shift'?-1:1));
+  return {state:'work',sh,ev,remark,noBreaks:!savedBreaksOn(sid,vd).length};
+}
+function openMyDay(d){
+  const sid=currentProfile?.staff_id; if(!sid) return;
+  const now=new Date(), n=dim(cy,cm);
+  if(d==null) d=myDaySel||((now.getFullYear()===cy&&now.getMonth()===cm)?now.getDate():1);
+  d=Math.max(1,Math.min(n,d)); myDaySel=d;
+  const dt=new Date(cy,cm,d);
+  const isToday=dt.toDateString()===now.toDateString();
+  const r=myDayTimeline(sid,d);
+  const kc={shift:'#2563eb',ot:'#d97706',task:'#0891b2',break:'#64748b'};
+  let body='';
+  if(r.state==='hidden') body=`<div style="padding:24px;text-align:center;color:var(--text3)">🔒 This day isn't published yet.<br><span style="font-size:11px">Check again after your TL publishes the schedule.</span></div>`;
+  else if(r.state==='none') body=`<div style="padding:24px;text-align:center;color:var(--text3)">No shift assigned.</div>`;
+  else if(r.state==='off') body=`<div style="padding:24px;text-align:center;font-size:15px">😌 ${r.label}</div>`;
+  else if(r.state==='leave') body=`<div style="padding:24px;text-align:center;font-size:15px">🏖️ ${r.label}</div>`;
+  else body=`<div style="position:relative;padding-left:18px;margin:6px 0 4px">
+      <div style="position:absolute;left:6px;top:6px;bottom:6px;width:2px;background:var(--border)"></div>
+      ${r.ev.map(e=>`<div style="position:relative;margin-bottom:10px">
+        <div style="position:absolute;left:-17px;top:4px;width:12px;height:12px;border-radius:50%;background:${e.color||kc[e.kind]};border:2px solid var(--surface)"></div>
+        <div style="display:flex;gap:10px;align-items:baseline">
+          <div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text3);min-width:52px">${fmtClock(e.t)}</div>
+          <div><div style="font-size:13px;font-weight:600;color:var(--text)">${e.icon} ${e.title}</div>
+          <div style="font-size:11px;color:var(--text2)">${e.sub}</div></div>
+        </div></div>`).join('')}
+    </div>
+    ${r.noBreaks?`<div style="font-size:11px;color:var(--text3);background:var(--surface2);padding:6px 8px;border-radius:var(--r)">☕ Break times not set yet for this day — check with your TL.</div>`:''}`;
+  if(r.remark) body+=`<div style="margin-top:8px;font-size:12px;background:#fffbeb;border:1px solid #fde68a;color:#92400e;padding:8px 10px;border-radius:var(--r)">📝 ${String(r.remark).replace(/</g,'&lt;')}</div>`;
+  // week strip
+  const mon=new Date(dt); mon.setDate(dt.getDate()-((dt.getDay()+6)%7));
+  const strip=Array.from({length:7},(_,i)=>{const x=new Date(mon);x.setDate(mon.getDate()+i);return x;}).map(x=>{
+    const inM=x.getMonth()===cm&&x.getFullYear()===cy, dd=x.getDate();
+    const code=inM?(hiddenDay(dd,cm,cy)?'🔒':(getS(sid,dd,cm,cy)||'—')):'';
+    const flags=inM&&!hiddenDay(dd,cm,cy)?((tasksMap[sid+'_'+ymdStr(cy,cm,dd)]||[]).length?'•':'')+(otData[sid+'_'+dd+'_'+cy+'-'+(cm+1)]?'+':''):'';
+    const sel=inM&&dd===d;
+    return `<div ${inM?`onclick="openMyDay(${dd})"`:''} style="flex:1;text-align:center;padding:5px 2px;border-radius:var(--r);cursor:${inM?'pointer':'default'};background:${sel?'var(--blue)':'var(--surface2)'};color:${sel?'#fff':inM?'var(--text)':'var(--text3)'};opacity:${inM?1:.4}">
+      <div style="font-size:9px">${['Mon','Tue','Wed','Thu','Fri','Sat','Sun'][(x.getDay()+6)%7]} ${dd}</div>
+      <div style="font-size:11px;font-weight:700">${code}<span style="font-size:9px">${flags}</span></div></div>`;}).join('');
+  document.getElementById('modalBox').innerHTML=`
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+      <h3 style="margin:0">📋 My day</h3>
+      <div style="display:flex;gap:4px">
+        <button class="btn" style="width:28px;padding:0;justify-content:center" ${d<=1?'disabled':''} onclick="openMyDay(${d-1})">←</button>
+        <button class="btn" style="font-size:11px" onclick="myDaySel=null;openMyDay()">Today</button>
+        <button class="btn" style="width:28px;padding:0;justify-content:center" ${d>=n?'disabled':''} onclick="openMyDay(${d+1})">→</button>
+      </div>
+    </div>
+    <div class="msub">${dt.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}${isToday?' · <b style="color:var(--blue)">Today</b>':''}</div>
+    <div style="display:flex;gap:4px;margin:10px 0 12px">${strip}</div>
+    ${body}
+    <div style="font-size:10px;color:var(--text3);margin-top:10px">• = task that day · + = overtime</div>
+    <div class="mbtns"><button class="btn" onclick="closeModal()">Close</button></div>`;
+  document.getElementById('overlay').classList.add('open');
+}
+
+function updateMcPendingBtn(){
+  const b=document.getElementById('mcPendBtn'); if(!b) return;
+  const n=viewerRestricted()?0:mcPendingItems().length;
+  b.style.display=n?'flex':'none'; b.textContent=`⏳ ${n} MC pending`;
+}
+function openMcPendingList(){
+  const items=mcPendingItems();
+  const inp='font-size:11px;border:1px solid var(--border2);border-radius:var(--r);padding:4px 6px;background:var(--surface);color:var(--text);font-family:\'DM Sans\',sans-serif';
+  const today=new Date(); today.setHours(0,0,0,0);
+  const box=document.getElementById('modalBox');
+  box.innerHTML=`<h3>⏳ MC awaiting approval</h3>
+    <div class="msub">${MONTHS[cm]} ${cy} · ${items.length} pending</div>
+    ${items.length?items.map(({st,d})=>{
+      const dt=new Date(cy,cm,d), age=Math.round((today-dt)/86400000);
+      const rm=stripMcTag(getR(st.id,d)), k='_'+st.id+'_'+d;
+      return `<div style="border:1px solid var(--border);border-radius:var(--r);padding:10px;margin-bottom:8px">
+        <div style="display:flex;justify-content:space-between;gap:8px;align-items:baseline">
+          <div style="font-size:13px;font-weight:600">${st.name}</div>
+          <div style="font-size:11px;color:var(--text3);white-space:nowrap">${dt.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'})}${age>0?` · <span style="color:${age>=3?'var(--red)':'#b45309'}">${age} day${age>1?'s':''} ago</span>`:''}</div>
+        </div>
+        <div style="font-size:11px;color:var(--text3);margin:2px 0 8px">${st.team?'Team '+st.team+' · ':''}${rm?rm.replace(/</g,'&lt;'):'No note'}</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <button onclick="approveMC('${st.id}',${d},true)" style="font-size:11px;padding:5px 10px;border-radius:var(--r);border:none;background:#15803d;color:#fff;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif">✓ Approve</button>
+          <select id="mcRejReason${k}" style="${inp};flex:1 1 130px">${MC_REJ_REASONS.map(r=>`<option>${r}</option>`).join('')}</select>
+          <button onclick="rejectMC('${st.id}',${d},true)" style="font-size:11px;padding:5px 10px;border-radius:var(--r);border:none;background:#b91c1c;color:#fff;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif">✕ Reject</button>
+        </div></div>`;}).join(''):'<div style="padding:20px;text-align:center;color:var(--text3);font-size:12px">Nothing pending 🎉</div>'}
+    <div class="mbtns"><button class="btn" onclick="closeModal()">Close</button></div>`;
+  document.getElementById('overlay').classList.add('open');
 }
 
 function swapSectionHtml(sid,day){
@@ -4578,7 +4881,7 @@ function openShiftModal(sid, day, name){
     >${s.code}</button>`).join('');
 
   // Half-day AL — every shift, with the hours actually worked
-  const curBase=sh&&!['AL','RL','MC','MCR','EL','PH','OD','RD','UL','CL','HOSP','TO'].includes(sh)?sh.replace(/-H[12]AL$/,''):'';
+  const curBase=sh&&!['AL','RL','MC','MCR','MCP','EL','PH','OD','RD','UL','CL','HOSP','TO'].includes(sh)?sh.replace(/-H[12]AL$/,''):'';
   const hdShifts=shiftTypes.filter(t=>t.start&&t.end&&(t.hours||9)>=8);
   hdShifts.sort((a,b)=>(a.code===curBase?-1:b.code===curBase?1:0));
   const alColor=(timeoffTypes.find(t=>t.code==='AL')||{}).color||'#16a34a';
@@ -5519,9 +5822,9 @@ const SHIFT_HOURS={
   'RL':[8,17],   // Replacement
 };
 // Timeoff and Off = not available
-const ABSENT_CODES=new Set(['AL','RL','MC','MCR','EL','PH','O']);
+const ABSENT_CODES=new Set(['AL','RL','MC','MCR','MCP','EL','PH','O']);
 // Full-day leave: the person isn't working at all that day — any OT or support block on that day doesn't count
-const LEAVE_NO_OT=new Set(['AL','RL','MC','MCR','EL','UL','CL','HOSP','TO','PH']);
+const LEAVE_NO_OT=new Set(['AL','RL','MC','MCR','MCP','EL','UL','CL','HOSP','TO','PH']);
 
 // Half-day AL working hours for any shift: H2AL (2nd half off) works the first 4h,
 // H1AL (1st half off) works the last 4h. Returns minutes {start,end} or null.
@@ -6823,7 +7126,7 @@ const BREAK_CFG={peakFrom:10*60, peakTo:16*60, firstWin:120, earliest:60, gap:30
   maxRun:300, step:10, peakW:1.0, floor:0.75, shortEarliest:180,
   blackout:[[19*60,20*60]]};   // no breaks 7PM–8PM
 const CALL_ROLES=new Set(['Inbound Agent','New Staff','Agent']);
-const ABSENT_FOR_BREAKS=new Set(['AL','RL','MC','MCR','EL','PH','O','OD','RD','UL','CL','HOSP','TO','H1','H2']);
+const ABSENT_FOR_BREAKS=new Set(['AL','RL','MC','MCR','MCP','EL','PH','O','OD','RD','UL','CL','HOSP','TO','H1','H2']);
 
 function breakRuleOf(kind){
   const r=kind==='meal'?breakRules.find(b=>!b.eaOnly&&(/meal|lunch/i.test(b.name)||b.duration>=60))
@@ -7502,7 +7805,7 @@ async function renderProfileCard(forceSid){
               onfocus="this.style.borderBottomColor='var(--blue)'" onblur="this.style.borderBottomColor='transparent'">`;
             const sel=(id,val,opts)=>`<select id="pf_${id}_${s.id}"
               style="font-size:12px;font-weight:500;text-align:right;border:none;background:transparent;color:var(--text);outline:none;cursor:pointer;border-bottom:1px dashed var(--border2)">
-              ${opts.map(o=>`<option value="${o}" ${val===o?'selected':''}>${o}</option>`).join('')}
+              ${opts.map(o=>`<option value="${o}" ${val===o?'selected':''}>${o||'—'}</option>`).join('')}
             </select>`;
             const dateVal=(d)=>d?new Date(d).toISOString().split('T')[0]:'';
             const dateFmt=(d)=>d?new Date(d).toLocaleDateString('en-GB'):'—';
@@ -7537,10 +7840,12 @@ async function renderProfileCard(forceSid){
               ['📞 3CX Ext',       isAdminView ? inp('cx',s.cx) : txt(s.cx)],
               ['👥 Team',          isAdminView ? sel('team',s.team,[...new Set(staffList.map(x=>x.team).filter(Boolean))]) : txt(s.team)],
               ['💼 Position',      isAdminView ? `<select id="pf_staff_role_${s.id}" onchange="roleSelectChanged(this)" style="font-size:12px;font-weight:500;text-align:right;border:none;background:transparent;color:var(--text);outline:none;cursor:pointer;border-bottom:1px dashed var(--border2)">${roleOptionsHtml(s.staff_role)}</select>` : txt(s.staff_role)],
+              ['🏢 Agency',        isAdminView ? sel('agency',s.agency||'',['','XOX','PERSOLAPAC']) : txt(s.agency||'—')],
               ['📋 Status',        isAdminView ? sel('position_status',s.position_status,['Permanent','Contract','Probation']) : txt(s.position_status)],
               ['🖥️ Work mode',     isAdminView ? sel('work_mode',s.work_mode,['Work from office','WFH','Hybrid']) : txt(s.work_mode)],
               ['🎂 Birth date',    isAdminView ? inp('birth_date',dateVal(s.birth_date),'date') : txt(dateFmt(s.birth_date))],
               ['📅 Date joined',   isAdminView ? inp('contract_start',dateVal(s.contract_start),'date') : txt(dateFmt(s.contract_start))],
+              ...(s.position_status==='Contract'?[['🔁 Latest renewal', isAdminView ? inp('renewal_date',dateVal(s.renewal_date),'date') : txt(s.renewal_date?dateFmt(s.renewal_date):'—')]]:[]),
               ['🟢 Employment',   isAdminView ? sel('employment_status',s.employment_status||'Active',['Active','Resigned']) : txt(s.employment_status||'Active')],
               ['🚪 Last working date', isAdminView ? inp('last_working_date',dateVal(s.last_working_date),'date') : txt(s.last_working_date?dateFmt(s.last_working_date):'—')],
               ['⏳ Duration',      txt(duration)],
@@ -8452,8 +8757,9 @@ function openHalfDayInfo(sid, day, code){
 }
 
 // ── LEAVE BALANCE ──
-async function loadLeaveData(staffId, alStart, mcStart){
-  const now=new Date();
+async function loadLeaveData(staffId, alStart, mcStart, alEnd){
+  // up to the end of the leave period, so leave already booked ahead is counted too
+  const now=alEnd&&alEnd>new Date()?alEnd:new Date();
   const earliest=alStart<mcStart?alStart:mcStart;
   const monthKeys=[];
   let d=new Date(earliest.getFullYear(), earliest.getMonth(), 1);
@@ -8482,7 +8788,13 @@ async function loadLeaveData(staffId, alStart, mcStart){
 }
 
 function getLeaveYear(staff){
-  // AL year = contract anniversary to anniversary
+  // Contract staff: AL period = latest renewal (or joining date) → contract end
+  if(staff.position_status==='Contract'&&staff.contract_end){
+    const st=new Date(staff.renewal_date||staff.contract_start||staff.contract_end);
+    const en=new Date(staff.contract_end);
+    if(st<=en) return {start:new Date(st.getFullYear(),st.getMonth(),st.getDate()), end:new Date(en.getFullYear(),en.getMonth(),en.getDate())};
+  }
+  // Permanent: AL year = joining anniversary to anniversary
   if(!staff.contract_start) return {start:new Date(new Date().getFullYear(),0,1), end:new Date(new Date().getFullYear(),11,31)};
   const cs=new Date(staff.contract_start);
   const today=new Date();
@@ -8496,6 +8808,14 @@ function getLeaveYear(staff){
   return {start:yearStart, end:yearEnd};
 }
 
+// Contract staff: 6 days for a 6-month contract, 12 days for a 1-year contract (from the latest renewal)
+function alEntitlementOf(staff){
+  if(staff.position_status==='Contract'&&staff.contract_end){
+    const st=new Date(staff.renewal_date||staff.contract_start||staff.contract_end), en=new Date(staff.contract_end);
+    if(st<=en){ const months=Math.round(((en-st)/86400000+1)/30.44); return months>=9?12:6; }
+  }
+  return staff.al_entitlement??14;
+}
 function getMCYear(){
   // MC year = calendar year Jan 1 - Dec 31
   const y=new Date().getFullYear();
@@ -8542,17 +8862,19 @@ async function renderLeaveBalance(staff, container){
   const mcYear=getMCYear();
 
   // Load all schedule data for the leave year period from Supabase
-  await loadLeaveData(staff.id, alYear.start, mcYear.start);
+  await loadLeaveData(staff.id, alYear.start, mcYear.start, new Date(Math.max(alYear.end, mcYear.end)));
 
   // AL: counts AL + EL (half-days already included as 0.5 inside countLeaveTaken)
   const alTaken=countLeaveTaken(staff.id,['AL'],alYear.start,alYear.end);
   const elTaken=countLeaveTaken(staff.id,['EL'],alYear.start,alYear.end);
   const alUsed=alTaken+elTaken;
-  const alBal=staff.al_entitlement-alUsed;
+  const alEnt=alEntitlementOf(staff);
+  const alBal=alEnt-alUsed;
 
   // MC: calendar year
   const mcTaken=countLeaveTaken(staff.id,['MC'],mcYear.start,mcYear.end);
   const mcRejected=countLeaveTaken(staff.id,['MCR'],mcYear.start,mcYear.end);
+  const mcPending=countLeaveTaken(staff.id,['MCP'],mcYear.start,mcYear.end);
   const mcBal=staff.mc_entitlement-mcTaken;
 
   // RL: separate tracking
@@ -8588,12 +8910,12 @@ async function renderLeaveBalance(staff, container){
         </div>
         <!-- Progress bar -->
         <div style="height:6px;background:var(--surface2);border-radius:3px;overflow:hidden;margin-bottom:8px">
-          <div style="height:100%;background:${alBal<3?'var(--red)':alBal<5?'var(--amber)':'var(--green)'};width:${Math.max(0,Math.min(100,alBal/staff.al_entitlement*100)).toFixed(0)}%;transition:width .3s"></div>
+          <div style="height:100%;background:${alBal<3?'var(--red)':alBal<5?'var(--amber)':'var(--green)'};width:${Math.max(0,Math.min(100,alBal/(alEnt||1)*100)).toFixed(0)}%;transition:width .3s"></div>
         </div>
         <!-- Breakdown -->
         <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px">
           <div style="text-align:center;padding:6px;background:var(--surface2);border-radius:var(--r)">
-          <div style="font-size:13px;font-weight:500;color:var(--text)">${staff.al_entitlement} days</div>
+          <div style="font-size:13px;font-weight:500;color:var(--text)">${alEnt} days</div>
           <div style="font-size:10px;color:var(--text3)">Entitlement</div>
         </div>
         <div onclick="showLeaveDates('${staff.id}','AL')" style="text-align:center;padding:6px;background:var(--surface2);border-radius:var(--r);cursor:pointer;border:1px solid transparent" onmouseover="this.style.borderColor='var(--amber)'" onmouseout="this.style.borderColor='transparent'">
@@ -8631,6 +8953,7 @@ async function renderLeaveBalance(staff, container){
         <div onclick="showLeaveDates('${staff.id}','MC')" style="text-align:center;padding:6px;background:var(--surface2);border-radius:var(--r);cursor:pointer;border:1px solid transparent" onmouseover="this.style.borderColor='var(--amber)'" onmouseout="this.style.borderColor='transparent'">
           <div style="font-size:13px;font-weight:500;color:var(--amber)">${mcTaken} days</div>
           <div style="font-size:10px;color:var(--text3)">MC taken 👆</div>
+          ${mcPending?`<div onclick="event.stopPropagation();showLeaveDates('${staff.id}','MCP')" style="margin-top:4px;font-size:10px;font-weight:600;color:#b45309;cursor:pointer" title="MC waiting for document / approval">⏳ ${mcPending} pending</div>`:''}
           ${mcRejected?`<div onclick="event.stopPropagation();showLeaveDates('${staff.id}','MCR')" style="margin-top:4px;font-size:10px;font-weight:600;color:#b91c1c;cursor:pointer" title="Rejected MCs — not counted as MC taken">✕ ${mcRejected} rejected</div>`:''}
         </div>
         <div style="text-align:center;padding:6px;background:var(--surface2);border-radius:var(--r)">
@@ -8719,7 +9042,7 @@ function showLeaveDates(staffId, leaveType){
   if(!staff){toast('Staff not found','err');return;}
   // Derive year range from staff data
   let yearStart, yearEnd;
-  if(leaveType==='MC'||leaveType==='MCR'){
+  if(leaveType==='MC'||leaveType==='MCR'||leaveType==='MCP'){
     const r=getMCYear();yearStart=r.start;yearEnd=r.end;
   } else {
     const r=getLeaveYear(staff);yearStart=r.start;yearEnd=r.end;
@@ -8748,12 +9071,13 @@ function showLeaveDates(staffId, leaveType){
         else if(leaveType==='EL'&&sh==='EL'){match=true;label='EL';}
         else if(leaveType==='MC'&&sh==='MC'){match=true;label='MC';}
         else if(leaveType==='MCR'&&sh==='MCR'){match=true;label='MC rejected';}
+        else if(leaveType==='MCP'&&sh==='MCP'){match=true;label='MC pending';}
         if(match) dates.push({d,m,y,dt,label,days});
       }
     }
   }
 
-  const typeLabel=leaveType==='AL'?'Annual Leave':leaveType==='EL'?'Emergency Leave':leaveType==='MC'?'Medical Leave':leaveType==='MCR'?'Rejected MC':'Half-day AL';
+  const typeLabel=leaveType==='AL'?'Annual Leave':leaveType==='EL'?'Emergency Leave':leaveType==='MC'?'Medical Leave':leaveType==='MCR'?'Rejected MC':leaveType==='MCP'?'MC pending approval':'Half-day AL';
   const box=document.getElementById('modalBox');
   box.innerHTML=`<h3>${typeLabel} — dates taken</h3>
   <div class="msub">${staff?staff.name:''} · ${dates.length} occurrence${dates.length!==1?'s':''} · ${dates.reduce((a,x)=>a+x.days,0).toFixed(1)} days total</div>
@@ -8805,10 +9129,13 @@ async function saveProfileDetails(staffId){
   // Only send fields that are actually on the card (e.g. Contract end is hidden for Permanent staff —
   // a hidden field must not be saved as blank)
   const updates={};
-  ['employee_id','cx','team','staff_role','position_status','work_mode','birth_date','contract_start','contract_end','last_working_date','employment_status'].forEach(f=>{
+  ['employee_id','cx','team','staff_role','agency','renewal_date','position_status','work_mode','birth_date','contract_start','contract_end','last_working_date','employment_status'].forEach(f=>{
     const el=document.getElementById('pf_'+f+'_'+staffId);
     if(el) updates[f]=(el.value||'').trim()||null;
   });
+  { const cur=staffList.find(x=>x.id===staffId)||allStaff.find(x=>x.id===staffId)||{};
+    const merged={...cur,...updates};
+    if(merged.position_status==='Contract'&&merged.contract_end) updates.al_entitlement=alEntitlementOf(merged); }
   const chk=checkEmployment(updates);
   if(chk){ if(statusEl) statusEl.textContent=chk; toast(chk,'err'); return; }
 
@@ -8961,9 +9288,18 @@ async function renderAvailability(){
   document.getElementById('availWeekLabel').textContent=`${fmt(days[0])} – ${fmt(days[6])} ${days[0].getFullYear()}`;
 
   // Filter staff
-  const posF=document.getElementById('availPosFil')?.value||'';
-  const posList=posF?staffList.filter(s=>s.staff_role===posF):staffList;
+  const posF=document.getElementById('availPosFil')?.value??'__calls';
+  const posList=staffList;
+  const posLabel=posF==='__calls'?'answering inbound calls':posF==='__lc'?'on Livechat':(posF||'all staff working');
 
+  // Make sure every month in this week is loaded (a week can cross into the next month)
+  for(const mk of [...new Set(days.map(d=>d.getFullYear()+'-'+(d.getMonth()+1)))]){
+    if(!Object.keys(schedData).some(k=>k.endsWith('_'+mk))){
+      const {data}=await fetchScheduleMonth(mk);
+      (data||[]).forEach(r=>{ schedData[r.staff_id+'_'+r.day+'_'+mk]=r.shift;
+        if(r.ot_hours||r.ot_start) otData[r.staff_id+'_'+r.day+'_'+mk]={hours:r.ot_hours||0,start:r.ot_start||'',end:r.ot_end||'',type:r.ot_type||'OT'}; });
+    }
+  }
   // Load tasks for week
   const dateFrom=`${days[0].getFullYear()}-${String(days[0].getMonth()+1).padStart(2,'0')}-${String(days[0].getDate()).padStart(2,'0')}`;
   const dateTo=`${days[6].getFullYear()}-${String(days[6].getMonth()+1).padStart(2,'0')}-${String(days[6].getDate()).padStart(2,'0')}`;
@@ -8975,18 +9311,19 @@ async function renderAvailability(){
     tasksByStaffDate[k].push(t);
   });
 
+  // Only breaks actually planned/saved (Breaks tab) — no guessing
   const isOnBreak=(sid,d,shiftCode,slotMin)=>{
     const mk=`${d.getFullYear()}-${d.getMonth()+1}`;
-    const key=sid+'_'+d.getDate()+'_'+mk;
-    const breaks=breakOverrides[key]||getAutoBreaks(shiftCode)||[];
+    const breaks=breakOverrides[sid+'_'+d.getDate()+'_'+mk]||[];
     return breaks.some(b=>{
-      if(!b||!b.start) return false;
-      const [bh,bm]=b.start.split(':').map(Number);
-      const bStart=bh*60+bm;
-      const bEnd=bStart+(b.duration_mins||60);
-      return slotMin>=bStart&&slotMin<bEnd;
+      if(!b) return false;
+      const bS=b.startMins??(b.start?toMin(b.start):null); if(bS==null) return false;
+      const bE=b.endMins??(b.end?toMin(b.end):bS+(b.duration||b.duration_mins||0));
+      return slotMin>=bS&&slotMin<bE;
     });
   };
+  const taskAt=(tasks,slotMin)=>(tasks||[]).find(t=>{const a=toMin(t.start_time);return slotMin>=a&&slotMin<a+(t.duration_mins||0);});
+  const coversOf=t=>t?(TASK_TYPES.find(x=>x.code===t.task_type)?.covers||null):null;
 
   const isOnTask=(tasks,slotMin)=>{
     if(!tasks||!tasks.length) return false;
@@ -8999,16 +9336,22 @@ async function renderAvailability(){
   };
 
   const isAvailable=(s,dayDate,slotMin)=>{
-    const mk=`${dayDate.getFullYear()}-${dayDate.getMonth()+1}`;
-    const d=dayDate.getDate();
-    const sh=schedData[s.id+'_'+d+'_'+mk]||schedData[s.id+'_'+d]||'';
-    const ot=otData[s.id+'_'+d+'_'+mk]||otData[s.id+'_'+d]||null;
-    const slotHour=Math.floor(slotMin/60);
-    if(!isWorkingDuringHour(sh,slotHour,ot)) return false;
+    const d=dayDate.getDate(), m0=dayDate.getMonth(), y=dayDate.getFullYear();
+    const mk=`${y}-${m0+1}`;
+    const sh=getS(s.id,d,m0,y);
+    if(!sh||LEAVE_NO_OT.has(sh)||['OD','RD','O'].includes(sh)) return false;
+    const ot=hiddenDay(d,m0,y)?null:(otData[s.id+'_'+d+'_'+mk]||null);
+    if(!isWorkingDuringHour(sh,Math.floor(slotMin/60),ot)) return false;
     if(isOnBreak(s.id,dayDate,sh,slotMin)) return false;
-    const dateStr=`${dayDate.getFullYear()}-${String(dayDate.getMonth()+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-    const tasks=tasksByStaffDate[s.id+'_'+dateStr];
-    if(isOnTask(tasks,slotMin)) return false;
+    const t=hiddenDay(d,m0,y)?null:taskAt(tasksByStaffDate[s.id+'_'+ymdStr(y,m0,d)],slotMin);
+    const cov=coversOf(t);
+    if(t&&!cov) return false;                       // Quiz / Training / Meeting… = off calls
+    const lc=isLCShift(sh);
+    // which queue is this person on right now?
+    const queue=cov?cov:(lc?'Livechat':(CALL_ROLES.has(s.staff_role)?'Inbound Agent':null));
+    if(posF==='__calls') return queue==='Inbound Agent';
+    if(posF==='__lc') return queue==='Livechat';
+    if(posF) return s.staff_role===posF;
     return true;
   };
 
@@ -9017,7 +9360,8 @@ async function renderAvailability(){
   for(let m=8*60;m<22*60;m+=10) slots.push(m);
 
   // Build matrix: slots × days
-  const matrix=slots.map(slot=>days.map(day=>posList.filter(s=>isAvailable(s,day,slot)).length));
+  const who=slots.map(slot=>days.map(day=>posList.filter(s=>isAvailable(s,day,slot))));
+  const matrix=who.map(r=>r.map(l=>l.length));
   const maxCount=Math.max(1,...matrix.flat());
 
   // Color based on count
@@ -9058,7 +9402,7 @@ async function renderAvailability(){
     matrix[si].forEach((count,di)=>{
       const bg=cellColor(count);
       const tc=textColor(count);
-      html+=`<td class="cov-hover-cell" style="background:${bg};color:${tc};padding:2px 4px;text-align:center;font-size:10px;font-weight:${count>0?'600':'400'};border:0.5px solid var(--border)" data-popup="${encodeURIComponent(`<div style='font-size:10px;font-weight:700;color:var(--text3);margin-bottom:4px'>${DOW[di]} ${days[di].getDate()} — ${hh}:${mm}</div><div style='font-size:13px;font-weight:700;color:var(--text)'>${count} available</div><div style='font-size:10px;color:var(--text3)'>${posF||'All staff'}</div>`)}">${count||'—'}</td>`;
+      html+=`<td class="cov-hover-cell" style="background:${bg};color:${tc};padding:2px 4px;text-align:center;font-size:10px;font-weight:${count>0?'600':'400'};border:0.5px solid var(--border)" data-popup="${encodeURIComponent(`<div style='font-size:10px;font-weight:700;color:var(--text3);margin-bottom:4px'>${DOW[di]} ${days[di].getDate()} — ${hh}:${mm}</div><div style='font-size:13px;font-weight:700;color:var(--text)'>${count} available</div><div style='font-size:10px;color:var(--text3);margin-bottom:4px'>${posLabel}</div>${who[si][di].map(x=>`<div style='font-size:11px;color:var(--text2);white-space:nowrap'>· ${x.name.replace(/'/g,'&#39;')}</div>`).join('')}`)}">${count||'—'}</td>`;
     });
     html+='</tr>';
   });
@@ -9073,7 +9417,7 @@ async function renderAvailability(){
     <span style="display:flex;align-items:center;gap:4px"><span style="width:14px;height:14px;background:rgba(251,191,36,0.5);border-radius:2px;display:inline-block"></span>Low (20–39%)</span>
     <span style="display:flex;align-items:center;gap:4px"><span style="width:14px;height:14px;background:rgba(239,68,68,0.4);border-radius:2px;display:inline-block"></span>Critical (&lt;20%)</span>
     <span style="display:flex;align-items:center;gap:4px"><span style="width:14px;height:14px;background:var(--surface);border:1px solid var(--border);border-radius:2px;display:inline-block"></span>None</span>
-    <span style="font-size:11px;color:var(--text3);margin-left:8px">Counts exclude staff on break or assigned tasks</span>`;
+    <span style="font-size:11px;color:var(--text3);margin-left:8px">Excludes leave, saved breaks and off-call tasks · colours compare with the busiest slot of the week</span>`;
 
   // Hover popup
   const popup=document.getElementById('covPopup');
