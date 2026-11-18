@@ -160,7 +160,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);fon
   .app-body{padding:10px 10px calc(70px + env(safe-area-inset-bottom))}
   .toolbar{gap:6px!important;flex-wrap:wrap}
   .toolbar>input,.toolbar>select{flex:1 1 30%;min-width:0;width:auto!important;height:34px;font-size:13px}
-  #addStaffBtn,#ioWrap{display:none!important}
+  #addStaffBtn,#ioWrap,#autoSchedBtn,#clearWeekBtn,#bulkUndoBtn{display:none!important}
   .toolbar>div[style*="margin-left:auto"]{margin-left:0!important;width:100%;justify-content:space-between}
   #mLabel{min-width:0!important;flex:1;font-size:14px!important}
   .sum-row{display:flex;flex-wrap:nowrap!important;overflow-x:auto;gap:6px;padding-bottom:4px;-webkit-overflow-scrolling:touch}
@@ -263,6 +263,9 @@ tbody td.sticky{position:sticky;left:0;z-index:2;background:var(--surface)}
 .th-day.has-remark{position:relative;}
 .wk-col{color:var(--text3) !important}
 /* Weekend column — visible border on left edge */
+.al-bar{display:block;height:4px;border-radius:2px;margin:2px 3px 0}
+.al-open{background:#22c55e}.al-low{background:#f59e0b}.al-full{background:#ef4444}
+.al-dot{display:inline-block;width:8px;height:8px;border-radius:50%;vertical-align:middle}
 .th-day.wk-col{background:var(--surface2) !important;border-left:2px solid var(--border2) !important}
 td.wk-cell{border-left:2px solid var(--border2) !important}
 /* Crosshair hover highlight */
@@ -733,6 +736,9 @@ tr.section-drag-over td{border-top:3px solid var(--blue) !important}
           <select id="tfil" onchange="renderSchedule()"><option value="">All teams</option></select>
           <select id="rfil" onchange="renderSchedule()"><option value="">All roles</option></select>
           <button class="btn btn-blue" id="addStaffBtn" onclick="openModal('addStaff')">+ Add staff</button>
+          <button class="btn" id="autoSchedBtn" style="display:none;background:#f5f3ff;color:#6d28d9;border-color:#ddd6fe;font-weight:600" onclick="openAutoSchedule()">⚡ Auto schedule</button>
+          <button class="btn" id="clearWeekBtn" style="display:none;color:var(--red);border-color:#fecaca" onclick="openClearWeek()">🧹 Clear week</button>
+          <button class="btn" id="bulkUndoBtn" style="display:none" onclick="openBulkUndo()" title="Put back the schedule as it was before an Auto schedule or Clear week">↩ Revert</button>
           <div style="position:relative;display:inline-block" id="ioWrap">
             <button class="btn" onclick="toggleIOMenu()" style="display:flex;align-items:center;gap:4px">
               ⬍ Import / Export ▾
@@ -763,6 +769,7 @@ tr.section-drag-over td{border-top:3px solid var(--blue) !important}
           </div>
         </div>
         <div class="sum-row" id="sumRow"></div>
+        <div id="alLegend" style="display:none;align-items:center;gap:10px;flex-wrap:wrap;font-size:11px;color:var(--text2);margin:0 0 6px"></div>
         <div id="scheduleTableWrap"><div class="tbl-wrap"><table><thead id="thead"></thead><tbody id="tbody"></tbody></table></div></div>
         <div id="dayViewWrap"></div>
         <div class="legend">
@@ -922,6 +929,7 @@ tr.section-drag-over td{border-top:3px solid var(--blue) !important}
         <button id="autoAssignBtn" class="btn" style="display:none;background:var(--amber-bg);color:var(--amber);border-color:var(--amber-bd);font-weight:500" onclick="autoAssignBreaks()">
           ⚡ Auto-assign all
         </button>
+        <button id="clearBreaksBtn" class="btn autoAssignExtra" style="display:none;font-weight:500;color:var(--red);border-color:#fecaca" onclick="clearBreaksDay()" title="Remove every break assigned on the selected day">🗑 Clear day</button>
         <button class="btn btn-blue" onclick="renderBreaksTab()">↻ Refresh</button>
       </div>
     </div>
@@ -1114,6 +1122,63 @@ tr.section-drag-over td{border-top:3px solid var(--blue) !important}
         <div style="display:flex;justify-content:flex-end;gap:8px;border-top:1px solid var(--border);padding-top:10px">
           <span id="taskTypeSaveStatus" style="font-size:11px;color:var(--text3);align-self:center"></span>
           <button class="btn btn-blue" onclick="saveSettingsManual('tasks')">💾 Save task types</button>
+        </div>
+      </div>
+
+      <!-- Demand profile for auto schedule -->
+      <div class="settings-card" style="grid-column:1/-1">
+        <h4>📈 Auto schedule requirement</h4>
+        <div style="display:flex;gap:16px;flex-wrap:wrap;margin:4px 0 10px;font-size:12px">
+          <label style="display:flex;gap:6px;align-items:center;cursor:pointer"><input type="radio" name="demandMode" value="shift" onchange="demandModeUI()" style="width:auto"> <b>Headcount per shift</b> — fill M / MD / E to the numbers below</label>
+          <label style="display:flex;gap:6px;align-items:center;cursor:pointer"><input type="radio" name="demandMode" value="hourly" onchange="demandModeUI()" style="width:auto"> <b>Agents needed per hour</b> — based on call traffic</label>
+        </div>
+        <div id="demandShiftWrap">
+          <div class="desc">Inbound agents & new staff wanted on each shift. Auto schedule fills these first; anyone left over goes to the shift that's least filled. Off days are spread so each day can meet its total. Public holidays use the Sunday row.</div>
+          <div style="overflow-x:auto"><table id="demandShiftTable" style="border-collapse:collapse;font-size:12px"></table></div>
+        </div>
+        <div id="demandHourlyWrap">
+        <div class="desc">Used by <b>⚡ Auto schedule</b> to decide how many inbound agents go on M / MD / E each day. These are agents <b>actually on calls</b> (after breaks) for 80% of calls answered in 30s. Pre-filled from your CC Dashboard traffic (Oct–Nov, busy-day volume, 288s handle time). Public holidays use the Sunday row.</div>
+        <div style="overflow-x:auto"><table id="demandTable" style="border-collapse:collapse;font-size:11px"></table></div>
+        <div style="display:flex;gap:10px;align-items:center;margin-top:8px;flex-wrap:wrap">
+          <label style="font-size:11px;color:var(--text2)">Time lost to breaks 9AM–7PM <input id="demandShrink" type="number" min="0" max="50" step="1" style="width:60px;height:28px;padding:0 6px;border:1px solid var(--border2);border-radius:var(--r)"> %</label>
+          <button class="btn" onclick="resetDemand()">↺ Reset to traffic-based numbers</button>
+        </div>
+        </div>
+        <div style="display:flex;justify-content:flex-end;gap:8px;border-top:1px solid var(--border);padding-top:10px;margin-top:10px">
+          <span id="demandStatus" style="font-size:11px;color:var(--text3);align-self:center"></span>
+          <button class="btn btn-blue" onclick="saveDemand()">💾 Save</button>
+        </div>
+      </div>
+
+      <!-- AL quota per week -->
+      <div class="settings-card" style="grid-column:1/-1">
+        <h4>🏖️ AL quota — per week &amp; per day</h4>
+        <div class="desc">Limit how much Annual Leave inbound agents and new staff can apply for — per week (Sun–Sat) and/or per day. Approved AL and pending AL requests both count; a half day counts as 0.5. Once a week is full, agents can't submit more AL for it — TLs and managers can still add AL directly (you'll get a warning). Leave the limit empty for no limit.</div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:12px">
+          <label style="font-size:11px;color:var(--text2);display:flex;flex-direction:column;gap:4px">Default limit per week
+            <input id="alqDefault" type="number" min="0" step="0.5" placeholder="No limit" style="width:120px;height:32px;padding:0 8px;border:1px solid var(--border2);border-radius:var(--r);font-family:'DM Sans',sans-serif"></label>
+          <label style="font-size:11px;color:var(--text2);display:flex;flex-direction:column;gap:4px">Default limit per day
+            <input id="alqDayDefault" type="number" min="0" step="0.5" placeholder="No limit" style="width:120px;height:32px;padding:0 8px;border:1px solid var(--border2);border-radius:var(--r);font-family:'DM Sans',sans-serif"></label>
+          <label style="font-size:11px;color:var(--text2);display:flex;flex-direction:column;gap:4px">Count by
+            <select id="alqCountBy" style="height:32px;padding:0 8px;border:1px solid var(--border2);border-radius:var(--r);font-family:'DM Sans',sans-serif">
+              <option value="days">AL days (3 days = 3)</option>
+              <option value="people">People (one person = 1, any number of days)</option>
+            </select></label>
+        </div>
+        <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">Weeks — set a different limit for a busy or quiet week</div>
+        <div id="alqWeeks" style="display:flex;flex-direction:column;gap:6px;margin-bottom:14px"></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px;flex-wrap:wrap">
+          <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em">Days — open or limit a specific day (e.g. Christmas Eve: 2)</div>
+          <div style="display:flex;gap:4px;align-items:center">
+            <button class="btn" style="width:26px;padding:0;justify-content:center" onclick="alqMonthNav(-1)">←</button>
+            <span id="alqMonthLabel" style="font-size:12px;font-weight:600;min-width:110px;text-align:center"></span>
+            <button class="btn" style="width:26px;padding:0;justify-content:center" onclick="alqMonthNav(1)">→</button>
+          </div>
+        </div>
+        <div id="alqDays" style="display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;margin-bottom:10px"></div>
+        <div style="display:flex;justify-content:flex-end;gap:8px;border-top:1px solid var(--border);padding-top:10px">
+          <span id="alqStatus" style="font-size:11px;color:var(--text3);align-self:center"></span>
+          <button class="btn btn-blue" onclick="saveAlQuota()">💾 Save AL quota</button>
         </div>
       </div>
 
@@ -1547,6 +1612,302 @@ function mobileLanding(){
   _mydayAutoShown=true; setTimeout(()=>{ openMyDay(); markBottomNav('myday'); },400);
 }
 
+// ── WEEKS (Sun–Sat) of the month on screen ──
+function monthWeeks(){
+  const n=dim(cy,cm), out=[]; let cur=null;
+  for(let d=1;d<=n;d++){ const dow=new Date(cy,cm,d).getDay();
+    if(!cur||dow===0){ cur={start:d,days:[]}; out.push(cur); } cur.days.push(d); }
+  out.forEach(w=>{ w.end=w.days[w.days.length-1];
+    const a=new Date(cy,cm,w.start), b=new Date(cy,cm,w.end);
+    w.label=`${a.getDate()} ${MONTHS[cm].slice(0,3)} – ${b.getDate()} ${MONTHS[cm].slice(0,3)}`+(w.days.length<7?` (${w.days.length} days)`:'');
+  });
+  return out;
+}
+
+// ── CLEAR WEEK ──
+function openClearWeek(){
+  const wks=monthWeeks();
+  const box=document.getElementById('modalBox');
+  box.innerHTML=`<h3>🧹 Clear a week</h3><div class="msub">${MONTHS[cm]} ${cy} · weeks run Sunday → Saturday</div>
+    <div class="mf">
+      <label>Week</label>
+      <select id="cwWeek" onchange="clearWeekCount()" style="width:100%;height:34px;border:1px solid var(--border2);border-radius:var(--r);padding:0 8px;font-family:'DM Sans',sans-serif">${wks.map((w,i)=>`<option value="${i}">${w.label}</option>`).join('')}</select>
+      <label>What to clear</label>
+      <label style="display:flex;gap:8px;align-items:center;font-weight:400;text-transform:none;letter-spacing:0"><input type="radio" name="cwWhat" value="shifts" checked onchange="clearWeekCount()" style="width:auto"> Shifts only — keep OD, RD and all leave (AL, MC, EL…)</label>
+      <label style="display:flex;gap:8px;align-items:center;font-weight:400;text-transform:none;letter-spacing:0"><input type="radio" name="cwWhat" value="all" onchange="clearWeekCount()" style="width:auto"> Everything — shifts, OD/RD and leave</label>
+      <label>Who</label>
+      <select id="cwWho" onchange="clearWeekCount()" style="width:100%;height:34px;border:1px solid var(--border2);border-radius:var(--r);padding:0 8px;font-family:'DM Sans',sans-serif">
+        <option value="all">Everyone</option><option value="call">Inbound agents & new staff only</option>
+        ${[...new Set(staffList.map(x=>x.team).filter(Boolean))].map(t=>`<option value="team:${t}">Team ${t}</option>`).join('')}
+      </select>
+      <div id="cwCount" style="font-size:12px;margin-top:8px;color:var(--text2)"></div>
+    </div>
+    <div class="mbtns"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn" style="background:var(--red);color:#fff;border:none" onclick="doClearWeek()">🧹 Clear</button></div>`;
+  document.getElementById('overlay').classList.add('open');
+  clearWeekCount();
+}
+function clearWeekCells(){
+  const w=monthWeeks()[+document.getElementById('cwWeek').value];
+  const what=document.querySelector('input[name=cwWhat]:checked').value, who=document.getElementById('cwWho').value;
+  const mk=cy+'-'+(cm+1), out=[];
+  staffList.filter(x=>who==='all'||(who==='call'?CALL_ROLES.has(x.staff_role):x.team===who.slice(5))).forEach(x=>{
+    w.days.forEach(d=>{ const c=schedData[x.id+'_'+d+'_'+mk]||''; if(!c) return;
+      const keep=what==='shifts'&&(['OD','RD','O'].includes(c)||(ABSENT_FOR_BREAKS.has(c)&&!/-H[12]AL$/.test(c)));
+      if(!keep) out.push({sid:x.id,day:d,mk,shift:''}); });
+  });
+  return {w,out};
+}
+function clearWeekCount(){ const {w,out}=clearWeekCells(); document.getElementById('cwCount').innerHTML=out.length?`<b>${out.length}</b> cell${out.length>1?'s':''} will be cleared (${w.label}). Notes and OT on those cells go too. You can undo with <b>Ctrl+Z</b>.`:'Nothing to clear for this choice.'; }
+async function doClearWeek(){
+  const {w,out}=clearWeekCells(); if(!out.length){ toast('Nothing to clear','ok'); return; }
+  if(!confirm(`Clear ${out.length} cells in ${w.label}?`)) return;
+  closeModal();
+  const n=await applyCells(out,`Clear week ${w.label}`);
+  if(n>0){ await recordBulkChange(`🧹 Clear week ${w.label}`,out); renderSchedule();
+    toastAction(`🧹 Cleared ${n} cells`,'Revert',()=>revertBulk(0)); }
+}
+
+// ── AUTO SCHEDULE ──
+// Fills only EMPTY cells. Keeps everything you already entered (OD, RD, AL, MC, manual shifts).
+//  • Each Sun–Sat week gets 1 OD + 1 RD (side by side) if it doesn't have them yet.
+//  • Inbound agents & new staff: off days go to the quietest days; M / MD / E are chosen to cover
+//    the hourly "Agents needed on calls" in Settings. One shift per person per week; E/MD are rotated fairly.
+//  • Everyone else (TL, QA, managers, outbound, livechat): follows their usual shift and usual off days.
+async function buildAutoPlan(scopeDays,opt){
+  await loadDemand();
+  const mk=cy+'-'+(cm+1), n=dim(cy,cm);
+  const prev=new Date(cy,cm-1,1), next=new Date(cy,cm+1,1);
+  const pmk=prev.getFullYear()+'-'+(prev.getMonth()+1), nmk=next.getFullYear()+'-'+(next.getMonth()+1);
+  const [pr,nr]=await Promise.all([fetchScheduleMonth(pmk,'staff_id,day,shift'),fetchScheduleMonth(nmk,'staff_id,day,shift')]);
+  const adj={}; (pr.data||[]).forEach(r=>adj[r.staff_id+'_p_'+r.day]=r.shift); (nr.data||[]).forEach(r=>adj[r.staff_id+'_n_'+r.day]=r.shift);
+  const pDays=new Date(cy,cm,0).getDate();
+  const cell=(sid,d)=>schedData[sid+'_'+d+'_'+mk]||'';
+  const isOff=c=>c==='OD'||c==='RD'||c==='O';
+  const WORK=['M','MD','E'].filter(c=>shiftTypes.some(t=>t.code===c));
+  const span=c=>({a:getShiftStart(c),b:getShiftEnd(c)});
+  const sh=(demand.shrink??18)/100;
+  const dayType=d=>{ const w=new Date(cy,cm,d).getDay(); return isPH(d)||w===0?'Sun':w===6?'Sat':'WD'; };
+  const needSched=(d,h)=>{ const v=demand[dayType(d)][h-8]||0; return h>=9&&h<=18?v/(1-sh):v; };
+  const byShift=(demand.mode||'shift')==='shift';
+  const reqShift=(d,c)=>((demand.shifts||DEMAND_DEFAULT.shifts)[dayType(d)]||{})[c]||0;
+  const usable=(x,d)=>{ const dt=new Date(cy,cm,d);
+    if(x.contract_start&&dt<new Date(x.contract_start+'T00:00:00')) return false;
+    if(lwdMap[x.id]&&afterLastDay(x.id,cy,cm,d)) return false; return true; };
+  const people=staffList.filter(x=>(x.employment_status||'Active')==='Active');
+  const isCall=x=>CALL_ROLES.has(x.staff_role);
+  const plan={}; const put=(sid,d,c)=>{ plan[sid+'_'+d]=c; };
+  const val=(sid,d)=>plan[sid+'_'+d]||cell(sid,d);
+  const inScope=new Set(scopeDays);
+  // usual pattern for non-call staff (this month + last month)
+  const habit=x=>{ const cnt={}, off={0:0,1:0,2:0,3:0,4:0,5:0,6:0};
+    for(let d=1;d<=n;d++){ const c=cell(x.id,d); if(!c) continue; if(isOff(c)) off[new Date(cy,cm,d).getDay()]++; else if(shiftTypes.some(t=>t.code===c)) cnt[c]=(cnt[c]||0)+1; }
+    for(let d=1;d<=pDays;d++){ const c=adj[x.id+'_p_'+d]; if(!c) continue; if(isOff(c)) off[new Date(cy,cm-1,d).getDay()]++; else if(shiftTypes.some(t=>t.code===c)) cnt[c]=(cnt[c]||0)+1; }
+    const shift=Object.entries(cnt).sort((a,b)=>b[1]-a[1])[0]?.[0]||'M';
+    const offDays=Object.entries(off).sort((a,b)=>b[1]-a[1]||(+a[0]===0?-1:+b[0]===0?1:+b[0]-+a[0])).map(e=>+e[0]);
+    if(!Object.values(off).some(v=>v)) offDays.splice(0,7,6,0,5,1,2,3,4);   // default Sat + Sun
+    return {shift,offDays}; };
+  // shift usage this month (fair rotation)
+  const usage={}; people.forEach(x=>{ usage[x.id]={M:0,MD:0,E:0}; for(let d=1;d<=n;d++){ const c=cell(x.id,d); if(usage[x.id][c]!=null) usage[x.id][c]++; } });
+
+  for(const w of monthWeeks()){
+    const wd=w.days.filter(d=>inScope.has(d)); if(!wd.length) continue;
+    // full Sun–Sat week incl. neighbouring months, to count off days already given
+    const full=[]; const s0=new Date(cy,cm,w.start); s0.setDate(s0.getDate()-s0.getDay());
+    for(let i=0;i<7;i++){ const dt=new Date(s0); dt.setDate(s0.getDate()+i); full.push(dt); }
+    const existingOffs=x=>full.reduce((k,dt)=>{ let c='';
+      if(dt.getMonth()===cm&&dt.getFullYear()===cy) c=val(x.id,dt.getDate());
+      else c=adj[x.id+'_'+(dt<new Date(cy,cm,1)?'p':'n')+'_'+dt.getDate()]||'';
+      return k+(isOff(c)?1:0); },0);
+    const knownDays=x=>full.filter(dt=>(dt.getMonth()===cm&&dt.getFullYear()===cy)||adj[x.id+'_'+(dt<new Date(cy,cm,1)?'p':'n')+'_'+dt.getDate()]).length;
+    const empty=(x,d)=>inScope.has(d)&&!val(x.id,d)&&usable(x,d);
+
+    // ── 1. OFF DAYS ──
+    if(opt.offs){
+      // others: usual off weekdays
+      if(opt.others) people.filter(x=>!isCall(x)).forEach(x=>{
+        let need=Math.max(0,Math.round(2*knownDays(x)/7)-existingOffs(x)); if(!need) return;
+        const hb=habit(x); const placed=[];
+        for(const dow of hb.offDays){ if(!need) break; const d=w.days.find(dd=>new Date(cy,cm,dd).getDay()===dow); if(d&&empty(x,d)){ placed.push(d); need--; } }
+        placed.sort((a,b)=>a-b).forEach((d,i)=>put(x.id,d,(i===0&&!full.some(dt=>dt.getMonth()===cm&&val(x.id,dt.getDate())==='OD'))?'OD':'RD'));
+      });
+      if(opt.call){
+        const callers=people.filter(isCall);
+        const target={}; w.days.forEach(d=>{ let t=0;
+          if(byShift) t=WORK.reduce((a,c)=>a+(reqShift(d,c)||0),0); else { for(let h=8;h<20;h++) t+=needSched(d,h); t/=9; }
+          target[d]=Math.max(1,t); });
+        const expected={}; w.days.forEach(d=>expected[d]=callers.filter(x=>{ const c=val(x.id,d); return usable(x,d)&&(c?(!isOff(c)&&!ABSENT_FOR_BREAKS.has(c)&&!isLCShift(c)):true); }).length);
+        const needs=callers.map(x=>({x,need:Math.max(0,Math.round(2*knownDays(x)/7)-existingOffs(x)),opts:w.days.filter(d=>empty(x,d)).length})).filter(o=>o.need>0&&o.opts>0).sort((a,b)=>a.opts-b.opts||a.x.name.localeCompare(b.x.name));
+        needs.forEach(({x,need})=>{
+          const ok=w.days.filter(d=>empty(x,d)); let pick=[];
+          if(need>=2){ let best=null,bs=-1e9;
+            const pairs=[]; for(let i=0;i<ok.length-1;i++) if(ok[i+1]===ok[i]+1) pairs.push([ok[i],ok[i+1]]);
+            // weekend off: Sunday + Saturday of the same week counts as side by side (Sun OD, Sat RD)
+            if(w.days.length===7&&ok.includes(w.days[0])&&ok.includes(w.days[6])) pairs.push([w.days[0],w.days[6]]);
+            pairs.forEach(([p1,p2])=>{ const sa=expected[p1]-target[p1], sb=expected[p2]-target[p2];
+              const sc=Math.min(sa,sb)*10+(sa+sb)*0.1; if(sc>bs){bs=sc;best=[p1,p2];} });
+            if(best) pick=best; }
+          while(pick.length<Math.min(need,ok.length)){ const rest=ok.filter(d=>!pick.includes(d)).sort((a,b)=>(expected[b]-target[b])-(expected[a]-target[a])); pick.push(rest[0]); }
+          pick.sort((a,b)=>a-b);
+          const hasOD=full.some(dt=>dt.getMonth()===cm&&val(x.id,dt.getDate())==='OD');
+          pick.forEach((d,i)=>{ put(x.id,d,(i===0&&!hasOD)?'OD':'RD'); expected[d]--; });
+        });
+      }
+    }
+
+    // ── 2. SHIFTS ──
+    if(opt.others) people.filter(x=>!isCall(x)).forEach(x=>{ const hb=habit(x); wd.forEach(d=>{ if(empty(x,d)) put(x.id,d,hb.shift); }); });
+    if(opt.call){
+      const callers=people.filter(isCall);
+      const cov={}; w.days.forEach(d=>{ cov[d]=new Array(24).fill(0);
+        callers.forEach(x=>{ const c=val(x.id,d); if(!c||isOff(c)||ABSENT_FOR_BREAKS.has(c)||isLCShift(c)) return;
+          for(let h=8;h<20;h++) if(isWorkingDuringHour(c,h,null)) cov[d][h]++; }); });
+      // headcount per shift per day (for "Headcount per shift" mode)
+      const cnt={}; w.days.forEach(d=>{ cnt[d]={}; WORK.forEach(c=>cnt[d][c]=0);
+        callers.forEach(x=>{ const c=val(x.id,d); if(cnt[d][c]!=null) cnt[d][c]++; }); });
+      const todo=[];
+      callers.forEach(x=>{ const days=wd.filter(d=>empty(x,d)); if(!days.length) return;
+        // already has a shift this week? keep it consistent
+        const mine=w.days.map(d=>val(x.id,d)).find(c=>WORK.includes(c));
+        if(mine){ days.forEach(d=>{ put(x.id,d,mine); cnt[d][mine]++; const {a,b}=span(mine); for(let h=8;h<20;h++) if(h*60>=a&&h*60<b) cov[d][h]++; }); usage[x.id][mine]+=days.length; }
+        else todo.push({x,days}); });
+      while(todo.length){
+        let best=null;
+        todo.forEach((t,ti)=>WORK.forEach(c=>{ const {a,b}=span(c); let g=0;
+          if(byShift){
+            // fill missing headcount first; once every shift is full, top up the least-filled one
+            t.days.forEach(d=>{ const r=reqShift(d,c), k=cnt[d][c]; g+=k<r?100:-(k+1)/Math.max(1,r); });
+          } else
+          t.days.forEach(d=>{ for(let h=8;h<20;h++) if(h*60>=a&&h*60<b) g+=Math.max(0,needSched(d,h)-cov[d][h]); });
+          const fair=-(usage[t.x.id][c]||0)*0.01;
+          const sc=g+fair;
+          if(!best||sc>best.sc) best={ti,c,sc}; }));
+        const t=todo.splice(best.ti,1)[0]; const {a,b}=span(best.c);
+        t.days.forEach(d=>{ put(t.x.id,d,best.c); cnt[d][best.c]++; for(let h=8;h<20;h++) if(h*60>=a&&h*60<b) cov[d][h]++; });
+        usage[t.x.id][best.c]+=t.days.length;
+      }
+    }
+  }
+  const changes=Object.entries(plan).filter(([k,c])=>{ const [sid,d]=k.split('_'); return !cell(sid,+d)&&c; }).map(([k,c])=>{ const i=k.lastIndexOf('_'); return {sid:k.slice(0,i),day:+k.slice(i+1),mk,shift:c}; });
+  // preview stats: inbound agents on calls vs needed
+  const stats=scopeDays.map(d=>{ const cov=new Array(24).fill(0);
+    people.filter(isCall).forEach(x=>{ const c=val(x.id,d); if(!c||isOff(c)||ABSENT_FOR_BREAKS.has(c)||isLCShift(c)) return; for(let h=8;h<20;h++) if(isWorkingDuringHour(c,h,null)) cov[h]++; });
+    const short=[]; for(let h=8;h<20;h++){ const on=h>=9&&h<=18?cov[h]*(1-sh):cov[h]; if(on+0.01<(demand[dayType(d)][h-8]||0)) short.push(h); }
+    const sc={}; WORK.forEach(c=>sc[c]=people.filter(isCall).filter(x=>val(x.id,d)===c).length);
+    const shortShift=WORK.filter(c=>sc[c]<reqShift(d,c)).map(c=>`${c} ${sc[c]}/${reqShift(d,c)}`);
+    const working=people.filter(isCall).filter(x=>{ const c=val(x.id,d); return c&&!isOff(c)&&!ABSENT_FOR_BREAKS.has(c)&&!isLCShift(c); }).length;
+    return {d,working,M:cov[8],E:cov[19],short,sc,shortShift}; });
+  return {changes,stats,byShift,WORK};
+}
+// ── REVERT bulk changes (Auto schedule / Clear week) ──
+// Saved in the database, so it still works after a refresh or from another computer.
+// Only cells that haven't been changed since are put back — later manual edits are kept.
+let bulkHistory=[];
+async function loadBulkHistory(){
+  try{ const {data}=await sb.from('app_settings').select('value').eq('key','bulk_undo').maybeSingle(); bulkHistory=data&&data.value?JSON.parse(data.value):[]; }catch(_){ bulkHistory=[]; }
+  return bulkHistory;
+}
+async function recordBulkChange(label,changes){
+  const last=undoStack[undoStack.length-1];
+  const prevMap={}; (last&&last.batch||[]).forEach(u=>prevMap[u.staffId+'_'+u.day+'_'+u.month_key]=u);
+  const cells=changes.map(c=>{ const mk=c.mk||cy+'-'+(cm+1); const u=prevMap[c.sid+'_'+c.day+'_'+mk];
+    return u?{s:c.sid,d:+c.day,mk,p:u.prevShift||'',po:u.prevOT||null,n:c.shift||''}:null; }).filter(Boolean);
+  if(!cells.length) return;
+  await loadBulkHistory();
+  bulkHistory.unshift({label,at:new Date().toISOString(),by:(_realProfile||currentProfile)?.display_name||'',mk:cy+'-'+(cm+1),cells});
+  bulkHistory=bulkHistory.slice(0,5);
+  const {error}=await sb.from('app_settings').upsert({key:'bulk_undo',value:JSON.stringify(bulkHistory)},{onConflict:'key'});
+  if(error) toast('Saved, but the revert point could not be stored: '+error.message,'err');
+  updateBulkUndoBtn();
+}
+function updateBulkUndoBtn(){
+  const b=document.getElementById('bulkUndoBtn'); if(!b) return;
+  const ok=typeof canAssignShift==='function'&&canAssignShift()&&bulkHistory.some(h=>h.mk===cy+'-'+(cm+1));
+  b.style.display=ok?'':'none';
+}
+async function openBulkUndo(){
+  await loadBulkHistory();
+  const list=bulkHistory.map((h,i)=>({h,i})).filter(x=>x.h.mk===cy+'-'+(cm+1));
+  const box=document.getElementById('modalBox');
+  box.innerHTML=`<h3>↩ Revert a bulk change</h3><div class="msub">${MONTHS[cm]} ${cy} · puts cells back to how they were before</div>
+    ${list.length?list.map(({h,i})=>{ const still=h.cells.filter(c=>(schedData[c.s+'_'+c.d+'_'+c.mk]||'')===c.n).length;
+      return `<div style="border:1px solid var(--border);border-radius:var(--r);padding:10px;margin-bottom:8px;display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap">
+        <div><div style="font-size:13px;font-weight:600">${h.label}</div>
+        <div style="font-size:11px;color:var(--text3)">${new Date(h.at).toLocaleString('en-GB',{day:'numeric',month:'short',hour:'numeric',minute:'2-digit'})}${h.by?' · by '+h.by:''} · ${h.cells.length} cells${still<h.cells.length?` · ${h.cells.length-still} edited since (will be kept)`:''}</div></div>
+        <button class="btn" style="color:var(--red);border-color:#fecaca" ${still?'':'disabled'} onclick="revertBulk(${i})">↩ Revert ${still} cells</button></div>`; }).join('')
+      :'<div style="padding:16px;text-align:center;color:var(--text3);font-size:12px">No Auto schedule or Clear week to revert for this month.</div>'}
+    <div style="font-size:11px;color:var(--text3)">Only the last 5 runs are kept. Cells you changed by hand after the run are left as they are.</div>
+    <div class="mbtns"><button class="btn" onclick="closeModal()">Close</button></div>`;
+  document.getElementById('overlay').classList.add('open');
+}
+async function revertBulk(i){
+  await loadBulkHistory();
+  const h=bulkHistory[i]; if(!h){ toast('Nothing to revert','err'); return; }
+  const back=h.cells.filter(c=>(schedData[c.s+'_'+c.d+'_'+c.mk]||'')===c.n).map(c=>({sid:c.s,day:c.d,mk:c.mk,shift:c.p,ot:c.po||null}));
+  const kept=h.cells.length-back.length;
+  if(!back.length){ toast('Every cell was changed since — nothing to revert','err'); return; }
+  if(!confirm(`Revert "${h.label}"? ${back.length} cells go back to how they were${kept?` (${kept} edited since are kept)`:''}.`)) return;
+  closeModal();
+  const n=await applyCells(back,'Revert '+h.label);
+  if(n<0) return;
+  bulkHistory.splice(i,1);
+  await sb.from('app_settings').upsert({key:'bulk_undo',value:JSON.stringify(bulkHistory)},{onConflict:'key'});
+  updateBulkUndoBtn(); renderSchedule();
+  toast(`↩ Reverted ${n} cells`,'ok');
+}
+
+let _autoPlan=null;
+function hourRanges(hs){ const out=[]; hs.forEach(h=>{ const l=out[out.length-1]; if(l&&h===l[1]+1) l[1]=h; else out.push([h,h]); }); return out; }
+function openAutoSchedule(){
+  const wks=monthWeeks();
+  const box=document.getElementById('modalBox');
+  box.dataset.wide='1'; box.style.width='min(640px, calc(100vw - 20px))'; box.style.maxWidth='calc(100vw - 20px)';
+  box.innerHTML=`<h3>⚡ Auto schedule</h3><div class="msub">${MONTHS[cm]} ${cy} · fills <b>empty</b> cells only — everything you already entered stays</div>
+    <div class="mf">
+      <label>Which days</label>
+      <select id="asScope" style="width:100%;height:34px;border:1px solid var(--border2);border-radius:var(--r);padding:0 8px;font-family:'DM Sans',sans-serif">
+        <option value="month">Whole month</option>${wks.map((w,i)=>`<option value="${i}">Week ${w.label}</option>`).join('')}
+      </select>
+      <label>Fill in</label>
+      <label style="display:flex;gap:8px;align-items:center;font-weight:400;text-transform:none;letter-spacing:0"><input type="checkbox" id="asOffs" checked style="width:auto"> OD + RD for each week that doesn't have them yet (side by side, on the quietest days)</label>
+      <label style="display:flex;gap:8px;align-items:center;font-weight:400;text-transform:none;letter-spacing:0"><input type="checkbox" id="asCall" checked style="width:auto"> Inbound agents & new staff — M / MD / E to meet the requirement in Settings</label>
+      <label style="display:flex;gap:8px;align-items:center;font-weight:400;text-transform:none;letter-spacing:0"><input type="checkbox" id="asOthers" checked style="width:auto"> Everyone else (TL, QA, managers, outbound, livechat) — their usual shift & off days</label>
+      <div style="font-size:11px;color:var(--text3);margin-top:6px">Tip: plot OD, RD, approved AL and any fixed shifts first, then run this. You can undo the whole thing with <b>Ctrl+Z</b>. Set the requirement in Settings → 📈 Auto schedule requirement.</div>
+      <div id="asPreview" style="margin-top:10px"></div>
+    </div>
+    <div class="mbtns"><button class="btn" onclick="closeModal()">Cancel</button>
+      <button class="btn" onclick="previewAutoSchedule()">👁 Preview</button>
+      <button class="btn btn-blue" id="asApply" onclick="applyAutoSchedule()" disabled style="opacity:.5">⚡ Apply</button></div>`;
+  document.getElementById('overlay').classList.add('open');
+}
+async function previewAutoSchedule(){
+  const sc=document.getElementById('asScope').value;
+  const days=sc==='month'?Array.from({length:dim(cy,cm)},(_,i)=>i+1):monthWeeks()[+sc].days;
+  const opt={offs:document.getElementById('asOffs').checked,call:document.getElementById('asCall').checked,others:document.getElementById('asOthers').checked};
+  const pv=document.getElementById('asPreview'); pv.innerHTML='<div style="font-size:12px;color:var(--text3)">Working it out…</div>';
+  _autoPlan=await buildAutoPlan(days,opt);
+  const {changes,stats,byShift,WORK}=_autoPlan;
+  const by={}; changes.forEach(c=>by[c.shift]=(by[c.shift]||0)+1);
+  const shortDays=stats.filter(s=>s.short.length);
+  const fh=h=>(h%12||12)+(h<12?'AM':'PM');
+  pv.innerHTML=changes.length?`<div style="font-size:12px;margin-bottom:6px"><b>${changes.length}</b> empty cells will be filled: ${Object.entries(by).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<b>${v}</b> ${k}`).join(' · ')}</div>
+    <div style="max-height:220px;overflow:auto;border:1px solid var(--border);border-radius:var(--r)">
+    ${byShift?`<table style="width:100%;border-collapse:collapse;font-size:11px"><tr style="position:sticky;top:0;background:var(--surface2)"><th style="text-align:left;padding:4px 6px">Day</th><th>Inbound working</th>${WORK.map(c=>`<th>${c}</th>`).join('')}<th style="text-align:left">Requirement</th></tr>
+    ${stats.map(s=>`<tr style="border-top:1px solid var(--border)"><td style="padding:3px 6px;white-space:nowrap">${new Date(cy,cm,s.d).toLocaleDateString('en-GB',{weekday:'short',day:'numeric'})}</td><td style="text-align:center">${s.working}</td>${WORK.map(c=>`<td style="text-align:center">${s.sc[c]}</td>`).join('')}<td style="color:${s.shortShift.length?'var(--red)':'#15803d'}">${s.shortShift.length?'Short: '+s.shortShift.join(', '):'✓ met'}</td></tr>`).join('')}
+    </table>`:`<table style="width:100%;border-collapse:collapse;font-size:11px"><tr style="position:sticky;top:0;background:var(--surface2)"><th style="text-align:left;padding:4px 6px">Day</th><th>Inbound working</th><th>At 8AM</th><th>At 7PM</th><th style="text-align:left">Short of target</th></tr>
+    ${stats.map(s=>`<tr style="border-top:1px solid var(--border)"><td style="padding:3px 6px;white-space:nowrap">${new Date(cy,cm,s.d).toLocaleDateString('en-GB',{weekday:'short',day:'numeric'})}</td><td style="text-align:center">${s.working}</td><td style="text-align:center">${s.M}</td><td style="text-align:center">${s.E}</td><td style="color:${s.short.length?'var(--red)':'#15803d'}">${s.short.length?hourRanges(s.short).map(([a,b])=>a===b?fh(a):fh(a)+'–'+fh(b+1)).join(', '):'✓ covered'}</td></tr>`).join('')}
+    </table>`}</div>
+    ${(byShift?stats.filter(s=>s.shortShift.length):shortDays).length?`<div style="font-size:11px;color:var(--text2);margin-top:6px">⚠ ${(byShift?stats.filter(s=>s.shortShift.length):shortDays).length} day(s) can't reach the target with the staff available — consider OT or moving leave.</div>`:''}`
+    :'<div style="font-size:12px;color:var(--text3)">Nothing to fill — every cell in this range already has something.</div>';
+  const ap=document.getElementById('asApply'); ap.disabled=!changes.length; ap.style.opacity=changes.length?1:.5;
+}
+async function applyAutoSchedule(){
+  if(!_autoPlan||!_autoPlan.changes.length) return;
+  const ch=_autoPlan.changes; _autoPlan=null; closeModal();
+  const n=await applyCells(ch,'Auto schedule');
+  if(n>0){ await recordBulkChange('⚡ Auto schedule',ch); renderSchedule();
+    toastAction(`⚡ Auto schedule filled ${n} cells`,'Revert',()=>revertBulk(0)); }
+}
+
 // ── VIEW AS (admin impersonation, read-only) ──
 // Shows the app exactly as another user sees it. Uses the admin's own login, so nothing can be
 // changed while viewing: every save is blocked until "Back to my account".
@@ -1642,6 +2003,7 @@ function updateUserUI(){
   // Add staff / import buttons — admin/managers only
   const addBtn=document.getElementById('addStaffBtn');
   if(addBtn) addBtn.style.display=isAdmin?'':'none';
+  ['autoSchedBtn','clearWeekBtn'].forEach(id=>{ const b=document.getElementById(id); if(b) b.style.display=(typeof canAssignShift==='function'&&canAssignShift())?'':'none'; });
 
   // Action panel (copy/undo) — managers only, hidden from agents
   const actionPanel=document.getElementById('sidebarActionPanel');
@@ -1739,6 +2101,8 @@ async function loadSchedule(){
     });
   }
   await loadViewTasks();
+  try{ await loadAlAvailability(true); }catch(_){}
+  try{ await loadBulkHistory(); }catch(_){}
   renderSchedule();
 }
 
@@ -2044,6 +2408,44 @@ async function saveShift(staffId,day,val,monthOverride,noUnpublish=false){
     if(LEAVE_NO_OT.has(val)&&prevOT) toast(`OT on day ${day} removed — ${staffName.split(' ')[0]} is on ${val}`,'ok');
   }
   renderSchedule();
+  if(month_key===cy+'-'+(cm+1)&&(prevShift||'')!==(val||'')) queueBreakReplan(parseInt(day));
+  if(val&&(val==='AL'||/-H[12]AL$/.test(val))&&staff&&CALL_ROLES.has(staff.staff_role)&&!(prevShift===val)){
+    const [yy,mm]=month_key.split('-').map(Number);
+    const dt=new Date(yy,mm-1,parseInt(day));
+    Promise.all([alWeekUsage(dt),alDayUsage(dt)]).then(([u,du])=>{
+      if(du&&du.limit!=null&&+du.used>+du.limit) toast(`⚠ AL quota exceeded for day ${day}: ${du.used}/${du.limit}`,'err');
+      else if(u&&u.limit!=null&&+u.used>+u.limit) toast(`⚠ AL quota exceeded for this week: ${u.used}/${u.limit}`,'err');
+    });
+  }
+}
+
+// ── Keep planned breaks right when the roster changes (MC, EL, swap, shift change, OT) ──
+// If the day's breaks were made by Auto-assign, re-plan that day for everyone still working.
+// If someone edited breaks by hand that day, leave them alone and just tell the user.
+let _brQueue=new Set(), _brTimer=null;
+function queueBreakReplan(day){ if(viewAs) return; _brQueue.add(day); clearTimeout(_brTimer); _brTimer=setTimeout(runBreakReplan,1200); }
+async function runBreakReplan(){
+  const days=[..._brQueue]; _brQueue.clear();
+  const mk=cy+'-'+(cm+1);
+  const done=[], manual=[];
+  days.forEach(d=>{
+    const keys=Object.keys(breakOverrides).filter(k=>k.endsWith('_'+d+'_'+mk));
+    if(!keys.length) return;                                   // no breaks planned yet for that day
+    if(keys.some(k=>(breakOverrides[k]||[]).some(b=>!b.auto))){ manual.push(d); return; }
+    keys.forEach(k=>delete breakOverrides[k]);                 // drops the person now on MC/EL too
+    const r=planBreaksForDay(d);
+    r.people.forEach(p=>{ breakOverrides[p.s.id+'_'+d+'_'+mk]=planToOverrides(p.plan); });
+    done.push(d);
+  });
+  if(done.length){
+    const {error}=await sb.from('app_settings').upsert({key:'break_overrides',value:JSON.stringify(breakOverrides)},{onConflict:'key'});
+    if(error){ toast('Breaks not re-planned: '+error.message,'err'); return; }
+    await sb.from('app_settings').upsert({key:'last_breaks_updated_at',value:new Date().toISOString()},{onConflict:'key'});
+    toast(`☕ Breaks re-planned for ${done.map(d=>d+' '+MONTHS[cm].slice(0,3)).join(', ')}`,'ok');
+    if(currentTab==='breaks') renderBreaksTab();
+    if(currentTab==='coverage') renderCoverage();
+  }
+  if(manual.length) toast(`☕ ${manual.map(d=>d+' '+MONTHS[cm].slice(0,3)).join(', ')} has hand-edited breaks — re-check it in Breaks`,'err');
 }
 
 async function saveOT(staffId,day,hours,start,end,otType){
@@ -2070,6 +2472,7 @@ async function saveOT(staffId,day,hours,start,end,otType){
     otData[staffId+'_'+day]={hours,start:start||'',end:end||'',type:otType||'OT'};
   }
   renderSchedule();
+  queueBreakReplan(parseInt(day));   // OT changes the 5-hour rest rule
 }
 
 function getOT(sid,d){ if(hiddenDay(d)) return null; return otData[sid+'_'+d]||null;}
@@ -2228,6 +2631,11 @@ function getViewDays(){
 }
 
 function renderSchedule(){
+  try{ const lg=document.getElementById('alLegend'); if(lg){ const on=alAvail.any&&alAvail.key===cy+'-'+cm&&viewMode!=='day';
+      lg.style.display=on?'flex':'none';
+      if(on){ const full=Object.keys(alAvail.days).filter(d=>alState(+d).state==='full').length;
+        lg.innerHTML=`<b style="color:var(--text)">🏖️ AL availability</b><span><span class="al-dot al-open"></span> Open</span><span><span class="al-dot al-low"></span> Almost full</span><span><span class="al-dot al-full"></span> Full — AL can't be applied</span><span style="color:var(--text3)">Coloured line under each date · hover / tap Apply leave for details${full?` · ${full} day${full>1?'s':''} full this month`:''}</span>`; } } }catch(_){}
+  try{ updateBulkUndoBtn(); }catch(_){}
   try{ updateMcPendingBtn(); updateMyDayBtn(); setTimeout(scrollGridToToday,0); mobileLanding(); }catch(_){}
   const srch=document.getElementById('srch').value.toLowerCase();
   const tf=document.getElementById('tfil').value;
@@ -2296,7 +2704,9 @@ function renderSchedule(){
     const clickAttr=isAdmin
       ?`onclick="openDateRemark(${d})" style="cursor:pointer;text-align:center;${remStyle}" title="${rem?rem.label:'Add remark'}"`
       :`onclick="openDailyBreakView(${d},null)" style="cursor:pointer;text-align:center;${remStyle}" title="View break schedule"`;
-    h+=`<th class="th-day${ph?' ph-col':wk?' wk-col':''} ${rem?'has-remark':''}" ${clickAttr}>${dayLabel}${remDot}${remTip}</th>`;
+    const als=(vd.month===cm&&vd.year===cy)?alState(d):null;
+    const alBar=als&&als.state!=='none'?`<span class="al-bar al-${als.state}" title="${als.title}"></span>`:'';
+    h+=`<th class="th-day${ph?' ph-col':wk?' wk-col':''} ${rem?'has-remark':''}" ${clickAttr}>${dayLabel}${remDot}${remTip}${alBar}</th>`;
   });
   h+='</tr>';
   h+='<tr>';
@@ -2890,7 +3300,7 @@ function openModal(type,...args){
     <div id="rqp-to" style="display:${toDisplay||'block'}">
       <div class="mf">
         <label>Leave type</label>
-        <select id="rqLeave" style="width:100%;font-family:'DM Sans',sans-serif;font-size:13px;height:34px;padding:0 10px;border:1px solid var(--border2);border-radius:var(--r);background:var(--surface);color:var(--text)">
+        <select id="rqLeave" onchange="alQuotaHint('rqQuota',${day},this.value)" style="width:100%;font-family:'DM Sans',sans-serif;font-size:13px;height:34px;padding:0 10px;border:1px solid var(--border2);border-radius:var(--r);background:var(--surface);color:var(--text)">
           <option value="AL">Annual Leave</option>
           <option value="RL">Replacement Leave</option>
           <option value="MC">Medical Certificate</option>
@@ -2919,11 +3329,13 @@ function openModal(type,...args){
       </div>
     </div>
 
+    <div id="rqQuota" style="font-size:12px;margin-top:6px"></div>
     <div class="merr" id="rqErr"></div>
     <div class="mbtns">
       <button class="btn" onclick="closeModal()">Cancel</button>
       <button class="btn btn-blue" onclick="doSubmitRequest('${currentProfile?currentProfile.staff_id:sid}',${day},'${name.replace(/'/g,"\'")}','${sid}')">Submit request</button>
     </div>`;
+    setTimeout(()=>alQuotaHint('rqQuota',day,document.getElementById('rqLeave')?.value||'AL'),0);
   }
   else if(type==='resetPw'){
     const [uid,uname]=args;
@@ -3175,15 +3587,25 @@ function openTimeOffPicker(){
   const days=Array.from({length:dim(cy,cm)},(_,i)=>i+1);
   const dow=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
   const box=document.getElementById('modalBox');
+  const alCal=alAvail.any&&alAvail.key===cy+'-'+cm;
   box.innerHTML=`<h3>📅 Apply time-off / leave</h3>
   <div class="msub">${MONTHS[cm]} ${cy}</div>
   <div class="mf">
+    ${alCal?`<label>AL availability — tap a date</label>
+    <div id="alPickCal" style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:6px">
+      ${['S','M','T','W','T','F','S'].map(x=>`<div style="font-size:9px;font-weight:700;color:var(--text3);text-align:center">${x}</div>`).join('')}
+      ${'<div></div>'.repeat(fday(cy,cm))}
+      ${days.map(d=>{ const st=alState(d); const c={open:'#dcfce7;color:#166534',low:'#fef3c7;color:#92400e',full:'#fee2e2;color:#991b1b',none:'var(--surface2);color:var(--text)'}[st.state];
+        return `<button type="button" data-d="${d}" onclick="pickLeaveDay(${d})" title="${st.title||''}" style="height:30px;border:1px solid transparent;border-radius:6px;background:${c};font-size:12px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;position:relative">${d}${st.state==='full'?'<span style="position:absolute;top:0;right:2px;font-size:8px">⛔</span>':''}</button>`; }).join('')}
+    </div>
+    <div style="display:flex;gap:10px;font-size:10px;color:var(--text3);margin-bottom:8px"><span><span class="al-dot al-open"></span> Open</span><span><span class="al-dot al-low"></span> 1 or less left</span><span><span class="al-dot al-full"></span> Full</span></div>`:''}
     <label>Select date</label>
-    <select id="toDay" onchange="updateHalfDayOptions()" style="width:100%;font-family:'DM Sans',sans-serif;font-size:13px;height:34px;padding:0 10px;border:1px solid var(--border2);border-radius:var(--r);background:var(--surface);color:var(--text)">
+    <select id="toDay" onchange="updateHalfDayOptions();markLeaveDay()" style="width:100%;font-family:'DM Sans',sans-serif;font-size:13px;height:34px;padding:0 10px;border:1px solid var(--border2);border-radius:var(--r);background:var(--surface);color:var(--text)">
       ${days.map(d=>{
         const sh=getS(myId,d);
         const dayName=dow[(fday(cy,cm)+d-1)%7];
-        return`<option value="${d}">${d} ${MONTHS[cm]} (${dayName})${sh?' — '+sh:' — no shift'}`;
+        const st=alState(d);
+        return`<option value="${d}">${d} ${MONTHS[cm]} (${dayName})${sh?' — '+sh:' — no shift'}${st.state==='full'?' — ⛔ AL full':st.state==='low'?' — AL almost full':''}`;
       }).join('')}
     </select>
     <label>Leave type</label>
@@ -3212,6 +3634,7 @@ function openTimeOffPicker(){
 
     <label>Note <span style="font-weight:400;color:var(--text3)">(optional)</span></label>
     <input id="toNote" placeholder="e.g. Family event" style="width:100%;font-family:'DM Sans',sans-serif;font-size:13px;height:34px;padding:0 10px;border:1px solid var(--border2);border-radius:var(--r);background:var(--surface);color:var(--text)">
+    <div id="toQuota" style="font-size:12px;margin-top:8px"></div>
     <div class="merr" id="toErr"></div>
   </div>
   <div class="mbtns">
@@ -3219,7 +3642,8 @@ function openTimeOffPicker(){
     <button class="btn btn-blue" onclick="submitTimeOff()">Submit request</button>
   </div>`;
   document.getElementById('overlay').classList.add('open');
-  updateHalfDayOptions();
+  updateHalfDayOptions(); markLeaveDay();
+  loadAlAvailability().then(()=>{});
 }
 
 function getHalfDayTimes(shiftCode){
@@ -3244,6 +3668,7 @@ function updateHalfDayOptions(){
   const myId=currentProfile?.staff_id;
   const day=parseInt(document.getElementById('toDay')?.value||0);
   const leaveType=document.getElementById('toType')?.value||'';
+  if(day) alQuotaHint('toQuota',day,leaveType);
   const halfSection=document.getElementById('halfDaySection');
   if(!halfSection) return;
   // Only show for AL, and only if agent has a shift that day
@@ -3258,6 +3683,11 @@ function updateHalfDayOptions(){
   }
 }
 
+function pickLeaveDay(d){ const s=document.getElementById('toDay'); if(!s) return; s.value=d; updateHalfDayOptions(); markLeaveDay(); }
+function markLeaveDay(){
+  const v=+document.getElementById('toDay')?.value;
+  document.querySelectorAll('#alPickCal button').forEach(b=>b.style.borderColor=+b.dataset.d===v?'var(--blue)':'transparent');
+}
 async function submitTimeOff(){
   const myId=currentProfile?currentProfile.staff_id:null;
   const day=parseInt(document.getElementById('toDay').value);
@@ -3289,9 +3719,10 @@ async function submitTimeOff(){
     day, shift_requested:requestedCode,
     note:requestNote
   });
-  if(error){errEl.textContent=error.message;return;}
+  if(error){errEl.textContent=niceQuotaErr(error.message);return;}
   closeModal();
   await loadPendingRequests();
+  loadAlAvailability(true).then(()=>renderSchedule());
   toast('Leave request submitted — pending approval ✓','ok');
 }
 
@@ -3507,7 +3938,7 @@ async function doSaveOT(sid,day,hours,start,end){
   else toast('OT removed','ok');
 }
 
-function closeModal(){document.getElementById('overlay').classList.remove('open'); if(typeof markBottomNav==='function'&&typeof currentTab!=='undefined') markBottomNav(currentTab);}
+function closeModal(){document.getElementById('overlay').classList.remove('open'); const _mb=document.getElementById('modalBox'); if(_mb&&_mb.dataset.wide){ _mb.style.width=''; _mb.style.maxWidth=''; delete _mb.dataset.wide; } if(typeof markBottomNav==='function'&&typeof currentTab!=='undefined') markBottomNav(currentTab);}
 function handleOverlayBg(e){if(e.target===document.getElementById('overlay'))closeModal()}
 
 // ── PAGE SWITCHING ──
@@ -3981,8 +4412,200 @@ function renderSettingsTab(){
   renderTimeoffTypes();
   renderBreakRulesList();
   renderTaskTypes();
+  renderAlQuota();
+  renderDemand();
   renderPermTable();
 }
+
+// ── DEMAND PROFILE (agents needed on calls, per hour 8AM–7PM) ──
+const DEMAND_DEFAULT={WD:[8,10,12,13,12,11,12,13,12,12,11,9],Sat:[6,8,11,13,12,10,12,12,11,10,9,9],Sun:[7,8,10,11,11,10,10,10,9,9,7,7],shrink:18,
+  mode:'shift',shifts:{WD:{M:10,MD:4,E:7},Sat:{M:7,MD:4,E:6},Sun:{M:6,MD:3,E:6}}};
+let demand=JSON.parse(JSON.stringify(DEMAND_DEFAULT));
+async function loadDemand(){
+  try{ const {data}=await sb.from('app_settings').select('value').eq('key','demand_profile').maybeSingle();
+    if(data&&data.value) demand={...JSON.parse(JSON.stringify(DEMAND_DEFAULT)),...JSON.parse(data.value)}; }catch(_){}
+  return demand;
+}
+async function renderDemand(){
+  await loadDemand();
+  const t=document.getElementById('demandTable'); if(!t) return;
+  const hrs=Array.from({length:12},(_,i)=>i+8);
+  const lbl=h=>(h%12||12)+(h<12?'a':'p');
+  t.innerHTML=`<tr><th></th>${hrs.map(h=>`<th style="padding:2px 4px;color:var(--text3);font-weight:600">${lbl(h)}</th>`).join('')}</tr>`+
+    [['WD','Mon–Fri'],['Sat','Saturday'],['Sun','Sunday / PH']].map(([k,l])=>`<tr><td style="padding:2px 8px 2px 0;font-weight:600;white-space:nowrap">${l}</td>${hrs.map((h,i)=>`<td style="padding:2px"><input data-dm="${k}_${i}" type="number" min="0" value="${demand[k][i]}" style="width:42px;height:26px;padding:0 4px;border:1px solid var(--border2);border-radius:4px;font-size:11px;text-align:center"></td>`).join('')}</tr>`).join('');
+  document.getElementById('demandShrink').value=demand.shrink??18;
+  const codes=['M','MD','E'].filter(c=>shiftTypes.some(t=>t.code===c));
+  const lab=c=>{ const t=shiftTypes.find(x=>x.code===c); return t?`${c} <span style="font-weight:400;color:var(--text3)">${fmtRange(getShiftStart(c),getShiftEnd(c))}</span>`:c; };
+  const sh=demand.shifts||DEMAND_DEFAULT.shifts;
+  document.getElementById('demandShiftTable').innerHTML=`<tr><th></th>${codes.map(c=>`<th style="padding:3px 8px;text-align:center">${lab(c)}</th>`).join('')}<th style="padding:3px 8px;color:var(--text3)">Total</th></tr>`+
+    [['WD','Mon–Fri'],['Sat','Saturday'],['Sun','Sunday / PH']].map(([k,l])=>`<tr><td style="padding:3px 10px 3px 0;font-weight:600;white-space:nowrap">${l}</td>${codes.map(c=>`<td style="padding:3px;text-align:center"><input data-ds="${k}_${c}" type="number" min="0" value="${sh[k]?.[c]??0}" oninput="demandTotals()" style="width:56px;height:28px;padding:0 4px;border:1px solid var(--border2);border-radius:4px;text-align:center"></td>`).join('')}<td id="dsTot_${k}" style="text-align:center;font-weight:600"></td></tr>`).join('');
+  document.querySelectorAll('input[name=demandMode]').forEach(r=>r.checked=r.value===(demand.mode||'shift'));
+  demandTotals(); demandModeUI();
+}
+function demandTotals(){ ['WD','Sat','Sun'].forEach(k=>{ const t=[...document.querySelectorAll(`[data-ds^="${k}_"]`)].reduce((a,i)=>a+(+i.value||0),0); const el=document.getElementById('dsTot_'+k); if(el) el.textContent=t; }); }
+function demandModeUI(){ const m=document.querySelector('input[name=demandMode]:checked')?.value||'shift';
+  document.getElementById('demandShiftWrap').style.display=m==='shift'?'':'none';
+  document.getElementById('demandHourlyWrap').style.display=m==='hourly'?'':'none'; }
+function resetDemand(){ demand=JSON.parse(JSON.stringify(DEMAND_DEFAULT)); const keep=renderDemand; demand._reset=true;
+  const t=document.getElementById('demandTable'); if(t){ document.querySelectorAll('[data-dm]').forEach(i=>{ const [k,ix]=i.dataset.dm.split('_'); i.value=DEMAND_DEFAULT[k][+ix]; }); document.getElementById('demandShrink').value=DEMAND_DEFAULT.shrink; } }
+async function saveDemand(){
+  const d={WD:[],Sat:[],Sun:[]};
+  document.querySelectorAll('[data-dm]').forEach(i=>{ const [k,ix]=i.dataset.dm.split('_'); d[k][+ix]=Math.max(0,+i.value||0); });
+  d.shrink=Math.max(0,Math.min(50,+document.getElementById('demandShrink').value||0));
+  d.mode=document.querySelector('input[name=demandMode]:checked')?.value||'shift';
+  d.shifts={WD:{},Sat:{},Sun:{}};
+  document.querySelectorAll('[data-ds]').forEach(i=>{ const [k,c]=i.dataset.ds.split('_'); d.shifts[k][c]=Math.max(0,+i.value||0); });
+  const st=document.getElementById('demandStatus'); st.textContent='Saving…';
+  const {error}=await sb.from('app_settings').upsert({key:'demand_profile',value:JSON.stringify(d)},{onConflict:'key'});
+  if(error){ st.textContent=''; toast('Save failed: '+error.message,'err'); return; }
+  demand=d; st.textContent='Saved ✓'; toast('Auto schedule requirement saved ✓','ok');
+}
+
+// ── AL QUOTA PER WEEK ──
+let alQuota={default:null,dayDefault:null,countBy:'days',weeks:{},days:{}};
+let alqView=null;   // {y,m} month shown in the day calendar
+async function loadAlQuota(){
+  try{ const {data}=await sb.from('app_settings').select('value').eq('key','al_quota').maybeSingle();
+    if(data&&data.value) alQuota={default:null,dayDefault:null,countBy:'days',weeks:{},days:{},...JSON.parse(data.value)}; }catch(_){}
+  return alQuota;
+}
+const isoDate=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+// Our schedule weeks run Sunday → Saturday
+const weekStartOf=d=>{ const x=new Date(d.getFullYear(),d.getMonth(),d.getDate()); x.setDate(x.getDate()-x.getDay()); return x; };
+// ── AL availability for the month on screen (drives the coloured bar under each date) ──
+let alAvail={key:'',t:0,days:{},any:false};
+async function loadAlAvailability(force){
+  const key=cy+'-'+cm;
+  if(!force&&alAvail.key===key&&Date.now()-alAvail.t<60000) return alAvail;
+  await loadAlQuotaQuiet();
+  const anyLimit=alQuota.default!=null||alQuota.dayDefault!=null||Object.keys(alQuota.weeks||{}).length||Object.keys(alQuota.days||{}).length;
+  if(!anyLimit){ alAvail={key,t:Date.now(),days:{},any:false}; return alAvail; }
+  const mondays=[]; let w=weekStartOf(new Date(cy,cm,1)); const last=new Date(cy,cm+1,0);
+  while(w<=last){ mondays.push(new Date(w)); w.setDate(w.getDate()+7); }
+  const [mres,...wk]=await Promise.all([sb.rpc('sched_al_month_usage',{p_year:cy,p_month:cm+1}),...mondays.map(x=>alWeekUsage(x))]);
+  if(mres&&mres.error) console.warn('AL month usage:',mres.error.message);
+  const dayMap={}; (mres&&mres.data||[]).forEach(u=>{ const p=String(u.date).slice(0,10).split('-'); if(+p[1]-1===cm) dayMap[+p[2]]=u; });
+  const wkMap={}; wk.forEach(u=>{ if(u&&u.week_start) wkMap[String(u.week_start).slice(0,10)]=u; });
+  const days={}, n=new Date(cy,cm+1,0).getDate();
+  for(let d=1;d<=n;d++){
+    const u=dayMap[d]||{}; const wu=wkMap[isoDate(weekStartOf(new Date(cy,cm,d)))]||{};
+    // a day override set in Settings still applies even if the day lookup failed
+    const k=isoDate(new Date(cy,cm,d));
+    const dLim=u.limit!=null?u.limit:(alQuota.days?.[k]??alQuota.dayDefault??null);
+    const wLim=wu.limit!=null?wu.limit:(alQuota.weeks?.[isoDate(weekStartOf(new Date(cy,cm,d)))]??alQuota.default??null);
+    days[d]={dUsed:+u.used||0,dLim,wUsed:+wu.used||0,wLim,ws:wu.week_start,we:wu.week_end,unit:alQuota.countBy};
+  }
+  alAvail={key,t:Date.now(),days,any:true};
+  return alAvail;
+}
+async function loadAlQuotaQuiet(){ try{ await loadAlQuota(); }catch(_){} }
+function alState(d){
+  const a=alAvail.any&&alAvail.key===cy+'-'+cm?alAvail.days[d]:null;
+  if(!a||(a.dLim==null&&a.wLim==null)) return {state:'none',title:''};
+  const dLeft=a.dLim!=null?a.dLim-a.dUsed:Infinity, wLeft=a.wLim!=null?a.wLim-a.wUsed:Infinity;
+  const left=Math.min(dLeft,wLeft);
+  const state=left<=0?'full':left<=1?'low':'open';
+  const parts=[];
+  if(a.dLim!=null) parts.push(`This day: ${a.dUsed}/${a.dLim}`);
+  if(a.wLim!=null) parts.push(`This week: ${a.wUsed}/${a.wLim}`);
+  const head=state==='full'?(dLeft<=0?'⛔ AL full on this day':'⛔ AL full for this week'):state==='low'?'🟠 Almost full':'🟢 AL open';
+  return {state,left,dLeft,wLeft,title:`${head} — ${parts.join(' · ')}`};
+}
+
+async function alDayUsage(date,excludeId){
+  const {data,error}=await sb.rpc('sched_al_day_usage',{p_date:isoDate(date),p_exclude_request:excludeId||null});
+  return error?null:data;
+}
+async function alWeekUsage(date,excludeId){
+  const {data,error}=await sb.rpc('sched_al_week_usage',{p_date:isoDate(date),p_exclude_request:excludeId||null});
+  return error?null:data;
+}
+async function renderAlQuota(){
+  await loadAlQuota();
+  const def=document.getElementById('alqDefault'); if(!def) return;
+  def.value=alQuota.default??''; document.getElementById('alqCountBy').value=alQuota.countBy||'days';
+  document.getElementById('alqDayDefault').value=alQuota.dayDefault??'';
+  renderAlqDays();
+  // weeks touching this month and next month
+  const weeks=[]; let w=weekStartOf(new Date(cy,cm,1)); const last=new Date(cy,cm+2,0);
+  while(w<=last){ weeks.push(new Date(w)); w.setDate(w.getDate()+7); }
+  const box=document.getElementById('alqWeeks');
+  box.innerHTML='<div style="font-size:11px;color:var(--text3)">Loading…</div>';
+  const usage=await Promise.all(weeks.map(x=>alWeekUsage(x)));
+  const fmt=d=>d.toLocaleDateString('en-GB',{day:'numeric',month:'short'});
+  box.innerHTML=weeks.map((wk,i)=>{
+    const k=isoDate(wk), end=new Date(wk); end.setDate(wk.getDate()+6);
+    const u=usage[i]||{}; const lim=alQuota.weeks?.[k]??alQuota.default;
+    const used=+u.used||0, full=lim!=null&&lim!==''&&used>=+lim;
+    const pct=lim?Math.min(100,used/lim*100):0;
+    return `<div style="display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;padding:6px 8px;border:1px solid var(--border);border-radius:var(--r)">
+      <span style="font-size:12px;font-weight:600;flex:1 1 130px">${fmt(wk)} – ${fmt(end)} <span style="font-weight:400;color:var(--text3);font-size:10px">Sun–Sat</span></span>
+      <span style="font-size:11px;flex:1 1 150px;color:${full?'var(--red)':'var(--text2)'}">
+        <span style="display:inline-block;width:70px;height:6px;border-radius:3px;background:var(--surface2);vertical-align:middle;margin-right:6px;overflow:hidden"><span style="display:block;height:100%;width:${pct}%;background:${full?'var(--red)':pct>=75?'#f59e0b':'#22c55e'}"></span></span>
+        ${used} ${alQuota.countBy==='people'?'people':'days'}${lim!=null&&lim!==''?` of ${lim}${full?' · FULL':''}`:' · no limit'}</span>
+      <input type="number" min="0" step="0.5" data-alqw="${k}" value="${alQuota.weeks?.[k]??''}" placeholder="${alQuota.default??'No limit'}" title="Leave empty to use the default"
+        style="width:96px;flex:0 0 96px;height:28px;padding:0 6px;border:1px solid var(--border2);border-radius:var(--r);font-family:'DM Sans',sans-serif;font-size:12px">
+    </div>`;}).join('');
+}
+function alqMonthNav(dir){ if(!alqView) alqView={y:cy,m:cm}; const d=new Date(alqView.y,alqView.m+dir,1); alqView={y:d.getFullYear(),m:d.getMonth()}; collectAlqDays(); renderAlqDays(); }
+function collectAlqDays(){
+  alQuota.days=alQuota.days||{};
+  document.querySelectorAll('[data-alqd]').forEach(i=>{ const x=i.value.trim(); if(x==='') delete alQuota.days[i.dataset.alqd]; else alQuota.days[i.dataset.alqd]=+x; });
+}
+async function renderAlqDays(){
+  if(!alqView) alqView={y:cy,m:cm};
+  const {y,m}=alqView, box=document.getElementById('alqDays'); if(!box) return;
+  document.getElementById('alqMonthLabel').textContent=MONTHS[m]+' '+y;
+  const {data}=await sb.rpc('sched_al_month_usage',{p_year:y,p_month:m+1});
+  const usage={}; (data||[]).forEach(u=>usage[u.date]=u);
+  const first=new Date(y,m,1).getDay(), n=new Date(y,m+1,0).getDate();
+  const dd=document.getElementById('alqDayDefault')?.value.trim();
+  const defLim=dd===''||dd==null?alQuota.dayDefault:+dd;
+  let h=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(x=>`<div style="font-size:10px;font-weight:700;color:var(--text3);text-align:center">${x}</div>`).join('');
+  for(let i=0;i<first;i++) h+='<div></div>';
+  for(let d=1;d<=n;d++){
+    const k=isoDate(new Date(y,m,d)), u=usage[k]||{used:0};
+    const ov=alQuota.days?.[k]; const lim=ov??defLim;
+    const full=lim!=null&&+u.used>=+lim;
+    const isPH=dateRemarks&&dateRemarks[y+'-'+(m+1)+'-'+d]?.isPH;
+    h+=`<div style="border:1px solid ${ov!=null?'var(--blue)':'var(--border)'};border-radius:var(--r);padding:4px;background:${full?'#fef2f2':'var(--surface)'};min-width:0">
+      <div style="display:flex;justify-content:space-between;font-size:10px"><b>${d}</b>${isPH?'<span title="Public holiday">🎌</span>':''}<span style="color:${full?'var(--red)':'var(--text3)'}">${u.used||0}${lim!=null?'/'+lim:''}</span></div>
+      <input type="number" min="0" step="0.5" data-alqd="${k}" value="${ov??''}" placeholder="${defLim??'–'}" title="Max AL on ${d} ${MONTHS[m].slice(0,3)} (empty = default)"
+        style="width:100%;height:24px;margin-top:3px;padding:0 4px;border:1px solid var(--border2);border-radius:4px;font-size:11px;font-family:'DM Sans',sans-serif;box-sizing:border-box">
+    </div>`;
+  }
+  box.innerHTML=h;
+}
+async function saveAlQuota(){
+  const v=document.getElementById('alqDefault').value.trim();
+  const dv=document.getElementById('alqDayDefault').value.trim();
+  const weeks={...(alQuota.weeks||{})};
+  document.querySelectorAll('[data-alqw]').forEach(i=>{ const x=i.value.trim(); if(x==='') delete weeks[i.dataset.alqw]; else weeks[i.dataset.alqw]=+x; });
+  collectAlqDays();
+  alQuota={default:v===''?null:+v,dayDefault:dv===''?null:+dv,countBy:document.getElementById('alqCountBy').value,weeks,days:alQuota.days||{}};
+  const st=document.getElementById('alqStatus'); st.textContent='Saving…';
+  const {error}=await sb.from('app_settings').upsert({key:'al_quota',value:JSON.stringify(alQuota)},{onConflict:'key'});
+  if(error){ st.textContent=''; toast('Save failed: '+error.message,'err'); return; }
+  st.textContent='Saved ✓'; toast('AL quota saved ✓','ok'); renderAlQuota();
+  loadAlAvailability(true).then(()=>renderSchedule());
+}
+// one-line status for request forms
+async function alQuotaHint(elId,day,code){
+  const el=document.getElementById(elId); if(!el) return;
+  if(!(code==='AL'||/H[12]AL$/.test(code||''))){ el.innerHTML=''; return; }
+  const dt=new Date(cy,cm,day);
+  const [u,du]=await Promise.all([alWeekUsage(dt),alDayUsage(dt)]);
+  const fmt=d=>new Date(d).toLocaleDateString('en-GB',{day:'numeric',month:'short'});
+  const lines=[];
+  if(du&&du.limit!=null){ const left=Math.max(0,du.limit-du.used);
+    lines.push(left>0?`<span style="color:var(--text2)">📅 ${fmt(du.date)}: <b>${left}</b> AL left that day (${du.used}/${du.limit})</span>`
+      :`<span style="color:var(--red);font-weight:600">⛔ ${fmt(du.date)} is full (${du.used}/${du.limit} AL). Please pick another day.</span>`); }
+  if(u&&u.limit!=null){ const left=Math.max(0,u.limit-u.used), unit=u.count_by==='people'?'place':'day';
+    lines.push(left>0?`<span style="color:var(--text2)">🏖️ Week ${fmt(u.week_start)}–${fmt(u.week_end)}: <b>${left}</b> AL ${unit}${left===1?'':'s'} left (${u.used}/${u.limit})</span>`
+      :`<span style="color:var(--red);font-weight:600">⛔ Week ${fmt(u.week_start)}–${fmt(u.week_end)} is full (${u.used}/${u.limit} AL). Please pick another week.</span>`); }
+  el.innerHTML=lines.join('<br>');
+}
+const niceQuotaErr=m=>/AL_QUOTA_FULL/.test(m||'')?String(m).replace(/^.*AL_QUOTA_FULL:\s*/,''):m;
 
 // ── TASK TYPES (Settings) ──
 let taskRenames={};   // old name → new name, applied to existing tasks on save
@@ -4415,6 +5038,7 @@ async function applyCells(changes,label,opts={}){
     [schedData,otData,remarkData].forEach(m=>{ delete m[sk]; delete m[fk]; });
   });
   if(pubChanged) touchPublished();
+  { const mkNow=cy+'-'+(cm+1); [...ups.map(u=>[u.month_key,u.day]),...dels.map(d=>[d.mk,d.day])].forEach(([m,d])=>{ if(m===mkNow) queueBreakReplan(+d); }); }
   if(!opts.noUndo&&canAssignShift()){
     undoStack.push({batch:undo,desc:label});
     if(undoStack.length>UNDO_MAX) undoStack.shift();
@@ -5271,9 +5895,10 @@ async function doSubmitRequest(myStaffId, myDay, name, targetStaffId){
       shift_requested:leave,
       note
     });
-    if(error){errEl.textContent=error.message;return;}
+    if(error){errEl.textContent=niceQuotaErr(error.message);return;}
   }
   closeModal();
+  loadAlAvailability(true).then(()=>renderSchedule());
   toast('Request submitted — pending approval ✓','ok');
 }
 
@@ -5690,6 +6315,16 @@ async function approveRequest(rid){
     r=data;
   }
   if(!r){toast('Request not found','err');return;}
+  if(r.type==='timeoff'&&(r.shift_requested==='AL'||/H[12]AL$/.test(r.shift_requested||''))){
+    const [ry,rm]=(r.month_key||'').split('-').map(Number);
+    const dt=ry?new Date(ry,rm-1,r.day):null;
+    const [u,du]=dt?await Promise.all([alWeekUsage(dt,rid),alDayUsage(dt,rid)]):[null,null];
+    const amt=u&&u.count_by==='people'?1:(r.shift_requested==='AL'?1:0.5);
+    const msgs=[];
+    if(du&&du.limit!=null&&(+du.used+amt)>+du.limit) msgs.push(`${dt.toLocaleDateString('en-GB',{day:'numeric',month:'short'})} already has ${du.used}/${du.limit} AL`);
+    if(u&&u.limit!=null&&(+u.used+amt)>+u.limit) msgs.push(`the week of ${new Date(u.week_start).toLocaleDateString('en-GB',{day:'numeric',month:'short'})} is at ${u.used}/${u.limit}`);
+    if(msgs.length&&!confirm(`AL quota: ${msgs.join(' and ')}. Approve anyway?`)) return;
+  }
   const reviewer=currentProfile?currentProfile.display_name:'Admin';
   const {error}=await sb.from('requests').update({
     status:'approved', reviewed_by:reviewer, reviewed_at:new Date().toISOString()
@@ -6826,6 +7461,7 @@ async function saveBreakOverride(staffId,day,count){
       can('assign_breaks'));
     autoBtn.style.display=canAutoAssign?'flex':'none';
     const mb=document.getElementById('autoAssignMonthBtn'); if(mb) mb.style.display=canAutoAssign?'flex':'none';
+    const cb=document.getElementById('clearBreaksBtn'); if(cb) cb.style.display=canAutoAssign?'flex':'none';
   }
 
   // Auto-select today or first day, then render
@@ -6935,6 +7571,7 @@ function renderBreaksTab(){
       can('assign_breaks'));
     autoBtn.style.display=canAutoAssign?'flex':'none';
     const mb=document.getElementById('autoAssignMonthBtn'); if(mb) mb.style.display=canAutoAssign?'flex':'none';
+    const cb=document.getElementById('clearBreaksBtn'); if(cb) cb.style.display=canAutoAssign?'flex':'none';
   }
   const dayVal=parseInt(document.getElementById('breakDayFilter')?.value||0);
   const posFilter=document.getElementById('breakPosFilter')?.value||'';
@@ -7277,6 +7914,41 @@ async function autoAssignBreaks(scope){
   renderBreaksTab();
 }
 
+// Remove all breaks on the selected day (Auto-assign or hand-made)
+async function clearBreaksDay(){
+  const d=parseInt(document.getElementById('breakDayFilter')?.value||0);
+  if(!d){ toast('Select a day first','err'); return; }
+  const mk=cy+'-'+(cm+1);
+  const keys=Object.keys(breakOverrides).filter(k=>k.endsWith('_'+d+'_'+mk)&&(breakOverrides[k]||[]).length);
+  if(!keys.length){ toast(`No breaks assigned on ${d} ${MONTHS[cm].slice(0,3)}`,'ok'); return; }
+  if(!confirm(`Remove all breaks on ${d} ${MONTHS[cm]} for ${keys.length} staff?`)) return;
+  const backup={}; keys.forEach(k=>{ backup[k]=breakOverrides[k]; delete breakOverrides[k]; });
+  const {error}=await sb.from('app_settings').upsert({key:'break_overrides',value:JSON.stringify(breakOverrides)},{onConflict:'key'});
+  if(error){ Object.assign(breakOverrides,backup); toast('Could not clear: '+error.message,'err'); return; }
+  await sb.from('app_settings').upsert({key:'last_breaks_updated_at',value:new Date().toISOString()},{onConflict:'key'});
+  window._lastBreakClear={backup,d};
+  renderBreaksTab();
+  toastAction(`🗑 Breaks cleared for ${d} ${MONTHS[cm].slice(0,3)} (${keys.length} staff)`,'Undo',undoClearBreaks);
+}
+async function undoClearBreaks(){
+  const u=window._lastBreakClear; if(!u) return;
+  Object.assign(breakOverrides,u.backup); window._lastBreakClear=null;
+  const {error}=await sb.from('app_settings').upsert({key:'break_overrides',value:JSON.stringify(breakOverrides)},{onConflict:'key'});
+  if(error){ toast('Undo failed: '+error.message,'err'); return; }
+  await sb.from('app_settings').upsert({key:'last_breaks_updated_at',value:new Date().toISOString()},{onConflict:'key'});
+  renderBreaksTab(); toast(`Breaks restored for ${u.d} ${MONTHS[cm].slice(0,3)} ✓`,'ok');
+}
+function toastAction(msg,label,fn){
+  const el=document.createElement('div');
+  el.style.cssText='position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:3000;background:#1f2937;color:#fff;font-size:13px;padding:10px 14px;border-radius:10px;display:flex;gap:14px;align-items:center;box-shadow:0 6px 20px rgba(0,0,0,.25);font-family:\'DM Sans\',sans-serif;max-width:calc(100vw - 24px)';
+  el.innerHTML=`<span>${msg}</span>`;
+  const b=document.createElement('button'); b.textContent=label;
+  b.style.cssText='border:none;background:#fff;color:#1f2937;font-weight:700;font-size:12px;padding:5px 12px;border-radius:999px;cursor:pointer;font-family:inherit';
+  b.onclick=()=>{ el.remove(); fn(); };
+  el.appendChild(b); document.body.appendChild(el);
+  setTimeout(()=>el.remove(),8000);
+}
+
 // Peak-hour headcount strip for the Breaks tab
 function breaksCoverageStrip(day){
   const r={working:new Array(144).fill(0),onBreak:new Array(144).fill(0)};
@@ -7356,6 +8028,7 @@ function startPublishRealtime(){
       .on('postgres_changes',{event:'*',schema:'public',table:'app_settings'},pl=>{
         const k=(pl.new&&pl.new.key)||(pl.old&&pl.old.key);
         if(!k||['published_days','last_published_at','last_breaks_updated_at'].includes(k)) checkForScheduleUpdate(true);
+        if(k==='al_quota') loadAlAvailability(true).then(()=>renderSchedule());
       }).subscribe();
   }catch(e){ console.warn('realtime off:',e); }
 }
