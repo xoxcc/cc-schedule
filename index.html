@@ -1398,6 +1398,23 @@ var sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   }
 });
 
+// ── Staff ids: the database stores them as numbers, but every screen compares them as text (select values,
+// data-sid, onclick). Convert them to text once, as results arrive, so all lookups agree.
+(function normaliseStaffIds(){
+  try{
+    let p=sb.from('staff').select('id'); while(p&&!Object.prototype.hasOwnProperty.call(p,'then')) p=Object.getPrototypeOf(p);
+    if(!p||p.__idNorm) return; p.__idNorm=true;
+    const KEY=/(^|_)staff_id$/;
+    const fix=(o,isStaff)=>{ if(!o||typeof o!=='object') return;
+      if(Array.isArray(o)){ o.forEach(r=>fix(r,isStaff)); return; }
+      for(const k in o){ const v=o[k];
+        if(typeof v==='number'&&(KEY.test(k)||(isStaff&&k==='id'))) o[k]=String(v);
+        else if(v&&typeof v==='object'&&(KEY.test(k)||k==='data')) fix(v,false); } };
+    const _then=p.then;
+    p.then=function(f,r){ const isStaff=!!(this.url&&/\/rest\/v1\/staff$/.test(this.url.pathname));
+      return _then.call(this,res=>{ try{ if(res&&res.data) fix(res.data,isStaff); }catch(_){} return res; }).then(f,r); };
+  }catch(e){ console.warn('staff id normaliser',e); }
+})();
 // Theme-aware colour helpers: tint = translucent fill (stronger in dark), fg = coloured text (lifted in dark), solid = filled chip (lifted a little in dark)
 const txtOn=c=>{ const m=/^#?([0-9a-f]{6})$/i.exec(String(c||'').trim()); if(!m) return '#fff'; const n=parseInt(m[1],16), r=(n>>16)&255,g=(n>>8)&255,b=n&255; const L=(0.299*r+0.587*g+0.114*b); return L>150?'#111827':'#fff'; };
 const tint=(c,p)=>`color-mix(in srgb, color-mix(in srgb, ${c}, #fff var(--solid)) calc(var(--tk) * ${p}%), transparent)`;
@@ -1421,6 +1438,7 @@ let timeoffTypes=[
   {code:'EL',label:'Emergency Leave',color:'#f97316'},
   {code:'PH',label:'Public Holiday',color:'#854d0e'},
 ];
+const OFF_DEFS={OD:{code:'OD',label:'Off day',color:'#ef4444'},RD:{code:'RD',label:'Rest day',color:'#ef4444'}}; // Off day / Rest day show red
 let otTypes=[
   {code:'OT',label:'Overtime',color:'#f59e0b'},
   {code:'OT-Pre',label:'Pre-shift OT',color:'#8b5cf6'},
@@ -1632,6 +1650,49 @@ async function _loadProfileFromAuth(authUser){
   if(currentProfile.app_role==='admin') renderUsersTab();
   showPage('app');
   startSchedulePoll();
+  if(authUser&&authUser.user_metadata&&authUser.user_metadata.temp_password===true) setTimeout(showSetPasswordPrompt,700);
+}
+
+// ── First sign-in: ask the user to replace the shared default password ──
+function showSetPasswordPrompt(){
+  const inp='font-size:13px;border:0.5px solid var(--border2);border-radius:var(--r);padding:8px 10px;background:var(--surface);color:var(--text);width:100%';
+  const box=document.getElementById('modalBox');
+  box.innerHTML=`<h3>🔐 Set your personal password</h3>
+  <div style="background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.35);border-radius:var(--r);padding:10px 12px;font-size:12px;color:var(--text);margin-bottom:12px">
+    <b style="color:#d97706">Security notice</b> &nbsp;You are using a shared default password. Please set your own personal password now to secure your account.</div>
+  <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:9px 12px;font-size:12px;color:var(--text2);margin-bottom:12px">Your new password must be at least 8 characters.</div>
+  <div class="mf">
+    <label>New password <span style="color:var(--red)">*</span></label>
+    <input id="spNew" type="password" autocomplete="new-password" oninput="spCheck()" style="${inp}">
+    <div style="height:4px;border-radius:2px;background:var(--border);margin-top:6px;overflow:hidden"><div id="spBar" style="height:100%;width:0;transition:width .2s,background .2s"></div></div>
+    <div id="spStr" style="font-size:11px;margin-top:3px;color:var(--text3)"></div>
+    <label style="margin-top:10px">Confirm new password <span style="color:var(--red)">*</span></label>
+    <input id="spNew2" type="password" autocomplete="new-password" oninput="spCheck()" style="${inp}">
+    <div id="spMatch" style="font-size:11px;margin-top:3px"></div>
+    <div class="merr" id="spErr"></div>
+  </div>
+  <div class="mbtns"><button class="btn" onclick="closeModal()" style="color:var(--text3)">Remind me later</button><button class="btn btn-blue" id="spBtn" onclick="doSetPersonalPassword()">Set my password</button></div>`;
+  document.getElementById('overlay').classList.add('open');
+}
+function spCheck(){
+  const a=document.getElementById('spNew').value, b=document.getElementById('spNew2').value;
+  let sc=0; if(a.length>=8)sc++; if(a.length>=11)sc++; if(/[a-z]/.test(a)&&/[A-Z]/.test(a))sc++; if(/\d/.test(a))sc++; if(/[^A-Za-z0-9]/.test(a))sc++;
+  const lv=[['','0','transparent'],['Weak','20%','#ef4444'],['Weak','40%','#f97316'],['Fair','60%','#eab308'],['Strong','80%','#22c55e'],['Very strong','100%','#22c55e']][a?Math.min(sc,5):0];
+  const bar=document.getElementById('spBar'); bar.style.width=lv[1]; bar.style.background=lv[2];
+  const st=document.getElementById('spStr'); st.textContent=lv[0]; st.style.color=lv[2];
+  const m=document.getElementById('spMatch');
+  if(!b){m.textContent='';} else if(a===b){m.textContent='✓ Passwords match';m.style.color='#22c55e';} else {m.textContent='Passwords do not match';m.style.color='#ef4444';}
+}
+async function doSetPersonalPassword(){
+  const a=document.getElementById('spNew').value, b=document.getElementById('spNew2').value, err=document.getElementById('spErr'), btn=document.getElementById('spBtn');
+  err.textContent='';
+  if(a.length<8){err.textContent='Password must be at least 8 characters.';return;}
+  if(a===b===false){err.textContent='The two passwords do not match.';return;}
+  if(/^xox@2026$/i.test(a)){err.textContent='Please choose a password different from the shared default.';return;}
+  btn.disabled=true; btn.textContent='Saving…';
+  const {error}=await sb.auth.updateUser({password:a,data:{temp_password:false}});
+  if(error){err.textContent=error.message;btn.disabled=false;btn.textContent='Set my password';return;}
+  closeModal(); toast('Password updated ✓','ok');
 }
 
 async function doLogin(){
@@ -3161,7 +3222,7 @@ function renderSchedule(){
           }
           const shiftDef=baseShift?shiftTypes.find(s=>s.code===baseShift):null;
           const disp=sh==='MCR'?'MC✕':sh==='MCP'?'MC⏳':sh==='ELR'?'EL✕':sh==='ELP'?'EL⏳':(halfDayPart?halfDayPart:(sh||(ph?'PH':'')));
-          const colorDef=shiftDef||(sh?timeoffTypes.find(t=>t.code===sh):null);
+          const colorDef=shiftDef||(sh?(timeoffTypes.find(t=>t.code===sh)||OFF_DEFS[sh]||null):null);
           // Half-day cells: diagonal split (shift colour / AL green)
           let cls=''; let cellStyle='';
           let halfSplit='';
@@ -3183,7 +3244,7 @@ function renderSchedule(){
           } else if(sh==='MCR'||sh==='ELR'){
             cls='mc-rej'; cellStyle=`style="background:${colorDef?colorDef.color:'#7f1d1d'};color:#fff"`;
           } else if(colorDef){
-            cls=''; cellStyle=`style="background:${colorDef.color};color:${txtOn(colorDef.color)};font-weight:700"`;
+            cls=''; cellStyle=`style="background:${colorDef.color};color:${colorDef.fg||txtOn(colorDef.color)};font-weight:700"`;
           }
           const isCopied=false;
           const isFocused=!isCopied&&lastFocusedCell&&lastFocusedCell.sid===x.id&&lastFocusedCell.day===d;
@@ -3665,12 +3726,12 @@ function openModal(type,...args){
     const tempPw=genTempPassword();
     box.innerHTML=`<h3>🔑 Reset password</h3><div class="msub">${uname}</div>
     <div class="mf">
-      <label>Staff email <span style="font-size:10px;color:var(--text3)">(optional — for your records)</span></label>
-      <input id="rpEmail" type="email" placeholder="staff@example.com" value="${user.email||''}"
+      <label>Login email</label>
+      <input id="rpEmail" type="email" readonly value="${user.email||''}"
         style="font-size:12px;border:0.5px solid var(--border2);border-radius:var(--r);padding:6px 10px;background:var(--surface);color:var(--text);width:100%">
       <label style="margin-top:8px">New password</label>
       <div style="display:flex;gap:6px;align-items:center">
-        <input id="rpPw" type="text" placeholder="Min 6 characters" value="${tempPw}"
+        <input id="rpPw" type="text" placeholder="Min 8 characters" value="${tempPw}"
           style="font-size:12px;border:0.5px solid var(--border2);border-radius:var(--r);padding:6px 10px;background:var(--surface);color:var(--text);flex:1;font-family:'DM Mono',monospace">
         <button onclick="document.getElementById('rpPw').value=genTempPassword()" 
           style="font-size:11px;padding:4px 8px;border:0.5px solid var(--border2);border-radius:var(--r);background:var(--surface2);color:var(--text2);cursor:pointer;white-space:nowrap">🔀 New</button>
@@ -4512,19 +4573,14 @@ async function doChangePassword(){
 }
 
 async function doResetPw(uid){
-  const email=document.getElementById('rpEmail')?.value.trim()||null;
-  if(!pw||pw.length<6){document.getElementById('rpErr').textContent='Min 6 characters.';return;}
-  const salt=genSalt();
-  const password_hash=await hashPassword(pw,salt);
-  const updateObj={password_hash,salt};
-  if(email!==null) updateObj.email=email;
-  const {error}=await sb.from('app_users').update(updateObj).eq('id',uid);
-  if(error){document.getElementById('rpErr').textContent=error.message;return;}
-  // Update local cache
-  const u=appUsersList.find(x=>String(x.id)===String(uid));
-  if(u){u.email=email;}
+  const pw=(document.getElementById('rpPw')?.value||'').trim();
+  const errEl=document.getElementById('rpErr');
+  if(pw.length<8){errEl.textContent='Min 8 characters.';return;}
+  errEl.textContent='Saving…';
+  const {error}=await sb.rpc('sched_admin_set_password',{p_app_user_id:Number(uid),p_password:pw});
+  if(error){errEl.textContent=error.message;return;}
   closeModal();
-  toast('Password reset — share the new password with the staff member ✓','ok');
+  toast('Password reset ✓ — share the new password with the staff member','ok');
 }
 
 function exportCSV(){
@@ -4590,7 +4646,7 @@ const PERM_LABELS={
 };
 
 async function saveSettings(){
-  const payload={roles:customRoles,teams:customTeams,positions:customPositions,permissions,sectionOrder,staffOrder,shiftTypes,timeoffTypes,otTypes,breakRules,taskTypes:TASK_TYPES,duties:DUTIES};
+  const payload={offDefs:{OD:OFF_DEFS.OD.color,RD:OFF_DEFS.RD.color,ODfg:OFF_DEFS.OD.fg||'',RDfg:OFF_DEFS.RD.fg||''},roles:customRoles,teams:customTeams,positions:customPositions,permissions,sectionOrder,staffOrder,shiftTypes,timeoffTypes,otTypes,breakRules,taskTypes:TASK_TYPES,duties:DUTIES};
   const {error}=await sb.from('app_settings').upsert({key:'schedule_config',value:JSON.stringify(payload)},{onConflict:'key'});
   injectDynamicShiftCSS();
   if(error) throw new Error(error.message);
@@ -4676,9 +4732,9 @@ async function saveSettingsManual(section){
 
 function injectDynamicShiftCSS(){
   const lines=[];
-  [...shiftTypes,...timeoffTypes].forEach(s=>{
+  [...shiftTypes,...timeoffTypes,OFF_DEFS.OD,OFF_DEFS.RD].forEach(s=>{
     const col=s.color||'#888';
-    const textCol=isLightColor(col)?'#1a1a00':'#fff';
+    const textCol=s.fg||(isLightColor(col)?'#1a1a00':'#fff');
     lines.push(`.s-${s.code}{background:${col}!important;color:${textCol}!important}`);
     if(textCol==='#fff') lines.push(`.dark .s-${s.code}{background:${solid(col)}!important}`);
   });
@@ -4758,6 +4814,7 @@ async function loadSettings(){
       }
       if('shiftTypes' in s && s.shiftTypes.length) shiftTypes=s.shiftTypes;
       if('timeoffTypes' in s && s.timeoffTypes.length) timeoffTypes=s.timeoffTypes;
+      if(s.offDefs){ ['OD','RD'].forEach(k=>{ if(s.offDefs[k]) OFF_DEFS[k].color=s.offDefs[k]; if(s.offDefs[k+'fg']) OFF_DEFS[k].fg=s.offDefs[k+'fg']; }); }
       if('otTypes' in s && s.otTypes.length) otTypes=s.otTypes;
       if('breakRules' in s && s.breakRules.length) breakRules=s.breakRules;
       if('taskTypes' in s && Array.isArray(s.taskTypes) && s.taskTypes.length) TASK_TYPES=s.taskTypes;
@@ -5204,9 +5261,11 @@ function renderShiftTypes(){
   if(!shiftTypes.length){el.innerHTML='<div style="font-size:11px;color:var(--text3)">No shift types yet</div>';return;}
   el.innerHTML=shiftTypes.map((s,i)=>`
     <div style="display:flex;align-items:center;gap:8px;padding:6px 8px;background:var(--surface2);border-radius:var(--r);border:1px solid var(--border)">
-      <span style="width:32px;height:24px;background:${s.color};border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;flex-shrink:0">${s.code}</span>
+      <span style="width:32px;height:24px;background:${s.color};border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:${s.fg||txtOn(s.color)};flex-shrink:0">${s.code}</span>
       <input value="${s.label}" onchange="shiftTypes[${i}].label=this.value" style="flex:1;font-size:12px;border:none;background:transparent;outline:none;color:var(--text)">
-      <input type="color" value="${s.color}" onchange="shiftTypes[${i}].color=this.value;renderShiftTypes()" style="width:28px;height:24px;border:1px solid var(--border2);border-radius:4px;padding:1px;cursor:pointer">
+      <input type="color" value="${s.color}" title="Cell colour" onchange="shiftTypes[${i}].color=this.value;renderShiftTypes()" style="width:28px;height:24px;border:1px solid var(--border2);border-radius:4px;padding:1px;cursor:pointer">
+      <input type="color" value="${s.fg||txtOn(s.color)}" title="Font colour" onchange="shiftTypes[${i}].fg=this.value;renderShiftTypes()" style="width:28px;height:24px;border:1px solid var(--border2);border-radius:4px;padding:1px;cursor:pointer">
+      <button onclick="delete shiftTypes[${i}].fg;renderShiftTypes()" title="Font colour: automatic" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:12px;padding:0 2px">Aa↺</button>
       <button onclick="shiftTypes.splice(${i},1);renderShiftTypes()" style="background:none;border:none;cursor:pointer;color:var(--red);font-size:16px;padding:0 2px;line-height:1" title="Remove">×</button>
     </div>`).join('');
 }
@@ -5214,14 +5273,28 @@ function renderShiftTypes(){
 function renderTimeoffTypes(){
   const el=document.getElementById('timeoffTypeList');
   if(!el)return;
-  if(!timeoffTypes.length){el.innerHTML='<div style="font-size:11px;color:var(--text3)">No time-off types yet</div>';return;}
+  const offRows=['OD','RD'].map(k=>{ const t=OFF_DEFS[k]; return `
+    <div style="display:flex;align-items:center;gap:8px;padding:6px 8px;background:var(--surface2);border-radius:var(--r);border:1px solid var(--border)">
+      <span style="width:32px;height:24px;background:${t.color};border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:${t.fg||txtOn(t.color)};flex-shrink:0">${t.code}</span>
+      <span style="flex:1;font-size:12px;color:var(--text)">${t.label} <span style="font-size:10px;color:var(--text3)">(not leave)</span></span>
+      <input type="color" value="${t.color}" title="Cell colour" onchange="OFF_DEFS['${k}'].color=this.value;markOffDefsUnsaved()" style="width:28px;height:24px;border:1px solid var(--border2);border-radius:4px;padding:1px;cursor:pointer">
+      <input type="color" value="${t.fg||txtOn(t.color)}" title="Font colour" onchange="OFF_DEFS['${k}'].fg=this.value;markOffDefsUnsaved()" style="width:28px;height:24px;border:1px solid var(--border2);border-radius:4px;padding:1px;cursor:pointer">
+      <button onclick="delete OFF_DEFS['${k}'].fg;markOffDefsUnsaved()" title="Font colour: automatic" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:12px;padding:0 2px">Aa↺</button>
+    </div>`; }).join('');
+  if(!timeoffTypes.length){el.innerHTML='<div style="font-size:11px;color:var(--text3)">No time-off types yet</div>'+offRows;return;}
   el.innerHTML=timeoffTypes.map((t,i)=>`
     <div style="display:flex;align-items:center;gap:8px;padding:6px 8px;background:var(--surface2);border-radius:var(--r);border:1px solid var(--border)">
-      <span style="width:32px;height:24px;background:${t.color};border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;flex-shrink:0">${t.code}</span>
+      <span style="width:32px;height:24px;background:${t.color};border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:${t.fg||txtOn(t.color)};flex-shrink:0">${t.code}</span>
       <input value="${t.label}" onchange="timeoffTypes[${i}].label=this.value" style="flex:1;font-size:12px;border:none;background:transparent;outline:none;color:var(--text)">
-      <input type="color" value="${t.color}" onchange="timeoffTypes[${i}].color=this.value;renderTimeoffTypes()" style="width:28px;height:24px;border:1px solid var(--border2);border-radius:4px;padding:1px;cursor:pointer">
+      <input type="color" value="${t.color}" title="Cell colour" onchange="timeoffTypes[${i}].color=this.value;renderTimeoffTypes()" style="width:28px;height:24px;border:1px solid var(--border2);border-radius:4px;padding:1px;cursor:pointer">
+      <input type="color" value="${t.fg||txtOn(t.color)}" title="Font colour" onchange="timeoffTypes[${i}].fg=this.value;renderTimeoffTypes()" style="width:28px;height:24px;border:1px solid var(--border2);border-radius:4px;padding:1px;cursor:pointer">
+      <button onclick="delete timeoffTypes[${i}].fg;renderTimeoffTypes()" title="Font colour: automatic" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:12px;padding:0 2px">Aa↺</button>
       <button onclick="timeoffTypes.splice(${i},1);renderTimeoffTypes()" style="background:none;border:none;cursor:pointer;color:var(--red);font-size:16px;padding:0 2px;line-height:1" title="Remove">×</button>
-    </div>`).join('');
+    </div>`).join('')+offRows;
+}
+function markOffDefsUnsaved(){
+  renderTimeoffTypes(); try{renderSchedule();}catch(_){}
+  const st=document.getElementById('toSaveStatus'); if(st){st.textContent='● Unsaved';st.style.color='var(--amber)';}
 }
 
 function calcShiftHoursFromTime(start, end){
@@ -6234,8 +6307,7 @@ function openShiftModal(sid, day, name){
 
   const allLeave=[
     ...timeoffTypes.filter(t=>!['OD','RD'].includes(t.code)),
-    {code:'OD',label:'Off day',  color:'#8b5cf6'},
-    {code:'RD',label:'Rest day', color:'#6366f1'}
+    OFF_DEFS.OD, OFF_DEFS.RD
   ];
   const leaveBtns=allLeave.map(s=>`
     <button onclick="pickShiftFromModal('${sid}',${day},'${s.code}')"
