@@ -2231,7 +2231,7 @@ const VIEW_AS_MSG='Read-only: you are viewing as another user. Go back to your a
 })();
 async function startViewAs(userId){
   if(!currentProfile||currentProfile.app_role!=='admin'||viewAs) return;
-  const u=(appUsersList||[]).find(x=>x.id===userId); if(!u) return;
+  const u=(appUsersList||[]).find(x=>String(x.id)===String(userId)); if(!u) return;
   _realProfile=currentProfile; _realUser=currentUser;
   viewAs=u;
   currentProfile={app_role:u.app_role,display_name:u.display_name,staff_role:u.staff_role,team:u.team,staff_id:u.staff_id,username:u.username,id:u.id,email:u.email,_viewAs:true};
@@ -3059,7 +3059,7 @@ function renderSchedule(){
   // Apply staff order within each group
   Object.keys(grouped).forEach(role=>{
     grouped[role].sort((a,b)=>{
-      const oa=staffOrder.indexOf(a.id), ob=staffOrder.indexOf(b.id);
+      const oa=staffOrder.findIndex(x=>String(x)===String(a.id)), ob=staffOrder.findIndex(x=>String(x)===String(b.id));
       if(oa===-1&&ob===-1)return 0;
       if(oa===-1)return 1; if(ob===-1)return -1;
       return oa-ob;
@@ -3337,7 +3337,7 @@ async function renderUsersTab(){
     return;
   }
   tb.innerHTML=data.map(u=>{
-    const isMe=currentUser&&u.id===currentUser.id;
+    const isMe=!!(u.email&&currentProfile&&String(currentProfile.email||currentUser?.email||"").toLowerCase()===String(u.email).toLowerCase());
     const appRoleOpts=['admin','staff'].map(r=>`<option value="${r}"${r===u.app_role?' selected':''}>${r}</option>`).join('');
     // Use whichever roles array has data
     // Position uses customPositions list (Inbound Agent, Team Leader etc.)
@@ -3394,7 +3394,7 @@ async function saveUserEmail(uid){
   const email=input.value.trim().toLowerCase()||null;
   const {error}=await sb.from('app_users').update({email}).eq('id',uid);
   if(error){toast('Error: '+error.message,'err');return;}
-  const u=appUsersList.find(x=>x.id===uid);
+  const u=appUsersList.find(x=>String(x.id)===String(uid));
   if(u) u.email=email;
   input.style.color=email?'var(--blue)':'var(--text3)';
   toast(email?`Email saved: ${email}`:'Email cleared','ok');
@@ -3406,7 +3406,7 @@ async function updateUserField(uid,field,value){
   if(error){toast('Error: '+error.message,'err');renderUsersTab();return;}
 
   // 2. Update local caches
-  const appU=appUsersList.find(u=>u.id===uid);
+  const appU=appUsersList.find(u=>String(u.id)===String(uid));
   if(appU) appU[field]=value;
 
   // 3. If role/team/name changed — sync to staff table via staff_id
@@ -3661,7 +3661,7 @@ function openModal(type,...args){
   }
   else if(type==='resetPw'){
     const [uid,uname]=args;
-    const user=appUsersList.find(u=>u.id===uid)||{};
+    const user=appUsersList.find(u=>String(u.id)===String(uid))||{};
     const tempPw=genTempPassword();
     box.innerHTML=`<h3>🔑 Reset password</h3><div class="msub">${uname}</div>
     <div class="mf">
@@ -4521,7 +4521,7 @@ async function doResetPw(uid){
   const {error}=await sb.from('app_users').update(updateObj).eq('id',uid);
   if(error){document.getElementById('rpErr').textContent=error.message;return;}
   // Update local cache
-  const u=appUsersList.find(x=>x.id===uid);
+  const u=appUsersList.find(x=>String(x.id)===String(uid));
   if(u){u.email=email;}
   closeModal();
   toast('Password reset — share the new password with the staff member ✓','ok');
@@ -6413,12 +6413,13 @@ function rowDrop(e, targetSid, targetRole){
   const allIds=staffList.map(x=>x.id);
   if(!staffOrder.length) staffOrder=[...allIds];
   // Ensure all ids are in staffOrder
-  allIds.forEach(id=>{ if(!staffOrder.includes(id)) staffOrder.push(id); });
-  const fromIdx=staffOrder.indexOf(dragSid);
-  const toIdx=staffOrder.indexOf(targetSid);
+  allIds.forEach(id=>{ if(!staffOrder.some(x=>String(x)===String(id))) staffOrder.push(id); });
+  const _ix=v=>staffOrder.findIndex(x=>String(x)===String(v));
+  const fromIdx=_ix(dragSid);
+  const toIdx=_ix(targetSid);
   if(fromIdx===-1||toIdx===-1)return;
-  staffOrder.splice(fromIdx,1);
-  staffOrder.splice(toIdx,0,dragSid);
+  const _moved=staffOrder.splice(fromIdx,1)[0];
+  staffOrder.splice(toIdx,0,_moved);
   dragSid=null;
   saveSettings().catch(e=>toast("Save failed: "+e.message,"err"));
   renderSchedule();
