@@ -304,7 +304,7 @@ td.wk-cell{border-left:2px solid var(--border2) !important}
 .cell{width:30px;height:28px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;letter-spacing:.02em}
 .cell.editable{cursor:pointer;transition:opacity .1s}
 .ot-cell{width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;cursor:pointer;border-left:1px solid rgba(255,255,255,.3)}
-.ot-cell.has-ot{background:#f59e0b;color:#fff}
+.ot-cell.has-ot{background:#111827;color:#fcd34d}
 .ot-cell.no-ot{background:transparent;color:var(--text3)}
 .ot-cell.editable-ot:hover{opacity:.7}
 .shift-ot-wrap{display:flex;flex-direction:column;align-items:stretch}
@@ -312,7 +312,7 @@ td.wk-cell{border-left:2px solid var(--border2) !important}
 .ot-below{order:1}
 .shift-main{order:0}
 .ot-cell{width:100%;height:16px;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;cursor:pointer}
-.ot-cell.has-ot{color:#fff}
+.ot-cell.has-ot{color:#fcd34d;font-weight:800;border-top:2px solid #f59e0b;border-bottom:2px solid #f59e0b;box-sizing:border-box}
 .ot-cell.no-ot{background:transparent;color:var(--text3);height:0;overflow:hidden}
 .ot-cell.editable-ot:hover{opacity:.75}
 .ot-cell.editable-empty{height:8px;background:var(--surface2)}
@@ -328,7 +328,8 @@ td.wk-cell{border-left:2px solid var(--border2) !important}
 .week-view .cell.hd-split .hd-al{font-size:10px}
 .cell.ot-split{flex-direction:column;align-items:stretch;justify-content:stretch;position:relative;overflow:hidden}
 .cell.ot-split .ot-split-top{flex:1;display:flex;align-items:center;justify-content:center;font-size:9px;line-height:1}
-.cell.ot-split .ot-split-bot{flex:1;display:flex;align-items:center;justify-content:center;font-size:7px;font-weight:700;color:#fff;line-height:1;letter-spacing:-.02em;white-space:nowrap}
+.cell.ot-split .ot-split-bot{flex:1;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:800;color:#fcd34d;line-height:1;letter-spacing:-.02em;white-space:nowrap;border-top:2px solid #f59e0b;box-sizing:border-box}
+.cell.ot-split .ot-split-bot[style*='order:-1']{border-top:0;border-bottom:2px solid #f59e0b}
 .ot-split-bot .t-full{display:none}
 .week-view .ot-split-bot .t-full{display:inline}
 .week-view .ot-split-bot .t-short{display:none}
@@ -1294,6 +1295,11 @@ tr.section-drag-over td{border-top:3px solid var(--blue) !important}
               <option value="days">AL days (3 days = 3)</option>
               <option value="people">People (one person = 1, any number of days)</option>
             </select></label>
+          <label style="font-size:11px;color:var(--text2);display:flex;flex-direction:column;gap:4px">Shift swaps across weeks
+            <select id="alqSwapCross" style="height:32px;padding:0 8px;border:1px solid var(--border2);border-radius:var(--r);font-family:'DM Sans',sans-serif">
+              <option value="true">Allowed</option>
+              <option value="false">Not allowed (same Sun–Sat week only)</option>
+            </select></label>
         </div>
         <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:6px">
           <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em">Weeks — set a different limit for a busy or quiet week</div>
@@ -1380,8 +1386,8 @@ tr.section-drag-over td{border-top:3px solid var(--blue) !important}
 // ─────────────────────────────────────────
 //  CONFIGURATION — replace these two values
 // ─────────────────────────────────────────
-var SUPABASE_URL = 'https://jrfiyliesitsgnehxqtv.supabase.co';
-var SUPABASE_ANON_KEY = 'sb_publishable_-AOpf0GlT5MeQh5-NMZc9g_CD2xu9Ch';
+var SUPABASE_URL = 'https://kqspaqsrykqydbsolcop.supabase.co';
+var SUPABASE_ANON_KEY = 'sb_publishable_6g7q0LGA2N60PbE3XFEaTg_wHcYwGvq';
 // ─────────────────────────────────────────
 
 var { createClient } = supabase;
@@ -1393,6 +1399,7 @@ var sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
 });
 
 // Theme-aware colour helpers: tint = translucent fill (stronger in dark), fg = coloured text (lifted in dark), solid = filled chip (lifted a little in dark)
+const txtOn=c=>{ const m=/^#?([0-9a-f]{6})$/i.exec(String(c||'').trim()); if(!m) return '#fff'; const n=parseInt(m[1],16), r=(n>>16)&255,g=(n>>8)&255,b=n&255; const L=(0.299*r+0.587*g+0.114*b); return L>150?'#111827':'#fff'; };
 const tint=(c,p)=>`color-mix(in srgb, color-mix(in srgb, ${c}, #fff var(--solid)) calc(var(--tk) * ${p}%), transparent)`;
 const fg=c=>`color-mix(in srgb, ${c}, #fff var(--lift))`;
 const solid=c=>`color-mix(in srgb, ${c}, #fff var(--solid))`;
@@ -3176,7 +3183,7 @@ function renderSchedule(){
           } else if(sh==='MCR'||sh==='ELR'){
             cls='mc-rej'; cellStyle=`style="background:${colorDef?colorDef.color:'#7f1d1d'};color:#fff"`;
           } else if(colorDef){
-            cls=''; cellStyle=`style="background:${colorDef.color};color:#fff"`;
+            cls=''; cellStyle=`style="background:${colorDef.color};color:${txtOn(colorDef.color)};font-weight:700"`;
           }
           const isCopied=false;
           const isFocused=!isCopied&&lastFocusedCell&&lastFocusedCell.sid===x.id&&lastFocusedCell.day===d;
@@ -3201,7 +3208,7 @@ function renderSchedule(){
           const otObj=dayPub?getOT(x.id,d):null; // hide OT on unpublished days
           const ot=otObj?otObj.hours:0;
           const otTypeDef=otObj?otTypes.find(t=>t.code===otObj.type):null;
-          const otColor=otTypeDef?otTypeDef.color:'#f59e0b';
+          const otColor='#111827'; // OT is always near-black with amber text so it never blends with a shift colour
           const otDisplay=otObj?(otObj.start&&otObj.end?otObj.start+'-'+otObj.end:ot+'h'):'';
           const otTitle=otObj?`${otTypeDef?otTypeDef.label:'OT'}: ${otObj.start&&otObj.end?otObj.start+'–'+otObj.end:ot+'h'}`:(sh?'Click to add OT':'');
           const otClickable=cellCanAssign&&sh;
@@ -4937,6 +4944,7 @@ async function renderAlQuota(){
   if(!keep){
     def.value=alQuota.default??''; document.getElementById('alqCountBy').value=alQuota.countBy||'days';
     document.getElementById('alqDayDefault').value=alQuota.dayDefault??'';
+    try{ const {data:sw}=await sb.from('app_settings').select('value').eq('key','swap_cross_week').maybeSingle(); document.getElementById('alqSwapCross').value=(sw&&sw.value==='false')?'false':'true'; }catch(_){}
     renderAlqDays();
   }
   // weeks touching the chosen month and the one after (← → to move)
@@ -5033,7 +5041,8 @@ async function saveAlQuota(){
   const st=document.getElementById('alqStatus'); st.textContent='Saving…';
   const {error}=await sb.from('app_settings').upsert({key:'al_quota',value:JSON.stringify(alQuota)},{onConflict:'key'});
   if(error){ st.textContent=''; toast('Save failed: '+error.message,'err'); return; }
-  st.textContent='Saved ✓'; toast('AL quota saved ✓','ok'); renderAlQuota();
+  { const sx=document.getElementById('alqSwapCross'); if(sx){ const {error:e2}=await sb.from('app_settings').upsert({key:'swap_cross_week',value:sx.value},{onConflict:'key'}); if(e2){ st.textContent=''; toast('Swap setting failed: '+e2.message,'err'); return; } } }
+  st.textContent='Saved ✓'; toast('AL quota & swap settings saved ✓','ok'); renderAlQuota();
   loadAlAvailability(true).then(()=>renderSchedule());
 }
 // one-line status for request forms
@@ -5083,7 +5092,7 @@ async function leaveBalHint(elId,sid,day,code,half,nDays){
       ${+x.pending?`<div style="font-size:9px;color:var(--text3)">${balFmt(x.pending)} pending</div>`:''}</div>`; };
   const fmt=d=>d?new Date(d).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}):'';
   let warn='';
-  if(kind&&+b[kind].left<amt){
+  if(kind&&!b[kind].unset&&+b[kind].left<amt){
     const what=code==='EL'?'EL is taken from your AL balance, and you have':kind==='rl'?'You have':'You have';
     warn=`<div style="color:var(--red);font-weight:600;margin-top:6px;line-height:1.45">⛔ Not enough ${kind.toUpperCase()} balance${nDays>1?` for ${nDays} days`:''}. ${what} ${balFmt(Math.max(0,+b[kind].left))} day(s) left${+b[kind].pending?` (including ${balFmt(b[kind].pending)} pending)`:''}. Please speak to your TL.</div>`;
   }
@@ -5094,6 +5103,7 @@ async function leaveBalHint(elId,sid,day,code,half,nDays){
 async function leaveBalBlock(sid,day,code){
   const kind=BAL_KIND(code); if(!kind) return null;
   const b=await getLeaveBalance(sid,day); if(!b) return null;
+  if(b[kind]&&b[kind].unset) return null;   // entitlement not entered yet — don't block
   const amt=BAL_AMT(code); const left=+b[kind].left;
   return left<amt?`Not enough ${kind.toUpperCase()} balance — ${balFmt(Math.max(0,left))} day(s) left${code==='EL'?' (EL is taken from AL)':''}. Please speak to your TL.`:null;
 }
