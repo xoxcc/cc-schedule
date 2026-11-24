@@ -186,7 +186,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);fon
   .app-body{padding:10px 10px calc(70px + env(safe-area-inset-bottom))}
   .toolbar{gap:6px!important;flex-wrap:wrap}
   .toolbar>input,.toolbar>select{flex:1 1 30%;min-width:0;width:auto!important;height:34px;font-size:13px}
-  #addStaffBtn,#ioWrap,#autoSchedBtn,#clearWeekBtn,#bulkUndoBtn,#auditBtn{display:none!important}
+  #addStaffBtn,#ioWrap,#autoSchedBtn,#clearWeekBtn,#bulkUndoBtn,#auditBtn,#auditExportBtn,#mcOtBtn{display:none!important}
   .toolbar>div[style*="margin-left:auto"]{margin-left:0!important;width:100%;justify-content:space-between}
   #mLabel{min-width:0!important;flex:1;font-size:14px!important}
   .sum-row{display:flex;flex-wrap:nowrap!important;overflow-x:auto;gap:6px;padding-bottom:4px;-webkit-overflow-scrolling:touch}
@@ -330,6 +330,8 @@ td.wk-cell{border-left:2px solid var(--border2) !important}
 .cell.ot-split .ot-split-top{flex:1;display:flex;align-items:center;justify-content:center;font-size:9px;line-height:1}
 .cell.ot-split .ot-split-bot{flex:1;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:800;color:#fcd34d;line-height:1;letter-spacing:-.02em;white-space:nowrap;border-top:2px solid #f59e0b;box-sizing:border-box}
 .cell.ot-split .ot-split-bot[style*='order:-1']{border-top:0;border-bottom:2px solid #f59e0b}
+.ot-split-bot.ot-ph{box-shadow:inset 0 0 0 2px #dc2626}
+.cell.ot-split .ot-split-bot.ot-lost{background:transparent!important;color:inherit;opacity:.5;text-decoration:line-through;border-top:2px dashed #9ca3af;font-weight:700}
 .ot-split-bot .t-full{display:none}
 .week-view .ot-split-bot .t-full{display:inline}
 .week-view .ot-split-bot .t-short{display:none}
@@ -690,6 +692,7 @@ tr.section-drag-over td{border-top:3px solid var(--blue) !important}
         <div class="sidebar-user-role" id="userRoleLabel">—</div>
       </div>
     </div>
+    <button onclick="openChangePassword()" title="Change your password" style="display:flex;align-items:center;gap:6px;width:calc(100% - 24px);margin:0 12px 8px;padding:6px 10px;font-size:12px;border:0.5px solid var(--border2);border-radius:var(--r);background:var(--surface2);color:var(--text2);cursor:pointer;font-family:'DM Sans',sans-serif">🔑 Change password</button>
     <nav class="sidebar-nav">
       <div class="snav-section">Main</div>
       <button class="snav-item active" data-tab="schedule" onclick="switchTab('schedule')">
@@ -809,6 +812,8 @@ tr.section-drag-over td{border-top:3px solid var(--blue) !important}
           <button class="btn" id="clearWeekBtn" style="display:none;color:var(--red);border-color:#fecaca" onclick="openClearWeek()">🧹 Clear week</button>
           <button class="btn" id="complianceBtn" style="display:none;color:#b91c1c;border-color:#fecaca;font-weight:600" onclick="openCompliance()">⚠ Checks</button>
           <button class="btn" id="auditBtn" style="display:none" onclick="openAuditLog()" title="Who changed what, and when">📜 Change log</button>
+          <button class="btn" id="auditExportBtn" style="display:none" onclick="openHistoryReport()" title="Download swap shift, OT, off day and rest day history">📊 History report</button>
+          <button class="btn" id="mcOtBtn" style="display:none" onclick="openMcOtView()" title="How often agents go on MC on a day they had OT booked">🩺 MC on OT day</button>
           <button class="btn" id="bulkUndoBtn" style="display:none" onclick="openBulkUndo()" title="Put back the schedule as it was before an Auto schedule or Clear week">↩ Revert</button>
           <div style="position:relative;display:inline-block" id="ioWrap">
             <button class="btn" onclick="toggleIOMenu()" style="display:flex;align-items:center;gap:4px">
@@ -1050,6 +1055,7 @@ tr.section-drag-over td{border-top:3px solid var(--blue) !important}
     <div id="adhNote" style="margin-bottom:12px"></div>
     <div id="adhLegend" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px;padding:8px 12px;background:var(--surface2);border-radius:var(--r);border:0.5px solid var(--border);font-size:11px;color:var(--text2)"></div>
     <div id="adhGrid"></div>
+    <div id="adhAppLog" style="margin-top:14px"></div>
   </div>
 
   <!-- GUIDE TAB -->
@@ -1127,21 +1133,6 @@ tr.section-drag-over td{border-top:3px solid var(--blue) !important}
     <div style="font-size:15px;font-weight:600;margin-bottom:4px">Settings</div>
     <div style="font-size:12px;color:var(--text2);margin-bottom:16px">Manage roles, teams, positions and access permissions</div>
     <div class="settings-grid">
-
-      <!-- Change Password -->
-      <div class="settings-card">
-        <h4>🔑 Change my password</h4>
-        <div class="desc">Update your admin account password</div>
-        <div class="mf">
-          <label>Current password</label><input id="cpCur" type="password" placeholder="Current password">
-          <label>New password</label><input id="cpNew" type="password" placeholder="Min 6 characters">
-          <label>Confirm new password</label><input id="cpCon" type="password" placeholder="Repeat new password">
-          <div class="merr" id="cpErr"></div>
-        </div>
-        <div style="margin-top:12px;display:flex;justify-content:flex-end">
-          <button class="btn btn-blue" onclick="doChangePassword()">Update password</button>
-        </div>
-      </div>
 
       <!-- Manage Roles -->
       <div class="settings-card">
@@ -1468,7 +1459,7 @@ const APP_ROLES=['admin','staff'];
 const SHIFTS=[{v:'M',bg:'#3b82f6',fg:'#fff'},{v:'E',bg:'#f97316',fg:'#fff'},{v:'C',bg:'#ef4444',fg:'#fff'},{v:'H',bg:'#ec4899',fg:'#fff'},{v:'RL',bg:'#14b8a6',fg:'#fff'},{v:'O',bg:'#8b5cf6',fg:'#fff'}];
 const TOFFS=[{v:'AL',bg:'#22c55e',fg:'#fff'},{v:'MC',bg:'#eab308',fg:'#111'},{v:'OFF',bg:'#e5e7eb',fg:'#555'}];
 
-const _today=new Date();let cy=_today.getFullYear(),cm=_today.getMonth(),currentUser=null,currentProfile=null,staffList=[],schedData={},otData={};
+const _today=new Date();let cy=_today.getFullYear(),cm=_today.getMonth(),currentUser=null,currentProfile=null,staffList=[],schedData={},otData={},otLost={};
 // allStaff = every staff record; staffList = only those still employed in the month being viewed
 let allStaff=[], lwdMap={};
 function refreshActiveStaff(){
@@ -1650,7 +1641,6 @@ async function _loadProfileFromAuth(authUser){
   if(currentProfile.app_role==='admin') renderUsersTab();
   showPage('app');
   startSchedulePoll();
-  if(authUser&&authUser.user_metadata&&authUser.user_metadata.temp_password===true) setTimeout(showSetPasswordPrompt,700);
 }
 
 // ── First sign-in: ask the user to replace the shared default password ──
@@ -1762,6 +1752,8 @@ async function doLogin(){
 }
 
 async function doLogout(){
+  try{ await asLogoutRecord(); }catch(_){}
+  { const f=document.getElementById('statusFab'); if(f) f.style.display='none'; const pp=document.getElementById('statusPanel'); if(pp) pp.style.display='none'; clearInterval(_as.timer); _as.rows=[]; _as.open=null; }
   if(_pollInterval){ clearInterval(_pollInterval); _pollInterval=null; }
   localStorage.removeItem('cc_session');
   if(typeof viewAs!=="undefined"&&viewAs){viewAs=null;document.body.classList.remove("view-as");const _vb=document.getElementById("viewAsBar");if(_vb)_vb.style.display="none";}
@@ -1783,7 +1775,7 @@ function showPasswordResetScreen(){
     </div>
     <div class="lf">
       <label>New password</label>
-      <input id="rpNewPw" type="password" placeholder="Min 6 characters"
+      <input id="rpNewPw" type="password" placeholder="Min 8 characters"
         onkeydown="if(event.key==='Enter')document.getElementById('rpNewPw2').focus()">
       <label>Confirm new password</label>
       <input id="rpNewPw2" type="password" placeholder="Repeat new password"
@@ -2157,6 +2149,143 @@ function filterAuditList(){
     (rows.length?rows.map(a=>auditLine(a)).join(''):'<div style="padding:12px;text-align:center;color:var(--text3);font-size:12px">No match.</div>')+
     (_auditRows.length>=500?'<div style="font-size:11px;color:var(--text3);padding:6px 0">Showing the latest 500 — choose a staff member or month to see older ones.</div>':'');
 }
+
+// ── HISTORY REPORT: swap shift, OT, off day, rest day → Excel ──
+function openHistoryReport(){
+  const box=document.getElementById('modalBox');
+  const now=new Date(); const opts=[];
+  for(let i=-12;i<=6;i++){ const d=new Date(now.getFullYear(),now.getMonth()+i,1); opts.push({k:d.getFullYear()+'-'+(d.getMonth()+1),l:MONTHS[d.getMonth()].slice(0,3)+' '+d.getFullYear()}); }
+  const cur=cy+'-'+(cm+1);
+  const sel=(id,def)=>`<select id="${id}" style="height:34px;border:1px solid var(--border2);border-radius:var(--r);padding:0 8px;font-family:'DM Sans',sans-serif">${opts.map(o=>`<option value="${o.k}"${o.k===def?' selected':''}>${o.l}</option>`).join('')}</select>`;
+  box.innerHTML=`<h3>📊 History report</h3><div class="msub">Swap shift, OT, off day (OD) and rest day (RD) — downloaded as one Excel file</div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:10px 0">From ${sel('hrFrom',cur)} to ${sel('hrTo',cur)}</div>
+    <div style="font-size:12px;color:var(--text2);line-height:1.6">Sheets: <b>Summary</b> (per staff) · <b>Swaps</b> (who swapped with whom, shift before and after) · <b>OT</b> · <b>OT lost to MC</b> · <b>OT removed</b> (with reasons) · <b>OD &amp; RD</b> · <b>Change history</b> (who changed OT / OD / RD and when)</div>
+    <div id="hrMsg" style="font-size:12px;color:var(--text3);margin-top:8px"></div>
+    <div class="mbtns"><button class="btn" onclick="closeModal()">Close</button><button class="btn btn-blue" id="hrGo" onclick="runHistoryReport()">⬇ Download Excel</button></div>`;
+  document.getElementById('overlay').classList.add('open');
+}
+
+// ── MC ON OT DAY: who went MC on a day they had OT booked (OT is kept as a dimmed record) ──
+let _mcOt={rows:[],mode:'month'};
+async function openMcOtView(mode){
+  _mcOt.mode=mode||_mcOt.mode||'month';
+  const box=document.getElementById('modalBox'); document.getElementById('overlay').classList.add('open');
+  box.innerHTML='<h3>🩺 MC on OT day</h3><div style="padding:20px;text-align:center"><div class="spinner"></div></div>';
+  try{
+    const y=cy, mk=cy+'-'+(cm+1);
+    let q=sb.from('schedule').select('staff_id,month_key,day,shift,ot_hours,ot_start,ot_end,ot_type,remark');
+    q=_mcOt.mode==='month'?q.eq('month_key',mk):q.like('month_key',y+'-%');
+    const rows=await _fetchAllRows(()=>q);
+    const MCF2=new Set(['MC','MCP','MCR']);
+    // everyone who had OT booked (worked OT, or lost it to MC) in the period, for the % column
+    const per={};
+    rows.forEach(r=>{ const hasOt=(+r.ot_hours>0)||r.ot_start; const mcDay=MCF2.has(r.shift);
+      const p=per[r.staff_id]||(per[r.staff_id]={booked:0,lost:0,mc:0,days:[]});
+      if(mcDay) p.mc++;
+      if(hasOt){ p.booked++; if(mcDay){ p.lost++; p.days.push(r); } } });
+    _mcOt.rows=Object.entries(per).filter(([,p])=>p.lost>0).map(([id,p])=>({id,...p})).sort((a,b)=>b.lost-a.lost||b.mc-a.mc);
+    const nm=id=>((allStaff.find(x=>String(x.id)===String(id))||{}).name||('#'+id));
+    const tot=Object.values(per).reduce((a,p)=>({b:a.b+p.booked,l:a.l+p.lost}),{b:0,l:0});
+    const MS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const dstr=r=>{ const [yy,mm]=String(r.month_key).split('-').map(Number); return r.day+' '+MS[mm-1]+(r.ot_start&&r.ot_end?' ('+r.ot_start+'–'+r.ot_end+')':'')+' '+r.shift; };
+    const tab=(m,l)=>`<button class="btn${_mcOt.mode===m?' btn-blue':''}" onclick="openMcOtView('${m}')">${l}</button>`;
+    box.innerHTML=`<h3>🩺 MC on OT day</h3><div class="msub">Agents who went on MC (MC / MC pending / MC rejected) on a day they had OT booked. The OT stays as a dimmed record.</div>
+      <div style="display:flex;gap:6px;margin:8px 0">${tab('month',MONTHS[cm]+' '+cy)}${tab('year','Whole '+cy)}</div>
+      <div style="font-size:12px;color:var(--text2);margin-bottom:8px"><b>${tot.l}</b> of <b>${tot.b}</b> booked OT days ${_mcOt.mode==='month'?'this month':'this year'} were lost to MC${tot.b?` (${Math.round(tot.l/tot.b*100)}%)`:''} · <b>${_mcOt.rows.length}</b> agent${_mcOt.rows.length===1?'':'s'}</div>
+      <div style="max-height:52vh;overflow:auto;border:1px solid var(--border);border-radius:var(--r)">
+      ${_mcOt.rows.length?`<table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="background:var(--surface2);text-align:left"><th style="padding:6px 8px">#</th><th style="padding:6px 8px">Agent</th><th style="padding:6px 8px;text-align:center">OT lost to MC</th><th style="padding:6px 8px;text-align:center">OT booked</th><th style="padding:6px 8px;text-align:center">% lost</th><th style="padding:6px 8px;text-align:center">All MC days</th><th style="padding:6px 8px">Dates</th></tr></thead><tbody>${
+        _mcOt.rows.map((p,i)=>`<tr style="border-top:1px solid var(--border)"><td style="padding:6px 8px;color:var(--text3)">${i+1}</td><td style="padding:6px 8px;font-weight:600">${nm(p.id).replace(/</g,'&lt;')}</td><td style="padding:6px 8px;text-align:center;font-weight:700;color:${p.lost>=3?'var(--red)':p.lost>=2?'var(--amber)':'var(--text)'}">${p.lost}</td><td style="padding:6px 8px;text-align:center">${p.booked}</td><td style="padding:6px 8px;text-align:center">${Math.round(p.lost/p.booked*100)}%</td><td style="padding:6px 8px;text-align:center">${p.mc}</td><td style="padding:6px 8px;color:var(--text2)">${p.days.sort((a,b)=>String(a.month_key).localeCompare(String(b.month_key),undefined,{numeric:true})||a.day-b.day).map(dstr).join(' · ')}</td></tr>`).join('')}</tbody></table>`
+        :'<div style="padding:18px;text-align:center;color:var(--text3);font-size:12px">No MC on an OT day in this period.</div>'}</div>
+      <div class="mbtns"><button class="btn" onclick="closeModal()">Close</button></div>`;
+  }catch(e){ box.innerHTML='<h3>🩺 MC on OT day</h3><div style="color:var(--red);font-size:12px;padding:10px">Could not load: '+String(e.message||e).replace(/</g,'&lt;')+'</div><div class="mbtns"><button class="btn" onclick="closeModal()">Close</button></div>'; }
+}
+async function _fetchAllRows(make){
+  const out=[]; for(let from=0;;from+=1000){ const {data,error}=await make().range(from,from+999); if(error) throw error; out.push(...(data||[])); if(!data||data.length<1000) break; }
+  return out;
+}
+function _loadXLSX(){
+  return new Promise((res,rej)=>{ if(window.XLSX) return res(window.XLSX);
+    const sc=document.createElement('script'); sc.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+    sc.onload=()=>res(window.XLSX); sc.onerror=()=>rej(new Error('Could not load the Excel library')); document.head.appendChild(sc); });
+}
+async function runHistoryReport(){
+  const msg=document.getElementById('hrMsg'), btn=document.getElementById('hrGo');
+  const kv=k=>{ const [y,m]=k.split('-').map(Number); return y*12+m; };
+  let f=document.getElementById('hrFrom').value, t=document.getElementById('hrTo').value;
+  if(kv(f)>kv(t)){ const x=f; f=t; t=x; }
+  const keys=[]; for(let v=kv(f);v<=kv(t);v++){ const y=Math.floor((v-1)/12), m=v-y*12; keys.push(y+'-'+m); }
+  btn.disabled=true; msg.textContent='Collecting data…';
+  try{
+    const [sched,reqs,aud,XL]=await Promise.all([
+      _fetchAllRows(()=>sb.from('schedule').select('staff_id,month_key,day,shift,ot_hours,ot_start,ot_end,ot_type,remark').in('month_key',keys).order('month_key').order('day')),
+      _fetchAllRows(()=>sb.from('requests').select('*').in('month_key',keys).in('type',['swap','ot_swap','ot_offer','break_swap','shift_change']).order('created_at')),
+      _fetchAllRows(()=>sb.from('schedule_audit').select('*').in('month_key',keys).order('at')),
+      _loadXLSX()]);
+    const st=id=>allStaff.find(x=>String(x.id)===String(id))||{};
+    const nm=id=>st(id).name||('#'+id);
+    const WD=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    const dt=(mk,d)=>{ const [y,m]=String(mk).split('-').map(Number); const D=new Date(y,m-1,d); return {txt:String(d).padStart(2,'0')+'/'+String(m).padStart(2,'0')+'/'+y, wd:WD[D.getDay()], n:y*10000+m*100+d}; };
+    const ts=v=>v?new Date(v).toLocaleString('en-GB',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}):'';
+    const sumBy={}; const S=id=>sumBy[id]||(sumBy[id]={ot:0,oth:0,od:0,rd:0,swaps:0,swapReq:0,lost:0,mc:0});
+    // OT
+    sched.forEach(r=>{ if(['MC','MCP','MCR'].includes(r.shift)) S(r.staff_id).mc++; });
+    const MCF=new Set(['MC','MCP','MCR']);
+    const lostRows=sched.filter(r=>MCF.has(r.shift)&&((+r.ot_hours>0)||r.ot_start));
+    const ot=sched.filter(r=>((+r.ot_hours>0)||r.ot_start)&&!MCF.has(r.shift)).map(r=>{ const d=dt(r.month_key,r.day); const x=S(r.staff_id); x.ot++; x.oth+=(+r.ot_hours||0); return {n:d.n,row:[d.txt,d.wd,st(r.staff_id).employee_id||'',nm(r.staff_id),st(r.staff_id).team||'',st(r.staff_id).staff_role||'',r.ot_type||'OT',r.shift||'',r.ot_start||'',r.ot_end||'',+r.ot_hours||'',r.remark||'',phName(...String(r.month_key).split('-').map(Number),r.day,st(r.staff_id))]}; })
+      .sort((a,b)=>a.n-b.n).map(x=>x.row);
+    lostRows.forEach(r=>{ S(r.staff_id).lost++; });
+    const mcOt=lostRows.map(r=>{ const d=dt(r.month_key,r.day); return {n:d.n,row:[d.txt,d.wd,st(r.staff_id).employee_id||'',nm(r.staff_id),st(r.staff_id).team||'',r.shift,r.ot_start||'',r.ot_end||'',+r.ot_hours||'',r.remark||'']}; }).sort((a,b)=>a.n-b.n).map(x=>x.row);
+    // OD / RD
+    const odrd=sched.filter(r=>r.shift==='OD'||r.shift==='RD').map(r=>{ const d=dt(r.month_key,r.day); const x=S(r.staff_id); if(r.shift==='OD') x.od++; else x.rd++; return {n:d.n,row:[d.txt,d.wd,st(r.staff_id).employee_id||'',nm(r.staff_id),st(r.staff_id).team||'',st(r.staff_id).staff_role||'',r.shift==='OD'?'Off Day (OD)':'Rest Day (RD)',r.remark||'']}; })
+      .sort((a,b)=>a.n-b.n).map(x=>x.row);
+    // Swaps
+    const label={swap:'Shift swap',ot_swap:'OT swap',ot_offer:'OT offer',break_swap:'Break swap',shift_change:'Shift change'};
+    const cur=(id,mk,d)=>{ const r=sched.find(x=>String(x.staff_id)===String(id)&&x.month_key===mk&&x.day===d); return r?(r.shift||''):''; };
+    const near=(id,mk,d,t)=>{ if(!t) return []; const T=new Date(t).getTime(); return aud.filter(a=>String(a.staff_id)===String(id)&&a.month_key===mk&&a.day===d&&Math.abs(new Date(a.at).getTime()-T)<=180000); };
+    const ba=(id,mk,d,t,isOT)=>{ const rows=near(id,mk,d,t); if(!rows.length) return ['',isOT?'':cur(id,mk,d)];
+      return isOT?[rows[0].old_ot||'none',rows[rows.length-1].new_ot||'none']:[rows[0].old_shift||'',rows[rows.length-1].new_shift||'']; };
+    const isOR=x=>x==='OD'||x==='RD';
+    const swapRows=[];
+    reqs.forEach(r=>{ const isOT=r.type==='ot_swap'||r.type==='ot_offer'; const other=r.swap_with_staff_id; const d1=dt(r.month_key,r.day), d2=other?dt(r.month_key,r.swap_with_day||r.day):null;
+      const t=r.reviewed_at||null; const a=r.status==='approved'?ba(r.staff_id,r.month_key,r.day,t,isOT):['',''], b=(other&&r.status==='approved')?ba(other,r.month_key,r.swap_with_day||r.day,t,isOT):['',''];
+      if(r.status==='approved'){ S(r.staff_id).swaps++; if(other) S(other).swaps++; } S(r.staff_id).swapReq++;
+      swapRows.push({n:d1.n,row:[d1.txt,label[r.type]||r.type,nm(r.staff_id),a[0],a[1],other?nm(other):'',d2&&d2.txt!==d1.txt?d2.txt:'',b[0],b[1],r.status,r.reviewed_by||'',ts(r.reviewed_at||r.created_at),r.reject_reason||r.note||'']});
+    });
+    // Direct swaps done on the grid (no request): two staff, same day, same person, shifts exchanged within 2 minutes
+    const used=new Set(); const rq=new Set(reqs.filter(r=>r.swap_with_staff_id).map(r=>[r.staff_id,r.swap_with_staff_id].map(String).sort().join('|')+'|'+r.month_key+'|'+r.day));
+    const au=aud.filter(a=>a.old_shift&&a.new_shift&&a.old_shift!==a.new_shift&&!isOR(a.old_shift)&&!isOR(a.new_shift)&&!/^(AL|RL|MC|EL|PH|UL|CL|TO)/.test(a.new_shift));
+    au.forEach((a,x)=>{ if(used.has(a.id)) return;
+      const m=au.find(b=>b.id!==a.id&&!used.has(b.id)&&String(b.staff_id)!==String(a.staff_id)&&b.month_key===a.month_key&&b.day===a.day&&b.actor_name===a.actor_name&&Math.abs(new Date(b.at)-new Date(a.at))<=120000&&b.old_shift===a.new_shift&&b.new_shift===a.old_shift);
+      if(!m) return; used.add(a.id); used.add(m.id);
+      const key=[a.staff_id,m.staff_id].map(String).sort().join('|')+'|'+a.month_key+'|'+a.day; if(rq.has(key)) return;
+      const d=dt(a.month_key,a.day); S(a.staff_id).swaps++; S(m.staff_id).swaps++;
+      swapRows.push({n:d.n,row:[d.txt,'Direct swap (by schedule editor)',nm(a.staff_id),a.old_shift,a.new_shift,nm(m.staff_id),'',m.old_shift,m.new_shift,'done',a.actor_name||'',ts(a.at),'']}); });
+    const swaps=swapRows.sort((a,b)=>a.n-b.n).map(x=>x.row);
+    // Change history (OT / OD / RD only)
+    const hist=aud.filter(a=>isOR(a.old_shift)||isOR(a.new_shift)||(a.old_ot||'')!==(a.new_ot||'')).map(a=>{ const d=dt(a.month_key,a.day);
+      const kind=(isOR(a.old_shift)||isOR(a.new_shift))?(((a.new_shift||a.old_shift)==='OD')?'Off Day':'Rest Day'):'OT';
+      return [ts(a.at),a.actor_name||'',nm(a.staff_id),d.txt,kind,a.old_shift||'',a.new_shift||'',a.old_ot||'',a.new_ot||'']; });
+    const sum=Object.keys(sumBy).map(id=>({id,x:sumBy[id]})).sort((a,b)=>nm(a.id).localeCompare(nm(b.id))).map(({id,x})=>[st(id).employee_id||'',nm(id),st(id).team||'',st(id).staff_role||'',x.ot,+x.oth.toFixed(2),x.lost,x.mc,(x.ot+x.lost)?Math.round(100*x.lost/(x.ot+x.lost))+'%':'',x.od,x.rd,x.swapReq,x.swaps]);
+    const wb=XL.utils.book_new();
+    const add=(name,head,rows,widths)=>{ const ws=XL.utils.aoa_to_sheet([head,...rows]); ws['!cols']=widths.map(w=>({wch:w})); ws['!freeze']={xSplit:0,ySplit:1}; XL.utils.book_append_sheet(wb,ws,name); };
+    add('Summary',['Emp ID','Name','Team','Role','OT days worked','OT hours','OT cancelled by MC','MC days (all)','% of booked OT lost to MC','Off days (OD)','Rest days (RD)','Swap requests','Approved swaps involved'],sum,[9,34,12,18,9,9,12,10,14,13,13,13,20]);
+    // OT removed / cancelled with a reason (kept in the day remark) — for future reference
+    const otRem=[];
+    sched.forEach(r=>{ String(r.remark||'').split(' | ').forEach(seg=>{ const m=seg.match(/^OT (.+?) (removed|cancelled): (.*)$/); if(!m) return;
+      const d=dt(r.month_key,r.day); otRem.push({n:d.n,row:[d.txt,d.wd,st(r.staff_id).employee_id||'',nm(r.staff_id),st(r.staff_id).team||'',r.shift||'',m[1],m[2]==='removed'?'Removed':'Cancelled (MC day)',m[3]]}); }); });
+    const otRemRows=otRem.sort((a,b)=>a.n-b.n).map(x=>x.row);
+    add('OT removed',['Date','Day','Emp ID','Name','Team','Shift','OT','Type','Reason (by whom)'],otRemRows,[12,6,9,34,12,9,14,18,60]);
+    add('OT lost to MC',['Date','Day','Emp ID','Name','Team','Shift','OT start','OT end','OT hours','Remark'],mcOt,[12,6,9,34,12,8,9,9,9,50]);
+    add('Swaps',['Date','Type','Staff 1','Staff 1 before','Staff 1 after','Swapped with (Staff 2)','Staff 2 date (if different)','Staff 2 before','Staff 2 after','Status','Approved / done by','Actioned at','Note'],swaps,[12,24,30,14,14,32,14,14,14,11,22,20,30]);
+    add('OT',['Date','Day','Emp ID','Name','Team','Role','OT type','Shift','OT start','OT end','OT hours','Remark','Public holiday'],ot,[12,6,9,34,12,18,9,9,9,9,9,30,24]);
+    add('OD & RD',['Date','Day','Emp ID','Name','Team','Role','Type','Remark'],odrd,[12,6,9,34,12,18,14,30]);
+    add('Change history',['Changed at','Changed by','Staff','Date','Type','Old shift','New shift','Old OT','New OT'],hist,[20,26,30,12,10,10,10,18,18]);
+    const lbl=keys.length>1?keys[0]+'_to_'+keys[keys.length-1]:keys[0];
+    XL.writeFile(wb,`CC_History_Report_${lbl}.xlsx`);
+    msg.textContent=`Done ✓ — ${swaps.length} swap request(s), ${ot.length} OT day(s), ${odrd.length} OD/RD day(s), ${hist.length} change(s).`;
+  }catch(e){ msg.textContent='Failed: '+(e.message||e); }
+  btn.disabled=false;
+}
 // per-cell history inside the shift window
 async function loadCellHistory(sid,day){
   const el=document.getElementById('cellHist'); if(!el) return;
@@ -2318,6 +2447,7 @@ async function exitViewAs(){
 }
 
 function updateUserUI(){
+  try{ if(typeof statusWidgetInit==='function'&&currentProfile&&(!document.getElementById('statusFab')||_as.staffId!==currentProfile.staff_id||!_as.timer)) statusWidgetInit(); }catch(_){}
   const name=currentProfile.display_name||currentUser?.email||'User';
   const role=currentProfile.app_role==='admin'?'Admin':(currentProfile.staff_role||'Staff');
   const isAdmin=currentProfile.app_role==='admin';
@@ -2449,7 +2579,7 @@ async function syncStaffFromUsers(){
 
 async function loadSchedule(){
   refreshActiveStaff();
-  schedData={}; otData={};
+  schedData={}; otData={}; otLost={};
   // Collect all month_keys needed (weekly view may span 2 months)
   const viewDays=getViewDays();
   const monthKeys=[...new Set(viewDays.map(d=>d.year+'-'+(d.month+1)))];
@@ -2462,8 +2592,9 @@ async function loadSchedule(){
       schedData[simpleKey]=r.shift;
       schedData[key]=r.shift;
       if(r.ot_hours||r.ot_start){
-        otData[simpleKey]={hours:r.ot_hours||0,start:r.ot_start||'',end:r.ot_end||'',type:r.ot_type||'OT'};
-        otData[key]={hours:r.ot_hours||0,start:r.ot_start||'',end:r.ot_end||'',type:r.ot_type||'OT'};
+        const _T=MC_FAM.has(r.shift)?otLost:otData;
+        _T[simpleKey]={hours:r.ot_hours||0,start:r.ot_start||'',end:r.ot_end||'',type:r.ot_type||'OT'};
+        _T[key]={hours:r.ot_hours||0,start:r.ot_start||'',end:r.ot_end||'',type:r.ot_type||'OT'};
       }
       if(r.remark){
         remarkData[simpleKey]=r.remark;
@@ -2504,7 +2635,21 @@ async function loadViewTasks(){
 const toMin=t=>{ const [h,m]=String(t||'0:0').split(':').map(Number); return h*60+(m||0); };
 function supportTasks(sid,y,m0,d){
   if(hiddenDay(d,m0,y)) return [];
-  return (tasksMap[sid+'_'+ymdStr(y,m0,d)]||[]).filter(t=>TASK_TYPES.find(x=>x.code===t.task_type)?.covers);
+  const real=(tasksMap[sid+'_'+ymdStr(y,m0,d)]||[]).filter(t=>TASK_TYPES.find(x=>x.code===t.task_type)?.covers);
+  if(real.length) return real;
+  // Default: Quality Assurance staff support Inbound at the task type's default hours (08:00–11:00) on every day they work
+  const st=staffList.find(x=>String(x.id)===String(sid));
+  if(st&&/quality|^qa$/i.test(st.staff_role||'')){
+    const sh=getS(sid,d,m0,y);
+    if(!sh||LEAVE_NO_OT.has(sh)||['OD','RD','O'].includes(sh)) return [];
+    const tt=TASK_TYPES.find(x=>x.code==='Support Inbound'&&x.covers);
+    if(!tt) return [];
+    let a=toMin(tt.start||'08:00'), b=toMin(tt.end||'11:00');
+    const S=getShiftStart(sh), E=getShiftEnd(sh);
+    if(Number.isFinite(S)&&Number.isFinite(E)&&E>S){ a=Math.max(a,S); b=Math.min(b,E); }
+    if(b-a>=15) return [{id:null,staff_id:sid,task_type:'Support Inbound',start_time:minsToTime(a),duration_mins:b-a,_auto:true}];
+  }
+  return [];
 }
 // Tasks that take the person OFF calls (Quiz, Training, Coaching… — any type without "covers")
 function fmtHM(m){return String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0');}
@@ -2772,7 +2917,7 @@ async function saveShift(staffId,day,val,monthOverride,noUnpublish=false){
     delete remarkData[fullKey];
   } else {
     // Preserve existing OT when reassigning shift — except full-day leave, which cancels that day's OT
-    const existingOt=LEAVE_NO_OT.has(val)?null:(otData[simpleKey]||otData[fullKey]);
+    const existingOt=(LEAVE_NO_OT.has(val)&&!MC_FAM.has(val))?null:(otData[simpleKey]||otData[fullKey]||otLost[simpleKey]||otLost[fullKey]);
     const {error}=await sb.from('schedule').upsert({
       staff_id:staffId, month_key, day:parseInt(day), shift:val,
       ot_hours:existingOt?.hours||null,
@@ -2783,8 +2928,16 @@ async function saveShift(staffId,day,val,monthOverride,noUnpublish=false){
     if(error){ console.error('Upsert shift error:',error.message); toast(error.message.replace(/^.*(NO_DELETE|NEEDS_APPROVAL|ADMIN_ONLY):\s*/,''),'err'); return false; }
     schedData[simpleKey]=val;
     schedData[fullKey]=val;
-    if(!existingOt){ delete otData[simpleKey]; delete otData[fullKey]; }
-    if(LEAVE_NO_OT.has(val)&&prevOT) toast(`OT on day ${day} removed — ${staffName.split(' ')[0]} is on ${val}`,'ok');
+    if(MC_FAM.has(val)&&existingOt){
+      otLost[simpleKey]={...existingOt}; otLost[fullKey]={...existingOt};
+      delete otData[simpleKey]; delete otData[fullKey];
+      if(prevOT) toast(`OT on day ${day} cancelled — ${staffName.split(' ')[0]} is on ${val}. Kept as a dimmed record.`,'ok');
+    } else {
+      delete otLost[simpleKey]; delete otLost[fullKey];
+      if(existingOt){ otData[simpleKey]={...existingOt}; otData[fullKey]={...existingOt}; }
+      else { delete otData[simpleKey]; delete otData[fullKey]; }
+      if(LEAVE_NO_OT.has(val)&&prevOT) toast(`OT on day ${day} removed — ${staffName.split(' ')[0]} is on ${val}`,'ok');
+    }
   }
   renderSchedule();
   if(month_key===cy+'-'+(cm+1)&&(prevShift||'')!==(val||'')) queueBreakReplan(parseInt(day));
@@ -2827,8 +2980,30 @@ async function runBreakReplan(){
   if(manual.length) toast(`☕ ${manual.map(d=>d+' '+MONTHS[cm].slice(0,3)).join(', ')} has hand-edited breaks — re-check it in Breaks`,'err');
 }
 
-async function saveOT(staffId,day,hours,start,end,otType){
+async function saveOT(staffId,day,hours,start,end,otType,opt){
   const month_key=cy+'-'+(cm+1);
+  { // OT on an MC day is a permanent record: dimmed only. It can be removed only by an OT swap/offer, or by a TL giving a reason.
+    const k1=staffId+'_'+day, k2=k1+'_'+month_key;
+    const sh0=schedData[k2]??schedData[k1]??'';
+    const lost=otLost[k2]||otLost[k1]||null;
+    if(MC_FAM.has(sh0)&&hours>0){ toast('This agent is on MC — OT cannot be added to an MC day','err'); return; }
+    if(lost&&!hours){
+      let why;
+      if(opt&&opt.swap) why='OT given to another agent (swap/offer approved)';
+      else if(!canAssignShift()){ toast('Only a TL, manager or admin can cancel OT on an MC day','err'); return; }
+      else{
+        why=(window.prompt('This OT belongs to an MC day, so it is kept as a record (dimmed) and cannot simply be deleted.\n\nTo cancel it, type the reason (for example: "TL approved - agent not required to do the OT"):')||'').trim();
+        if(!why){ toast('OT kept as a dimmed record','ok'); return; }
+      }
+      const me=(staffList.find(x=>currentProfile&&x.id===currentProfile.staff_id)||{}).name||'TL';
+      const cur=remarkData[k2]||remarkData[k1]||'';
+      const nr=(cur?cur+' | ':'')+'OT '+(lost.start&&lost.end?lost.start+'-'+lost.end:(lost.hours||0)+'h')+' cancelled: '+why+' ('+me+')';
+      const {error}=await sb.from('schedule').update({ot_hours:null,ot_start:null,ot_end:null,ot_type:null,remark:nr}).eq('staff_id',staffId).eq('month_key',month_key).eq('day',day);
+      if(error){ toast('Could not cancel OT: '+error.message,'err'); return; }
+      delete otLost[k1]; delete otLost[k2]; remarkData[k1]=nr; remarkData[k2]=nr;
+      renderSchedule(); return;
+    }
+  }
   // Record previous state for undo
   const prevShift=schedData[staffId+'_'+day+'_'+month_key]??schedData[staffId+'_'+day]??null;
   const prevOT=otData[staffId+'_'+day+'_'+month_key]??otData[staffId+'_'+day]??null;
@@ -2860,7 +3035,7 @@ function getOTHours(sid,d){const o=getOT(sid,d);return o?o.hours:0;}
 // ── SCHEDULE RENDER ──
 function dim(y,m){return new Date(y,m+1,0).getDate()}
 function fday(y,m){return new Date(y,m,1).getDay()}
-function isPH(d){return(PH[cm]||[]).includes(d)}
+function isPH(d){return !!phName(cy,cm+1,d)||(PH[cm]||[]).includes(d)}
 function getDateRemark(d){return dateRemarks[cy+'-'+(cm+1)+'-'+d]||null;}
 function remarkKey(y,m,d){return y+'-'+(m+1)+'-'+d;}
 // Staff without schedule rights only see days that have been published
@@ -3015,7 +3190,7 @@ function renderSchedule(){
       if(on){ const full=Object.keys(alAvail.days).filter(d=>alState(+d).state==='full').length;
         lg.innerHTML=`<b style="color:var(--text)">🏖️ AL availability</b><span><span class="al-dot al-open"></span> Open</span><span><span class="al-dot al-low"></span> Almost full</span><span><span class="al-dot al-full"></span> Full — AL can't be applied</span><span><span class="al-dot al-locked"></span> Published — planned leave closed</span><span style="color:var(--text3)">Coloured line under each date · hover / tap Apply leave for details${full?` · ${full} day${full>1?'s':''} full this month`:''}</span>`; } } }catch(_){}
   try{ updateBulkUndoBtn(); }catch(_){}
-  try{ computeCompliance(); updateComplianceBtn(); const ab=document.getElementById('auditBtn'); if(ab) ab.style.display=(!viewerRestricted()&&canAssignShift())?'':'none'; }catch(e){ console.warn('compliance',e); }
+  try{ computeCompliance(); updateComplianceBtn(); const ab=document.getElementById('auditBtn'); if(ab) ab.style.display=(!viewerRestricted()&&canAssignShift())?'':'none'; const ae=document.getElementById('auditExportBtn'); if(ae) ae.style.display=(!viewerRestricted()&&canAssignShift())?'':'none'; const mo=document.getElementById('mcOtBtn'); if(mo) mo.style.display=(!viewerRestricted()&&canAssignShift())?'':'none'; }catch(e){ console.warn('compliance',e); }
   try{ updateMcPendingBtn(); updateMyDayBtn(); setTimeout(scrollGridToToday,0); mobileLanding(); }catch(_){}
   const srch=document.getElementById('srch').value.toLowerCase();
   const tf=document.getElementById('tfil').value;
@@ -3205,7 +3380,7 @@ function renderSchedule(){
           // Per-day publish check
           const dayPub=!restrictView||isDayPublished(d,vd.month!==undefined?vd.month:cm,vd.year||cy);
           const sh=dayPub?getS(x.id,d,vd.month!==undefined?vd.month:cm,vd.year||cy):'';
-          const ph=dayPub&&isPH(d);
+          const ph=dayPub&&isPH(d)&&!!phName(vd.year||cy,(vd.month!==undefined?vd.month:cm)+1,d,x);
           // Detect half-day codes: "M-H1AL", "MD-H2AL" OR plain "H1AL","H2AL"
           const halfDayMatch=sh?sh.match(/^([A-Z][A-Z0-9]*)-(H[12]AL)$/):null;
           const isPlainHalfDay=!halfDayMatch&&(sh==='H1AL'||sh==='H2AL');
@@ -3271,7 +3446,8 @@ function renderSchedule(){
           const otTypeDef=otObj?otTypes.find(t=>t.code===otObj.type):null;
           const otColor='#111827'; // OT is always near-black with amber text so it never blends with a shift colour
           const otDisplay=otObj?(otObj.start&&otObj.end?otObj.start+'-'+otObj.end:ot+'h'):'';
-          const otTitle=otObj?`${otTypeDef?otTypeDef.label:'OT'}: ${otObj.start&&otObj.end?otObj.start+'–'+otObj.end:ot+'h'}`:(sh?'Click to add OT':'');
+          const phOTname=(otObj&&ot)?phName(vd.year||cy,(vd.month!==undefined?vd.month:cm)+1,d,x):'';
+          const otTitle=otObj?`${otTypeDef?otTypeDef.label:'OT'}: ${otObj.start&&otObj.end?otObj.start+'–'+otObj.end:ot+'h'}${phOTname?' · ⚠ OT on public holiday ('+phOTname+')':''}`:(sh?'Click to add OT':'');
           const otClickable=cellCanAssign&&sh;
           // Determine if OT is before or after shift based on start time vs shift start
           // Pre-shift: OT-Pre type or start time before 12:00
@@ -3284,10 +3460,16 @@ function renderSchedule(){
           const otShort=otObj?(otObj.start&&otObj.end
             ?[otObj.start,otObj.end].map(t=>{const [h,m]=String(t).split(':');return +h+(m&&m!=='00'?':'+m:'');}).join('-')
             :ot+'h'):'';
+          const lostObj=(dayPub&&sh&&MC_FAM.has(sh)&&!ot)?(otLost[x.id+'_'+d]||otLost[x.id+'_'+d+'_'+(vd.year||cy)+'-'+((vd.month!==undefined?vd.month:cm)+1)]||null):null;
+          const lostShort=lostObj?(lostObj.start&&lostObj.end
+            ?[lostObj.start,lostObj.end].map(t=>{const [h,m]=String(t).split(':');return +h+(m&&m!=='00'?':'+m:'');}).join('-')
+            :(lostObj.hours||0)+'h'):'';
+          const otLostHtml=lostObj&&!showPending
+            ?`<div class="ot-split-bot ot-lost" title="OT cancelled — on ${sh} (kept as record)"><span class="t-short">${lostShort}</span><span class="t-full">${lostShort}</span></div>`:'';
           const otSplit=ot&&sh&&!showPending
-            ?`<div class="ot-split-bot" style="background:${otColor}${isPreShift?';order:-1':''}" title="${otTitle}"
+            ?`<div class="ot-split-bot${phOTname?' ot-ph':''}" style="background:${otColor}${isPreShift?';order:-1':''}" title="${otTitle}"
                 ${otClickable?`ondblclick="event.stopPropagation();openOTModal('${x.id}',${d},'${x.name.replace(/"/g,'&quot;')}')"`:''}>
-                <span class="t-short">${otShort}</span><span class="t-full">${otDisplay}</span></div>`:'';
+                <span class="t-short">${otShort}${phOTname?'🎌':''}</span><span class="t-full">${otDisplay}${phOTname?' 🎌':''}</span></div>`:'';
           return`<td style="${tdStyle}" class="${isWknd?'wk-cell':''}"><div class="shift-ot-wrap">
             <div class="ot-cell ${ot&&isPreShift&&!otSplit?'has-ot ot-above':(otClickable&&!ot?'no-ot editable-empty ot-above':'no-ot ot-above')}" 
               style="${ot&&isPreShift&&!otSplit?'background:'+otColor+';':''}order:-1"
@@ -3305,11 +3487,11 @@ function renderSchedule(){
                   ${isApprover2?`onclick="switchTab('requests')"`:''}>
                   ${pendCode}<div class="cell-pending-dot" style="background:#d97706"></div>
                 </div>`
-              : `<div class="cell shift-main ${cls}${otSplit?' ot-split':''}${cellCanAssign?' editable':''}${isCopied?' copied':''}${isFocused?' focused':''}${isSelected?' selected':''}" ${cellStyle} data-sid="${x.id}" data-day="${d}" data-name="${x.name.replace(/"/g,'&quot;')}" title="${cellTitle}" ${cellCanAssign?`
+              : `<div class="cell shift-main ${cls}${(otSplit||otLostHtml)?' ot-split':''}${cellCanAssign?' editable':''}${isCopied?' copied':''}${isFocused?' focused':''}${isSelected?' selected':''}" ${cellStyle} data-sid="${x.id}" data-day="${d}" data-name="${x.name.replace(/"/g,'&quot;')}" title="${cellTitle}" ${cellCanAssign?`
                 onmousedown="handleCellMouseDown(this.dataset.sid,this.dataset.day,this.dataset.name,event)"
                 onmouseenter="handleCellMouseEnter(this.dataset.sid,this.dataset.day,event)"
                 ondblclick="handleCellDblClick(this.dataset.sid,this.dataset.day,this.dataset.name,event)"
-              `:((currentProfile&&currentProfile.staff_id===x.id&&(vd.month??cm)===cm)?`onclick="openMyDay(${d})" onmouseover="this.style.cursor='pointer'"`:'')}>${halfSplit||(otSplit?`<span class="ot-split-top">${disp}</span>${otSplit}`:disp)}${remarkDot}</div>`
+              `:((currentProfile&&currentProfile.staff_id===x.id&&(vd.month??cm)===cm)?`onclick="openMyDay(${d})" onmouseover="this.style.cursor='pointer'"`:'')}>${halfSplit||(otSplit?`<span class="ot-split-top">${disp}</span>${otSplit}`:(otLostHtml?`<span class="ot-split-top">${disp}</span>${otLostHtml}`:disp))}${remarkDot}</div>`
             }
             <div class="ot-cell ${ot&&!isPreShift&&!otSplit?'has-ot ot-below editable-ot':(otClickable&&!ot?'no-ot editable-empty ot-below':'no-ot ot-below')}"
               style="${ot&&!isPreShift&&!otSplit?'background:'+otColor+';':''}"
@@ -3620,7 +3802,7 @@ function openModal(type,...args){
       <label>Display name</label><input id="uN" placeholder="Ahmad Bin Ali">
       <label>Email address</label><input id="uE" type="email" placeholder="ahmad.ali@xox.com.my" style="text-transform:lowercase">
       <label>Username</label><input id="uU" placeholder="ahmad.ali" style="text-transform:lowercase">
-      <label>Password</label><input id="uP" type="password" placeholder="Min 6 characters">
+      <label>Password</label><input id="uP" type="password" placeholder="Min 8 characters">
       <div class="mf-row">
         <div><label>App role</label><select id="uA"><option value="staff">Staff</option><option value="admin">Admin</option></select></div>
         <div><label>Staff role</label><select id="uR" onchange="roleSelectChanged(this)">${roleOptionsHtml()}</select></div>
@@ -3644,7 +3826,7 @@ function openModal(type,...args){
       <label>Username</label>
       <input id="elUser" value="${suggested}" style="width:100%;font-family:'DM Sans',sans-serif;font-size:13px;height:34px;padding:0 10px;border:1px solid var(--border2);border-radius:var(--r);background:var(--surface);color:var(--text);outline:none">
       <label>Password</label>
-      <input id="elPw" type="password" placeholder="Min 6 characters" style="width:100%;font-family:'DM Sans',sans-serif;font-size:13px;height:34px;padding:0 10px;border:1px solid var(--border2);border-radius:var(--r);background:var(--surface);color:var(--text);outline:none">
+      <input id="elPw" type="password" placeholder="Min 8 characters" style="width:100%;font-family:'DM Sans',sans-serif;font-size:13px;height:34px;padding:0 10px;border:1px solid var(--border2);border-radius:var(--r);background:var(--surface);color:var(--text);outline:none">
       <label>App role</label>
       <select id="elAppRole" style="width:100%;font-family:'DM Sans',sans-serif;font-size:13px;height:34px;padding:0 10px;border:1px solid var(--border2);border-radius:var(--r);background:var(--surface);color:var(--text);outline:none">
         <option value="staff">Staff</option>
@@ -4391,7 +4573,23 @@ function calcOTHours(){
 
 async function doSaveOT(sid,day,hours,start,end){
   const otType=document.getElementById('otTypeVal')?.value||'OT';
+  let rmNote=null;
+  if(!hours){   // removing a booked OT needs a reason (kept in the day's remark)
+    const mk0=cy+'-'+(cm+1), ex=otData[sid+'_'+day+'_'+mk0]||otData[sid+'_'+day];
+    const onMC=MC_FAM.has(getS(sid,day)||'');
+    if(ex&&!onMC){
+      const why=(window.prompt('Why is this OT being removed? (required — saved in the day remark)\n\nFor example: agent swapped it, agent unwell, no longer needed')||'').trim();
+      if(!why){ toast('OT not removed — a reason is required','err'); return; }
+      const me=(staffList.find(x=>currentProfile&&x.id===currentProfile.staff_id)||{}).name||'TL';
+      rmNote='OT '+(ex.start&&ex.end?ex.start+'-'+ex.end:(ex.hours||0)+'h')+' removed: '+why+' ('+me+')';
+    }
+  }
   await saveOT(sid,day,hours,start,end,otType);
+  if(rmNote){
+    const k1=sid+'_'+day, k2=k1+'_'+cy+'-'+(cm+1), cur=remarkData[k2]||remarkData[k1]||'', nr=(cur?cur+' | ':'')+rmNote;
+    const {error}=await sb.from('schedule').update({remark:nr}).eq('staff_id',sid).eq('month_key',cy+'-'+(cm+1)).eq('day',day);
+    if(!error){ remarkData[k1]=nr; remarkData[k2]=nr; }
+  }
   closeModal();
   if(hours) toast(`OT saved: ${start&&end?start+'–'+end+' ':''} ${hours}h ✓`,'ok');
   else toast('OT removed','ok');
@@ -4526,7 +4724,7 @@ function openChangePassword(){
     <input id="cpCur" type="password" placeholder="Your current password"
       style="font-size:12px;border:0.5px solid var(--border2);border-radius:var(--r);padding:6px 10px;background:var(--surface);color:var(--text);width:100%">
     <label style="margin-top:8px">New password</label>
-    <input id="cpNew" type="password" placeholder="Min 6 characters"
+    <input id="cpNew" type="password" placeholder="Min 8 characters"
       style="font-size:12px;border:0.5px solid var(--border2);border-radius:var(--r);padding:6px 10px;background:var(--surface);color:var(--text);width:100%">
     <label style="margin-top:8px">Confirm new password</label>
     <input id="cpNew2" type="password" placeholder="Repeat new password"
@@ -4543,33 +4741,22 @@ async function doChangePassword(){
   const nw2=document.getElementById('cpNew2').value;
   const errEl=document.getElementById('cpErr');
   if(!cur){errEl.textContent='Enter your current password.';return;}
-  if(!nw||nw.length<6){errEl.textContent='New password must be at least 6 characters.';return;}
+  if(!nw||nw.length<8){errEl.textContent='New password must be at least 8 characters.';return;}
   if(nw!==nw2){errEl.textContent='New passwords do not match.';return;}
+  if(nw===cur){errEl.textContent='The new password must be different from the current one.';return;}
   errEl.textContent='Verifying…';
-
-  // Verify current password via Supabase Auth re-sign-in
-  const email=currentProfile?.email||null;
-  if(email){
-    const {error:verifyErr}=await sb.auth.signInWithPassword({email,password:cur});
-    if(verifyErr){errEl.textContent='Current password is incorrect.';return;}
-    // Update via Supabase Auth
-    const {error}=await sb.auth.updateUser({password:nw});
-    if(error){errEl.textContent=error.message;return;}
-  } else {
-    // Fallback: legacy SHA-256 check + update
-    const username=currentProfile?.username||null;
-    if(!username){errEl.textContent='Session error — please log in again.';return;}
-    const {data:user,error:fetchErr}=await sb.from('app_users').select('password_hash,salt,id').eq('username',username).single();
-    if(fetchErr||!user){errEl.textContent='Could not verify identity.';return;}
-    const curHash=await hashPassword(cur,user.salt);
-    if(curHash!==user.password_hash){errEl.textContent='Current password is incorrect.';return;}
-    const salt=genSalt();
-    const password_hash=await hashPassword(nw,salt);
-    const {error}=await sb.from('app_users').update({password_hash,salt}).eq('id',user.id);
-    if(error){errEl.textContent=error.message;return;}
-  }
+  // The real login password lives in Supabase Auth — always change it there.
+  let email=(viewAs?_realProfile:currentProfile)?.email||null;
+  if(!email){ const {data:{user}}=await sb.auth.getUser(); email=user?.email||null; }
+  if(!email){errEl.textContent='Session expired — please sign out and sign in again.';return;}
+  const {error:verifyErr}=await sb.auth.signInWithPassword({email,password:cur});
+  if(verifyErr){errEl.textContent='Current password is incorrect.';return;}
+  const {error}=await sb.auth.updateUser({password:nw,data:{temp_password:false}});
+  if(error){errEl.textContent=error.message;return;}
+  // Confirm the server really holds the new password (and the old one no longer works)
+  errEl.textContent='Checking…';
   closeModal();
-  toast('Password changed successfully ✓','ok');
+  toast('Password changed ✓ — use the new password next time you sign in','ok');
 }
 
 async function doResetPw(uid){
@@ -5478,30 +5665,6 @@ function togglePerm(role,perm,val){
   if(statusEl){statusEl.textContent='● Unsaved changes';statusEl.style.color='var(--amber)';}
 }
 
-async function doChangePassword(){
-  const cur=document.getElementById('cpCur').value;
-  const nw=document.getElementById('cpNew').value;
-  const con=document.getElementById('cpCon').value;
-  const err=document.getElementById('cpErr');
-  err.textContent='';
-  if(!cur||!nw||!con){err.textContent='All fields required.';return}
-  if(nw.length<6){err.textContent='New password must be at least 6 characters.';return}
-  if(nw!==con){err.textContent='New passwords do not match.';return}
-  if(!currentUser){err.textContent='Not logged in.';return}
-  // Verify current password
-  const {data:u}=await sb.from('app_users').select('*').eq('id',currentUser.id).single();
-  if(!u){err.textContent='User not found.';return}
-  const curHash=await hashPassword(cur,u.salt);
-  if(curHash!==u.password_hash){err.textContent='Current password is incorrect.';return}
-  const salt=genSalt();
-  const password_hash=await hashPassword(nw,salt);
-  const {error}=await sb.from('app_users').update({password_hash,salt}).eq('id',currentUser.id);
-  if(error){err.textContent=error.message;return}
-  document.getElementById('cpCur').value='';
-  document.getElementById('cpNew').value='';
-  document.getElementById('cpCon').value='';
-  toast('Password changed successfully!','ok');
-}
 
 // Apply permissions when checking if user can do something
 function canAssignShift(){
@@ -5613,9 +5776,9 @@ async function applyCells(changes,label,opts={}){
     const key=c.sid+'_'+day+'_'+mk; if(seen.has(key)) continue; seen.add(key);
     const sk=c.sid+'_'+day, fk=sk+'_'+mk;
     const prevShift=schedData[fk]??'';
-    const prevOT=otData[fk]??null;
+    const prevOT=otData[fk]??otLost[fk]??null;
     const newShift=c.shift||'';
-    const newOT=(newShift&&!LEAVE_NO_OT.has(newShift))?(c.ot===undefined?prevOT:c.ot):null;
+    const newOT=MC_FAM.has(newShift)?prevOT:((newShift&&!LEAVE_NO_OT.has(newShift))?(c.ot===undefined?prevOT:c.ot):null);   // OT on an MC day is a record: pasting never wipes it
     const hasRemark=!!remarkData[fk];
     if(prevShift===newShift&&JSON.stringify(prevOT||null)===JSON.stringify(newOT||null)&&!(newShift===''&&hasRemark)) continue;
     undo.push({staffId:c.sid,day,month_key:mk,prevShift:prevShift||null,prevOT:prevOT?{...prevOT}:null});
@@ -5647,8 +5810,8 @@ async function applyCells(changes,label,opts={}){
   ups.forEach(u=>{
     const sk=u.staff_id+'_'+u.day, fk=sk+'_'+u.month_key;
     schedData[sk]=u.shift; schedData[fk]=u.shift;
-    if(u.ot_hours||u.ot_start){ const o={hours:u.ot_hours||0,start:u.ot_start||'',end:u.ot_end||'',type:u.ot_type||'OT'}; otData[sk]=o; otData[fk]={...o}; }
-    else { delete otData[sk]; delete otData[fk]; }
+    delete otData[sk]; delete otData[fk]; delete otLost[sk]; delete otLost[fk];
+    if(u.ot_hours||u.ot_start){ const o={hours:u.ot_hours||0,start:u.ot_start||'',end:u.ot_end||'',type:u.ot_type||'OT'}; const T=MC_FAM.has(u.shift)?otLost:otData; T[sk]=o; T[fk]={...o}; }
   });
   dels.forEach(d=>{
     const sk=d.sid+'_'+d.day, fk=sk+'_'+d.mk;
@@ -6600,63 +6763,29 @@ async function loadRemarks(){
   injectMalaysianHolidays();
 }
 
-function injectMalaysianHolidays(){
-  // Malaysian national public holidays
-  const PH={
+// Company public holidays (XOX memo "2026 Public Holidays", Selangor office). Replacement days follow the memo's rule 1.
+// Saturday PH has no replacement (rule 3). Kuala Lumpur-only and Penang-only holidays are left out.
+const PH_LIST={
     // 2025
-    '2025-1-1':  'New Year\'s Day',
-    '2025-1-29': 'Chinese New Year',
-    '2025-1-30': 'Chinese New Year (2nd day)',
-    '2025-2-1':  'Federal Territory Day',
-    '2025-3-30': 'Hari Raya Aidilfitri',
-    '2025-3-31': 'Hari Raya Aidilfitri (2nd day)',
-    '2025-5-1':  'Labour Day',
-    '2025-5-12': 'Wesak Day',
-    '2025-6-2':  'King\'s Birthday',
-    '2025-6-6':  'Hari Raya Aidiladha',
-    '2025-6-7':  'Hari Raya Aidiladha (2nd day)',
-    '2025-6-26': 'Awal Muharram',
-    '2025-8-31': 'Hari Merdeka',
-    '2025-9-16': 'Malaysia Day',
-    '2025-9-4':  'Maulidur Rasul',
-    '2025-10-20':'Deepavali',
-    '2025-12-25':'Christmas Day',
+    '2025-1-1':'New Year\'s Day','2025-1-29':'Chinese New Year','2025-1-30':'Chinese New Year (2nd day)','2025-3-30':'Hari Raya Aidilfitri','2025-3-31':'Hari Raya Aidilfitri (2nd day)',
+    '2025-5-1':'Labour Day','2025-5-12':'Wesak Day','2025-6-2':'King\'s Birthday','2025-6-6':'Hari Raya Aidiladha','2025-6-7':'Hari Raya Aidiladha (2nd day)','2025-6-26':'Awal Muharram',
+    '2025-8-31':'Hari Merdeka','2025-9-4':'Maulidur Rasul','2025-9-16':'Malaysia Day','2025-10-20':'Deepavali','2025-12-25':'Christmas Day',
     // 2026
-    '2026-1-1':  'New Year\'s Day',
-    '2026-1-17': 'Thaipusam',
-    '2026-1-28': 'Federal Territory Day',  
-    '2026-1-29': 'Chinese New Year',
-    '2026-1-30': 'Chinese New Year (2nd day)',
-    '2026-3-20': 'Hari Raya Aidilfitri',
-    '2026-3-21': 'Hari Raya Aidilfitri (2nd day)',
-    '2026-5-1':  'Labour Day',
-    '2026-5-31': 'Wesak Day',
-    '2026-5-27': 'Hari Raya Aidiladha',
-    '2026-6-1':  'King\'s Birthday',
-    '2026-6-16': 'Awal Muharram',
-    '2026-8-25': 'Maulidur Rasul',
-    '2026-8-31': 'Hari Merdeka',
-    '2026-9-16': 'Malaysia Day',
-    '2026-11-8': 'Deepavali',
-    '2026-12-25':'Christmas Day',
+    '2026-1-1':'New Year\'s Day','2026-2-1':'Thaipusam','2026-2-2':'Thaipusam (replacement, office staff)','2026-2-17':'Chinese New Year','2026-2-18':'Chinese New Year (2nd day)',
+    '2026-3-7':'Hari Nuzul Al-Quran*','2026-3-21':'Hari Raya Aidilfitri','2026-3-22':'Hari Raya Aidilfitri (2nd day)','2026-3-23':'Hari Raya Aidilfitri (replacement, office staff)',
+    '2026-5-1':'Labour Day','2026-5-27':'Hari Raya Qurban','2026-5-31':'Wesak Day*','2026-6-1':'Birthday of the Yang di-Pertuan Agong','2026-6-2':'Wesak Day (replacement, office staff)',
+    '2026-6-17':'Awal Muharram','2026-8-25':'Prophet Muhammad\'s Birthday','2026-8-31':'National Day','2026-9-16':'Malaysia Day',
+    '2026-11-8':'Deepavali','2026-11-9':'Deepavali (replacement, office staff)','2026-12-11':'Sultan of Selangor\'s Birthday','2026-12-25':'Christmas Day',
     // 2027
-    '2027-1-1':  'New Year\'s Day',
-    '2027-1-28': 'Federal Territory Day',
-    '2027-2-17': 'Chinese New Year',
-    '2027-2-18': 'Chinese New Year (2nd day)',
-    '2027-3-10': 'Hari Raya Aidilfitri',
-    '2027-3-11': 'Hari Raya Aidilfitri (2nd day)',
-    '2027-5-1':  'Labour Day',
-    '2027-5-16': 'Hari Raya Aidiladha',
-    '2027-5-21': 'Wesak Day',
-    '2027-6-5':  'Awal Muharram',
-    '2027-6-7':  'King\'s Birthday',
-    '2027-8-14': 'Maulidur Rasul',
-    '2027-8-31': 'Hari Merdeka',
-    '2027-9-16': 'Malaysia Day',
-    '2027-10-28':'Deepavali',
-    '2027-12-25':'Christmas Day',
-  };
+    '2027-1-1':'New Year\'s Day','2027-1-28':'Federal Territory Day','2027-2-17':'Chinese New Year','2027-2-18':'Chinese New Year (2nd day)','2027-3-10':'Hari Raya Aidilfitri','2027-3-11':'Hari Raya Aidilfitri (2nd day)',
+    '2027-5-1':'Labour Day','2027-5-16':'Hari Raya Aidiladha','2027-5-21':'Wesak Day','2027-6-5':'Awal Muharram','2027-6-7':'King\'s Birthday','2027-8-14':'Maulidur Rasul',
+    '2027-8-31':'Hari Merdeka','2027-9-16':'Malaysia Day','2027-10-28':'Deepavali','2027-12-25':'Christmas Day'
+};
+// Replacement days (a PH that fell on a Sunday) are holidays for office-hours staff only; shift staff earn RL instead when a PH falls on their Rest Day.
+const PH_OFFICE_ONLY=new Set(['2026-2-2','2026-3-23','2026-6-2','2026-11-9']);
+function phName(y,m1,d,staff){ const k=y+'-'+m1+'-'+d, n=PH_LIST[k]||''; if(n&&PH_OFFICE_ONLY.has(k)&&staff&&!staff.office_hours) return ''; return n; }
+function injectMalaysianHolidays(){
+  const PH=PH_LIST;
   // Only inject for current view month — don't overwrite user remarks
   const prefix=`${cy}-${cm+1}-`;
   Object.entries(PH).forEach(([dateKey,label])=>{
@@ -7031,7 +7160,7 @@ async function approveCancelLeave(rid){
       ot_end:existing?.ot_end||null, ot_type:existing?.ot_type||null,
     },{onConflict:'staff_id,month_key,day'});
     const sk=r.staff_id+'_'+day; const fk=r.staff_id+'_'+day+'_'+rMonthOverride;
-    schedData[sk]=restoreShift; schedData[fk]=restoreShift;
+    schedData[sk]=restoreShift; schedData[fk]=restoreShift; if(rMonthOverride===cy+'-'+(cm+1)) queueBreakReplan(+day);
     toast(`✓ Cancel approved — "${restoreShift}" shift restored`,'ok');
   } else {
     await sb.from('schedule').delete()
@@ -7097,7 +7226,7 @@ async function withdrawApprovedLeave(rid){
     // Update local memory cache
     const sk=r.staff_id+'_'+day;
     const fk=r.staff_id+'_'+day+'_'+rMonthOverride;
-    schedData[sk]=restoreShift; schedData[fk]=restoreShift;
+    schedData[sk]=restoreShift; schedData[fk]=restoreShift; if(rMonthOverride===cy+'-'+(cm+1)) queueBreakReplan(+day);
     if(existing?.ot_hours){
       const ot={hours:existing.ot_hours,start:existing.ot_start,end:existing.ot_end,type:existing.ot_type};
       otData[sk]=ot; otData[fk]=ot;
@@ -7202,27 +7331,27 @@ async function approveRequest(rid){
     // handled before the generic approve (needs admin) — see below
 
   } else if(r.type==='ot_swap'){
-    const otA=otData[r.staff_id+'_'+r.day+'_'+rMonthOverride]||otData[r.staff_id+'_'+r.day];
-    const otB=otData[r.swap_with_staff_id+'_'+r.swap_with_day+'_'+rMonthOverride]||otData[r.swap_with_staff_id+'_'+r.swap_with_day];
+    const otA=otData[r.staff_id+'_'+r.day+'_'+rMonthOverride]||otData[r.staff_id+'_'+r.day]||otLost[r.staff_id+'_'+r.day+'_'+rMonthOverride]||otLost[r.staff_id+'_'+r.day];
+    const otB=otData[r.swap_with_staff_id+'_'+r.swap_with_day+'_'+rMonthOverride]||otData[r.swap_with_staff_id+'_'+r.swap_with_day]||otLost[r.swap_with_staff_id+'_'+r.swap_with_day+'_'+rMonthOverride]||otLost[r.swap_with_staff_id+'_'+r.swap_with_day];
     if(otA) await saveOT(r.swap_with_staff_id, r.day, otA.hours, otA.start, otA.end, otA.type||'OT');
     if(otB) await saveOT(r.staff_id, r.swap_with_day, otB.hours, otB.start, otB.end, otB.type||'OT');
-    if(otA) await saveOT(r.staff_id, r.day, 0);
-    if(otB) await saveOT(r.swap_with_staff_id, r.swap_with_day, 0);
+    if(otA) await saveOT(r.staff_id, r.day, 0,'','','',{swap:true});
+    if(otB) await saveOT(r.swap_with_staff_id, r.swap_with_day, 0,'','','',{swap:true});
     toast('✓ OT swap approved — overtime slots exchanged','ok');
 
   } else if(r.type==='ot_offer'){
-    const otA=otData[r.staff_id+'_'+r.day+'_'+rMonthOverride]||otData[r.staff_id+'_'+r.day];
+    const otA=otData[r.staff_id+'_'+r.day+'_'+rMonthOverride]||otData[r.staff_id+'_'+r.day]||otLost[r.staff_id+'_'+r.day+'_'+rMonthOverride]||otLost[r.staff_id+'_'+r.day];
     if(otA){
       await saveOT(r.swap_with_staff_id, r.day, otA.hours, otA.start, otA.end, otA.type||'OT');
-      await saveOT(r.staff_id, r.day, 0);
+      await saveOT(r.staff_id, r.day, 0,'','','',{swap:true});
       toast('✓ OT offer approved — overtime transferred to colleague','ok');
     } else {
       // OT data not in memory — need to load first
       await loadSchedule();
-      const otA2=otData[r.staff_id+'_'+r.day+'_'+rMonthOverride]||otData[r.staff_id+'_'+r.day];
+      const otA2=otData[r.staff_id+'_'+r.day+'_'+rMonthOverride]||otData[r.staff_id+'_'+r.day]||otLost[r.staff_id+'_'+r.day+'_'+rMonthOverride]||otLost[r.staff_id+'_'+r.day];
       if(otA2){
         await saveOT(r.swap_with_staff_id, r.day, otA2.hours, otA2.start, otA2.end, otA2.type||'OT');
-        await saveOT(r.staff_id, r.day, 0);
+        await saveOT(r.staff_id, r.day, 0,'','','',{swap:true});
       }
       toast('✓ OT offer approved','ok');
     }
@@ -7290,6 +7419,7 @@ const SHIFT_HOURS={
 // Timeoff and Off = not available
 const ABSENT_CODES=new Set(['AL','RL','MC','MCR','MCP','EL','ELP','ELR','PH','O']);
 // Full-day leave: the person isn't working at all that day — any OT or support block on that day doesn't count
+const MC_FAM=new Set(['MC','MCP','MCR']);   // OT booked on an MC day is kept as a dimmed record (otLost), never counted
 const LEAVE_NO_OT=new Set(['AL','RL','MC','MCR','MCP','EL','ELP','ELR','UL','CL','HOSP','TO','PH']);
 
 // Half-day AL working hours for any shift: H2AL (2nd half off) works the first 4h,
@@ -7652,6 +7782,7 @@ async function adhFixSave(sid,day,fid){
 
 function adhDetail(sid){
   const r=adhLast[sid]; if(!r) return;
+  { const dsx=ymdStr(cy,cm,r.day); if(!_adhApp[dsx]&&!adhDetail._wait){ adhDetail._wait=true; adhAppFetch(dsx).then(()=>{ adhDetail._wait=false; adhDetail(sid); }); return; } }
   const _back=adhBack===sid?sid:null; adhBack=null;
   const hm=m=>m==null?'—':minsToTime(m), dur=m=>m>=60?`${Math.floor(m/60)}h ${String(m%60).padStart(2,'0')}m`:`${m}m`;
   const sd=shiftTypes.find(t=>t.code===r.sh);
@@ -7661,7 +7792,7 @@ function adhDetail(sid){
   if(r.status!=='ok'){
     body=`<div style="padding:14px;color:var(--text3)">${{nodata:'No CC Dashboard log-in data for this day yet.',pending:'The shift starts after the uploaded data ends.',noext:'No 3CX extension on this staff profile.'}[r.status]}</div>`;
   } else {
-    const ev=[];
+    const ev=[]; const app=adhAppInfo(sid,ymdStr(cy,cm,r.day));
     r.ses.forEach(([a,b])=>{ if(r.wins.some(w=>b>w.a&&a<w.b)) ev.push({a,b,t:'in'}); });
     r.gaps.forEach(g=>{
       const w=r.wins.find(w=>g.a>=w.a&&g.a<w.b)||{};
@@ -7670,11 +7801,15 @@ function adhDetail(sid){
       else if(w.first!=null&&g.b<=w.first) why=w.kind==='ot'?'OT not started yet':'not logged in yet (late)';
       else if(w.last!=null&&g.a>=w.last&&w.b<=r.cap) why=w.kind==='ot'?'left OT early':'logged out — left early';
       if(g.ob) why='on outbound call';
-      ev.push({a:g.a,b:g.b,t:'away',pl:g.pl,ob:g.ob,why});
+      let ap=null; if(!g.ob&&(g.b-g.a)>=2){ let best=null,bo=0; app.idle.forEach(x=>{ const o=Math.min(g.b,x.b)-Math.max(g.a,x.a); if(o>bo){bo=o;best=x;} }); ap=best?{st:best.e.status,a:best.a,b:best.b}:{none:true}; }
+      ev.push({a:g.a,b:g.b,t:'away',pl:g.pl,ob:g.ob,why,ap});
     });
     (r.calls?.calls||[]).forEach(c=>ev.push({a:c.a,b:c.b,t:'ob',c}));
     ev.sort((x,y)=>x.a-y.a||({in:0,away:1,ob:2}[x.t]-{in:0,away:1,ob:2}[y.t]));
     const sec=x=>x>=60?`${Math.floor(x/60)}m ${String(x%60).padStart(2,'0')}s`:`${x}s`;
+    const _tot={}; app.idle.forEach(x=>{ _tot[x.e.status]=(_tot[x.e.status]||0)+Math.max(0,x.b-x.a); });
+    const appSum=`<div style="padding:8px 10px;margin-bottom:6px;border:0.5px solid var(--border);border-radius:var(--r);background:var(--surface2);font-size:11px;line-height:1.7"><b>📋 App record</b> · in ${app.li!=null?hm(Math.round(app.li)):'—'} / out ${app.lo!=null?hm(Math.round(app.lo)):'—'} <span style="color:var(--text3)">(3CX: ${hm(r.ses.length?r.ses[0][0]:null)} / ${hm(r.ses.length?r.ses[r.ses.length-1][1]:null)})</span>
+      ${app.ent.length?(Object.keys(_tot).length?' · '+Object.entries(_tot).map(([k,v])=>`${AS_BY[k].icon} ${k.split(' (')[0]} ${Math.round(v)}m`).join(' · '):' · no idle taken'):' · <span style="color:var(--amber)">nothing tapped in the app this day</span>'}</div>`;
     const rows=ev.map(e=>{
       if(e.t==='ob'){ const t=new Date(0,0,0,0,0,e.c.s); const ts=`${String(t.getHours()).padStart(2,'0')}:${String(t.getMinutes()).padStart(2,'0')}:${String(t.getSeconds()).padStart(2,'0')}`;
         return `<tr style="border-bottom:0.5px solid var(--border);background:${tint('#8b5cf6',6)}"><td style="padding:4px 8px 4px 24px;white-space:nowrap;font-size:11px;color:#8b5cf6">📞 ${ts}</td>
@@ -7685,7 +7820,7 @@ function adhDetail(sid){
       const fid='adhfx'+e.a;
       return `<tr style="border-bottom:0.5px solid var(--border)"><td style="padding:5px 8px;white-space:nowrap"><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:${c};margin-right:6px"></span>${hm(e.a)} – ${hm(e.b)}</td>
         <td style="padding:5px 8px;text-align:right;font-weight:600;white-space:nowrap">${dur(e.b-e.a)}</td>
-        <td style="padding:5px 8px;color:${e.t==='in'||e.pl?'var(--text2)':e.ob?'#8b5cf6':'var(--red)'}">${e.t==='in'?'Logged in to queue':e.ob?'Off queue · on outbound call':'Away · '+e.why}
+        <td style="padding:5px 8px;color:${e.t==='in'||e.pl?'var(--text2)':e.ob?'#8b5cf6':'var(--red)'}">${e.t==='in'?'Logged in to queue':e.ob?'Off queue · on outbound call':'Away · '+e.why}${e.ap?(e.ap.none?` <span style="display:inline-block;margin-left:6px;padding:0 7px;border-radius:20px;font-size:10px;background:var(--amber-bg);color:var(--amber);border:0.5px solid var(--amber-bd)">app: no record</span>`:` <span style="display:inline-block;margin-left:6px;padding:0 7px;border-radius:20px;font-size:10px;background:${AS_BY[e.ap.st].color}22;color:var(--text);border:0.5px solid ${AS_BY[e.ap.st].color}">${AS_BY[e.ap.st].icon} app: ${e.ap.st.split(' (')[0]} ${hm(Math.round(e.ap.a))}–${hm(Math.round(e.ap.b))}</span>`):''}
           ${fixable?`<button onclick="adhFixToggle('${fid}')" style="float:right;font-size:10px;padding:1px 8px;border:0.5px solid var(--blue-bd);border-radius:20px;background:var(--blue-bg);color:var(--blue);cursor:pointer">＋ Add task / break</button>`:''}</td></tr>
         ${fixable?`<tr id="${fid}" style="display:none;background:var(--surface2)"><td colspan="3" style="padding:8px 10px">${adhFixForm(r,e,fid)}</td></tr>`:''}`;}).join('');
     const pos=x=>Math.max(0,Math.min(100,(x-480)/840*100)), wid=(a,b)=>Math.max(0,(Math.min(b,1320)-Math.max(a,480))/840*100);
@@ -7724,7 +7859,7 @@ function adhDetail(sid){
         <div class="scard">Outbound talk<strong>${sec(r.calls.obTalk)}</strong></div></div>`:'<div style="font-size:11px;color:var(--text3);margin-top:8px">No call data from the CC Dashboard for this day.</div>'}
       <div style="margin-top:12px;font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em">Activity</div>
       <div style="max-height:260px;overflow:auto;border:0.5px solid var(--border);border-radius:var(--r);margin-top:4px">
-        <table style="width:100%;border-collapse:collapse;font-size:12px">${rows||'<tr><td style="padding:10px;color:var(--text3)">No log-in recorded</td></tr>'}</table></div>
+        ${appSum}<table style="width:100%;border-collapse:collapse;font-size:12px">${rows||'<tr><td style="padding:10px;color:var(--text3)">No log-in recorded</td></tr>'}</table></div>
       ${r.flags.length?`<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:10px">${r.flags.map(f=>{const c=f.lvl==='bad'?['var(--red-bg)','var(--red)']:f.lvl==='warn'?['var(--amber-bg)','var(--amber)']:['var(--blue-bg)','var(--blue)'];return `<span style="font-size:11px;padding:2px 8px;border-radius:20px;background:${c[0]};color:${c[1]}">${f.t}</span>`;}).join('')}</div>`:''}`;
   }
   box.innerHTML=`<h3>🎯 ${r.s.name}</h3>
@@ -7749,6 +7884,142 @@ async function adhMonthNav(n){
   try{ await loadBreakOverrides(); }catch(_){}
   initAdherence();
 }
+
+// ══ AGENT STATUS (idle) LOG — agents tap their status; compared with 3CX in Adherence ══
+const AGENT_STATUS=[
+  {k:'Meal Break (Lunch)',icon:'🍽',grp:'Idle',color:'#f59e0b'},
+  {k:'Short Break (Team Break)',icon:'☕',grp:'Idle',color:'#f97316'},
+  {k:'Prayer (Zohor & Asar)',icon:'🕌',grp:'Idle',color:'#14b8a6'},
+  {k:'Meeting/Huddle',icon:'👥',grp:'Productivity idle',color:'#6366f1'},
+  {k:'Briefing',icon:'📣',grp:'Productivity idle',color:'#8b5cf6'},
+  {k:'Call Back',icon:'📞',grp:'Productivity idle',color:'#0ea5e9'}];
+const AS_BY=Object.fromEntries(AGENT_STATUS.map(x=>[x.k,x]));
+let _as={rows:[],open:null,timer:null,staffId:null,busy:false};
+const asToday=()=>{ const n=new Date(); return ymdStr(n.getFullYear(),n.getMonth(),n.getDate()); };
+const asMins=iso=>{ const d=new Date(iso); return d.getHours()*60+d.getMinutes()+d.getSeconds()/60; };
+function asIsAgent(){ return !!currentProfile?.staff_id; }   // everyone with a staff record can log their idle status
+function asFmtDur(ms){ const t=Math.max(0,Math.floor(ms/1000)), h=Math.floor(t/3600), m=Math.floor(t%3600/60), s2=t%60; return (h?h+':'+String(m).padStart(2,'0'):m)+':'+String(s2).padStart(2,'0'); }
+async function statusWidgetInit(){
+  const old=document.getElementById('statusFab'); 
+  if(!asIsAgent()||viewAs){ if(old) old.style.display='none'; const pp=document.getElementById('statusPanel'); if(pp) pp.style.display='none'; return; }
+  _as.staffId=currentProfile.staff_id;
+  if(!old){
+    const f=document.createElement('div'); f.id='statusFab';
+    f.style.cssText='position:fixed;right:14px;bottom:76px;z-index:900;background:var(--surface);color:var(--text);border:1px solid var(--border2);border-radius:24px;padding:9px 14px;font-size:12px;font-weight:600;box-shadow:0 4px 14px rgba(0,0,0,.18);cursor:pointer;display:flex;align-items:center;gap:7px;font-family:"DM Sans",sans-serif';
+    f.onclick=()=>asTogglePanel(); document.body.appendChild(f);
+    const p=document.createElement('div'); p.id='statusPanel';
+    p.style.cssText='position:fixed;right:14px;bottom:124px;z-index:901;width:280px;max-width:calc(100vw - 28px);background:var(--surface);color:var(--text);border:1px solid var(--border2);border-radius:14px;padding:12px;box-shadow:0 8px 28px rgba(0,0,0,.25);display:none;font-family:"DM Sans",sans-serif';
+    document.body.appendChild(p);
+  } else old.style.display='flex';
+  await asLoad(); asRender();
+  clearInterval(_as.timer); _as.timer=setInterval(asTick,1000);
+}
+async function asLoad(){
+  try{
+    // close any entry left open from a previous day (agent forgot) — flagged as auto-closed
+    const t=asToday();
+    const {data:stale}=await sb.from('agent_status_log').select('id,day,started_at').eq('staff_id',_as.staffId).is('ended_at',null).lt('day',t);
+    for(const r of (stale||[])){ const end=new Date(r.day+'T23:59:59'); await sb.from('agent_status_log').update({ended_at:end.toISOString(),auto_closed:true}).eq('id',r.id); }
+    const {data}=await sb.from('agent_status_log').select('*').eq('staff_id',_as.staffId).eq('day',t).order('started_at');
+    _as.rows=data||[]; _as.open=_as.rows.find(r=>!r.ended_at&&AS_BY[r.status])||null;
+  }catch(e){ console.warn('status log',e); }
+}
+function asState(){
+  const last=[..._as.rows].reverse().find(r=>r.status==='Logged in'||r.status==='Logged out');
+  const loggedIn=last&&last.status==='Logged in';
+  return {loggedIn,last};
+}
+function asRender(){
+  const f=document.getElementById('statusFab'), p=document.getElementById('statusPanel'); if(!f) return;
+  const {loggedIn}=asState();
+  if(_as.open){ const d=AS_BY[_as.open.status]; f.style.borderColor=d.color; f.innerHTML=`<span>${d.icon}</span><span>${_as.open.status.split(' (')[0]}</span><span id="statusTimer" style="font-variant-numeric:tabular-nums;color:var(--text2)"></span>`; }
+  else if(loggedIn){ f.style.borderColor='#22c55e'; f.innerHTML='<span style="width:9px;height:9px;border-radius:50%;background:#22c55e;display:inline-block"></span><span>On calls</span>'; }
+  else { f.style.borderColor='var(--border2)'; f.innerHTML='<span style="width:9px;height:9px;border-radius:50%;background:#94a3b8;display:inline-block"></span><span>Not logged in</span>'; }
+  asTick();
+  if(p&&p.style.display!=='none') asRenderPanel();
+}
+function asTick(){ const el=document.getElementById('statusTimer'); if(el&&_as.open) el.textContent=asFmtDur(Date.now()-new Date(_as.open.started_at)); const pt=document.getElementById('statusPanelTimer'); if(pt&&_as.open) pt.textContent=asFmtDur(Date.now()-new Date(_as.open.started_at)); }
+function asTogglePanel(){ const p=document.getElementById('statusPanel'); if(!p) return; if(p.style.display==='none'){ asRenderPanel(); p.style.display='block'; } else p.style.display='none'; }
+function asRenderPanel(){
+  const p=document.getElementById('statusPanel'); const {loggedIn}=asState();
+  const btn=(x)=>`<button onclick="asStart('${x.k.replace(/'/g,"\\'")}')" style="display:flex;align-items:center;gap:8px;width:100%;text-align:left;padding:9px 10px;margin-bottom:5px;border:1px solid ${_as.open&&_as.open.status===x.k?x.color:'var(--border)'};border-radius:10px;background:${_as.open&&_as.open.status===x.k?x.color+'22':'var(--surface2)'};color:var(--text);font-size:13px;cursor:pointer;font-family:inherit"><span style="font-size:16px">${x.icon}</span>${x.k}</button>`;
+  p.innerHTML=`<div style="font-size:11px;color:var(--text3);margin-bottom:6px">Tap when you leave the queue. Log in / out of 3CX and this app at the same time.</div>
+    ${!loggedIn?`<button onclick="asLogin()" style="width:100%;padding:10px;margin-bottom:8px;border:0;border-radius:10px;background:#16a34a;color:#fff;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit">▶ I have logged in to 3CX</button>`:''}
+    <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);margin:4px 0">Idle</div>
+    ${AGENT_STATUS.filter(x=>x.grp==='Idle').map(btn).join('')}
+    <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);margin:6px 0 4px">Productivity idle</div>
+    ${AGENT_STATUS.filter(x=>x.grp!=='Idle').map(btn).join('')}
+    ${_as.open?`<button onclick="asBack()" style="width:100%;padding:10px;margin:4px 0;border:0;border-radius:10px;background:#2563eb;color:#fff;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit">✔ Back on calls <span id="statusPanelTimer" style="font-weight:500;opacity:.85"></span></button>`:''}
+    ${loggedIn?`<button onclick="asLogout()" style="width:100%;padding:9px;margin-top:6px;border:1px solid var(--red);border-radius:10px;background:transparent;color:var(--red);font-weight:600;font-size:12px;cursor:pointer;font-family:inherit">⏻ I have logged out of 3CX (sign out)</button>`:''}`;
+  asTick();
+}
+async function asInsert(status,end){
+  const now=new Date().toISOString();
+  const row={staff_id:_as.staffId,day:asToday(),status,started_at:now,ended_at:end?now:null,set_by:currentProfile.display_name||currentProfile.username||''};
+  const {data,error}=await sb.from('agent_status_log').insert(row).select().single();
+  if(error){ toast('Could not save status: '+error.message,'err'); return null; }
+  _as.rows.push(data); return data;
+}
+async function asCloseOpen(){
+  if(!_as.open) return;
+  const now=new Date().toISOString();
+  const {error}=await sb.from('agent_status_log').update({ended_at:now}).eq('id',_as.open.id);
+  if(!error){ _as.open.ended_at=now; _as.open=null; }
+}
+async function asLogin(){ if(_as.busy) return; _as.busy=true; try{ await asInsert('Logged in',true); asRender(); toast('Logged in — have a good shift','ok'); } finally{ _as.busy=false; } }
+async function asStart(status){
+  if(_as.busy) return; _as.busy=true;
+  try{
+    if(_as.open&&_as.open.status===status){ await asCloseOpen(); asRender(); return; }
+    await asCloseOpen();
+    if(!asState().loggedIn) await asInsert('Logged in',true);
+    const r=await asInsert(status,false); if(r) _as.open=r;
+    asRender(); const p=document.getElementById('statusPanel'); if(p) p.style.display='none';
+    toast((AS_BY[status].icon)+' '+status+' started','ok');
+  } finally{ _as.busy=false; }
+}
+async function asBack(){ if(_as.busy) return; _as.busy=true; try{ await asCloseOpen(); asRender(); const p=document.getElementById('statusPanel'); if(p) p.style.display='none'; toast('Back on calls','ok'); } finally{ _as.busy=false; } }
+async function asLogout(){
+  if(_as.busy) return;
+  if(_as.open&&!confirm('You are still on "'+_as.open.status+'". Sign out now?')) return;
+  _as.busy=true; try{ await asLogoutRecord(); } finally{ _as.busy=false; }
+  doLogout();
+}
+// Records "Logged out" (called when the agent taps the button or signs out of the app)
+async function asLogoutRecord(){
+  try{ if(!asIsAgent()||!_as.staffId||viewAs) return;
+    await asCloseOpen();
+    if(asState().loggedIn) await asInsert('Logged out',true);
+  }catch(e){ console.warn('status logout',e); }
+}
+
+// ── Adherence: app status entries are shown inside each agent's activity detail (click a row), next to the 3CX away gaps ──
+const _adhApp={};   // ds -> {staff_id: [entries]}
+async function adhAppFetch(ds,force){
+  if(_adhApp[ds]&&!force) return _adhApp[ds];
+  const {data,error}=await sb.from('agent_status_log').select('*').eq('day',ds).order('started_at');
+  if(error){ console.warn('app status',error.message); return (_adhApp[ds]={}); }
+  const by={}; (data||[]).forEach(r=>(by[r.staff_id]=by[r.staff_id]||[]).push(r)); return (_adhApp[ds]=by);
+}
+function adhAppInfo(sid,ds){
+  const ent=((_adhApp[ds]||{})[sid])||[]; const n=new Date(); const nowM=ymdStr(n.getFullYear(),n.getMonth(),n.getDate())===ds?n.getHours()*60+n.getMinutes():24*60;
+  const idle=ent.filter(e=>AS_BY[e.status]).map(e=>({a:asMins(e.started_at),b:e.ended_at?asMins(e.ended_at):nowM,e}));
+  const li=ent.find(e=>e.status==='Logged in'), lo=[...ent].reverse().find(e=>e.status==='Logged out');
+  return {ent,idle,li:li?asMins(li.started_at):null,lo:lo?asMins(lo.started_at):null};
+}
+async function adhAppRender(){
+  const box=document.getElementById('adhAppLog'); if(box) box.innerHTML='';
+  if(adhMode==='day'){ const d=parseInt(document.getElementById('adhDay')?.value||0); if(d) await adhAppFetch(ymdStr(cy,cm,d),true); }
+}
+async function asDeleteDay(staffId,ds){
+  if(!confirm('Delete all app status entries for this agent on this day?')) return;
+  const {error}=await sb.from('agent_status_log').delete().eq('staff_id',staffId).eq('day',ds);
+  if(error){ toast('Could not delete: '+error.message,'err'); return; }
+  delete _adhApp[ds]; adhAppRender();
+}
+const _origRenderAdherence=renderAdherence;
+renderAdherence=async function(){ await _origRenderAdherence.apply(this,arguments); try{ await adhAppRender(); }catch(e){ console.warn(e); } };
+
 async function renderAdherence(){
   const grid=document.getElementById('adhGrid'); if(!grid) return;
   // Agents: one list of every day in the chosen month (no day picker / mode buttons)
@@ -8484,8 +8755,10 @@ async function loadHoursMonthData(){
       schedData[key]=r.shift;
       if(!schedData[simple]) schedData[simple]=r.shift;
       if(r.ot_hours||r.ot_start){
-        otData[simple]={hours:r.ot_hours||0,start:r.ot_start||'',end:r.ot_end||'',type:r.ot_type||'OT'};
-        otData[r.staff_id+'_'+r.day+'_'+mk]={hours:r.ot_hours||0,start:r.ot_start||'',end:r.ot_end||'',type:r.ot_type||'OT'};
+        const _o=()=>({hours:r.ot_hours||0,start:r.ot_start||'',end:r.ot_end||'',type:r.ot_type||'OT'});
+        const _t=MC_FAM.has(r.shift)?otLost:otData;
+        _t[simple]=_o();
+        _t[r.staff_id+'_'+r.day+'_'+mk]=_o();
       }
     });
   }
@@ -8535,7 +8808,7 @@ function renderHours(){
           const key=r.staff_id+'_'+r.day+'_'+r.month_key;
           schedData[key]=r.shift;
           if(r.ot_hours||r.ot_start){
-            otData[key]={hours:r.ot_hours||0,start:r.ot_start||'',end:r.ot_end||'',type:r.ot_type||'OT'};
+            (MC_FAM.has(r.shift)?otLost:otData)[key]={hours:r.ot_hours||0,start:r.ot_start||'',end:r.ot_end||'',type:r.ot_type||'OT'};
           }
         });
         renderHours();
@@ -9419,8 +9692,9 @@ function renderBreaksTab(){
 // peak 10AM–4PM is protected: breaks go off-peak where possible, otherwise spread thin.
 const BREAK_CFG={peakFrom:10*60, peakTo:16*60, firstWin:120, earliest:60, gap:30, tailGuard:30,
   maxRun:300, step:10, peakW:1.0, floor:0.75, shortEarliest:180,
-  blackout:[[19*60,20*60]]};   // no breaks 7PM–8PM
-const CALL_ROLES=new Set(['Inbound Agent','New Staff','Agent']);
+  blackout:[[19*60,20*60]],
+  mealFrom:11*60, mealTo:17*60};   // Meal + Short breaks must sit fully inside 11AM–5PM   // no breaks 7PM–8PM
+const CALL_ROLES=new Set(['Inbound Agent','New Staff','New Agent','Agent']);
 const ABSENT_FOR_BREAKS=new Set(['AL','RL','MC','MCR','MCP','EL','ELP','ELR','PH','O','OD','RD','UL','CL','HOSP','TO','H1','H2']);
 
 function breakRuleOf(kind){
@@ -9461,7 +9735,7 @@ function breakSetOK(win,brs){
   for(let i=0;i<sorted.length;i++){
     const b=sorted[i];
     if(b.st<win.S+C.earliest) return false;
-    if(b.k==='short'&&b.st<win.S+C.shortEarliest) return false;
+    if(b.k==='short'&&b.st<win.S+(win.shortE!=null?win.shortE:C.shortEarliest)) return false;
     if(C.blackout.some(([x,y])=>b.st<y&&b.st+b.dur>x)) return false;
     if(b.st+b.dur>(b.ea?win.wE:win.E)-C.tailGuard) return false;
     if(i&&sorted[i-1].st+sorted[i-1].dur+C.gap>b.st) return false;
@@ -9470,15 +9744,16 @@ function breakSetOK(win,brs){
   return eaRunsOK(win,brs);
 }
 // All valid break sets for one person (meal+short for a 9h shift; EA rest only if the run still exceeds 5h)
-function breakOptions(win){
+function breakOptions(win0,relax){
   const C=BREAK_CFG, out=[];
+  const win=relax?{...win0,shortE:C.earliest}:win0;   // relax = still inside 11AM–5PM, but short break may start earlier than 3h into the shift
   const shiftLen=win.E-win.S;
   const meal=breakRuleOf('meal'), short=breakRuleOf('short'), ea=breakRuleOf('ea');
   const blocked=(t,dur)=>C.blackout.some(([a,b])=>t<b&&t+dur>a);
-  const starts=(dur,limitEnd)=>{const a=[];for(let t=win.S+C.earliest;t+dur<=limitEnd-C.tailGuard;t+=C.step) if(!blocked(t,dur)) a.push(t);return a;};
+  const starts=(dur,limitEnd,inWin)=>{const a=[];for(let t=win.S+C.earliest;t+dur<=limitEnd-C.tailGuard;t+=C.step) if(!blocked(t,dur)&&(!inWin||(t>=C.mealFrom&&t+dur<=C.mealTo))) a.push(t);return a;};
   const base=[];
   if(shiftLen>=9*60){
-    for(const m of starts(meal.duration,win.E)) for(const sh of starts(short.duration,win.E).filter(t=>t>=win.S+C.shortEarliest))
+    for(const m of starts(meal.duration,win.E,true)) for(const sh of starts(short.duration,win.E,true).filter(t=>t>=win.S+(win.shortE!=null?win.shortE:C.shortEarliest)))
       base.push([{k:'meal',st:m,dur:meal.duration},{k:'short',st:sh,dur:short.duration}]);
   } else base.push([]);
   base.forEach(set=>{ if(breakSetOK(win,set)) out.push(set); });
@@ -9497,7 +9772,8 @@ function planBreaksForDay(day){
     if(!isCallStaff(s,sh)) return;
     const win=workWindow(s.id,day,sh);
     let opts=breakOptions(win);
-    if(!opts.length){ warnings.push(`${s.name}: no break plan fits the rules`); return; }
+    if(!opts.length){ opts=breakOptions(win,true); if(opts.length) warnings.push(`${s.name}: Short Break placed earlier than 3h into the shift to stay inside 11AM–5PM`); }
+    if(!opts.length){ warnings.push(`${s.name}: no Meal/Short Break fits inside 11AM–5PM — assign manually`); return; }
     const offs=offCallTasks(s.id,cy,cm,day).map(t=>[toMin(t.start_time),toMin(t.start_time)+(t.duration_mins||0)]);
     if(offs.length){   // keep breaks clear of Quiz / Training etc. when possible
       const clear=opts.filter(set=>set.every(b=>offs.every(([a,e])=>b.st>=e||b.st+b.dur<=a)));
@@ -9516,6 +9792,12 @@ function planBreaksForDay(day){
     const ssh=getS(s.id,day,cm,cy); if(!ssh||LEAVE_NO_OT.has(ssh)||['OD','RD','O'].includes(ssh)) return;
     supportTasks(s.id,cy,cm,day).forEach(t=>{ const a=toMin(t.start_time); for(let m=a;m<a+t.duration_mins;m+=C.step) working[Math.floor(m/C.step)]++; }); });
   const hw=h=>(h*60>=C.peakFrom&&h*60<C.peakTo)?C.peakW:1;
+  // Call demand per hour (agents needed for the service-level target). Breaks are steered into hours that have spare agents
+  // and away from hours that are already tight, so the 'on calls' figure stays close to 'need' across the day.
+  const needH=new Array(24).fill(null);
+  try{ if(typeof callRange!=='undefined'&&callRange){ const vd0={date:new Date(cy,cm,day),day,month:cm,year:cy};
+    for(let h=0;h<24;h++){ const c=callsAt(vd0,h); if(c&&c.calls) needH[h]=agentsNeeded(c.calls); } } }catch(e){}
+  const shortF=x=>x>0?x*x:0, thinF=x=>{ const t=4-x; return t>0?t*t:0; };
   // Cost of adding a break set: how much it lowers the *lowest* on-calls figure of each hour it touches
   // (what Coverage → After breaks shows), relative to that hour's headcount — for the person's group and overall.
   // Squared, so taking the 4th person off an hour hurts far more than the 2nd. Plus the 75% floor.
@@ -9527,13 +9809,18 @@ function planBreaksForDay(day){
     return hw(h)*(f(newMax)-f(oldMax));
   };
   const cost=(p,set)=>{
-    const inc={}; const hrs=new Set();
-    set.forEach(b=>{ for(let m=b.st;m<b.st+b.dur;m+=C.step){ const i=m/C.step; inc[i]=(inc[i]||0)+1; hrs.add(Math.floor(m/60)); } });
-    const g=grpOf(p); let c=0;
-    hrs.forEach(h=>{ c+=4*hourCost(wkG[g],obG[g],inc,h)+hourCost(working,onBreak,inc,h); });
-    Object.keys(inc).forEach(k=>{ const i=+k, wk=Math.max(1,working[i]), ob=onBreak[i]+inc[i];
-      c+=0.5*(ob/wk)*(ob/wk);                        // smooth tie-break inside the hour
-      if(wk-ob<Math.ceil(wk*C.floor)) c+=200; });
+    // Level the number on break slot-by-slot: squared on-break *share* of whoever is working in that slot
+    // (overall + the person's own role group), so no slot is left much emptier than another.
+    const g=grpOf(p); let c=0; const cnt={};
+    set.forEach(b=>{ for(let m=b.st;m<b.st+b.dur;m+=C.step){ const i=m/C.step; cnt[i]=(cnt[i]||0)+1; } });
+    Object.keys(cnt).forEach(k=>{ const i=+k, wk=Math.max(1,working[i]), wg=Math.max(1,wkG[g][i]);
+      const ob=onBreak[i], og=obG[g][i];
+      c+=100*(((ob+1)/wk)**2-(ob/wk)**2)*hw(Math.floor(i/6));
+      c+=50*(((og+1)/wg)**2-(og/wg)**2);
+      if(wk-(ob+1)<Math.ceil(wk*C.floor)) c+=200;
+      const nd=needH[Math.floor(i/6)];
+      if(nd!=null){ const before=wk-ob-nd, after=before-1;   // spare agents in this slot before / after taking one more off calls
+        c+=hw(Math.floor(i/6))*(90*(shortF(-after)-shortF(-before))+45*(thinF(after)-thinF(before))); } });
     return c;
   };
   const apply=(p,set,d)=>set.forEach(b=>{ for(let m=b.st;m<b.st+b.dur;m+=C.step){ const i=m/C.step; onBreak[i]+=d; obG[grpOf(p)][i]+=d; } });
@@ -9541,10 +9828,15 @@ function planBreaksForDay(day){
   people.sort((a,b)=>a.opts.length-b.opts.length||a.win.S-b.win.S);
   const pick=p=>{ let best=null,bc=Infinity; for(const o of p.opts){ const c=cost(p,o); if(c<bc-1e-9){bc=c;best=o;} } return best; };
   people.forEach(p=>{ p.plan=pick(p); apply(p,p.plan,1); });
-  for(let pass=0;pass<8;pass++){ let moved=false;
+  for(let pass=0;pass<30;pass++){ let moved=false;
     people.forEach(p=>{ apply(p,p.plan,-1); const np=pick(p); if(np!==p.plan) moved=true; p.plan=np; apply(p,p.plan,1); });
     if(!moved) break; }
-  return {people,working,onBreak,warnings};
+  // What-if summary: per hour, the lowest number on calls (what Coverage → After breaks shows) vs the agents needed
+  const tight=[];
+  for(let h=0;h<24;h++){ const nd=needH[h]; if(nd==null) continue; let low=Infinity, any=false;
+    for(let j=0;j<6;j++){ const i=h*6+j; if(working[i]>0) any=true; low=Math.min(low,working[i]-onBreak[i]); }
+    if(any&&low<=nd) tight.push({h,low,need:nd,gap:low-nd}); }
+  return {people,working,onBreak,warnings,tight,needKnown:needH.some(x=>x!=null)};
 }
 
 function planToOverrides(plan){
@@ -9555,21 +9847,34 @@ function planToOverrides(plan){
 async function autoAssignBreaks(scope){
   const dayVal=parseInt(document.getElementById('breakDayFilter')?.value||0);
   if(scope!=='month'&&scope!=='missing'&&!dayVal){toast('Select a day first','err');return;}
+  try{ await loadCallData(); }catch(_){}   // call demand per hour, so breaks go where there are spare agents
+  await loadBreakOverrides();   // start from the latest saved breaks, so another TL's work is never overwritten by a stale copy
   const mk=cy+'-'+(cm+1);
   let days=scope==='month'||scope==='missing'?Array.from({length:dim(cy,cm)},(_,i)=>i+1):[dayVal];
   if(scope==='missing'){ days=days.filter(d=>!Object.keys(breakOverrides).some(k=>k.endsWith('_'+d+'_'+mk))); if(!days.length){ toast('Every day this month already has breaks','ok'); return; }
     if(!confirm(`Plan breaks for ${days.length} day${days.length>1?'s':''} with none yet (${days.join(', ')} ${MONTHS[cm].slice(0,3)})? Days already planned are not touched.`)) return; }
-  let n=0, eaN=0; const warn=[];
+  let n=0, eaN=0; const warn=[]; const tightDays=[]; let needKnown=false;
   days.forEach(d=>{
     const r=planBreaksForDay(d);
     r.people.forEach(p=>{ breakOverrides[p.s.id+'_'+d+'_'+mk]=planToOverrides(p.plan); n++; if(p.plan.some(b=>b.k==='ea')) eaN++; });
     r.warnings.forEach(x=>warn.push(`${d} ${MONTHS[cm].slice(0,3)} — ${x}`));
+    if(r.needKnown) needKnown=true;
+    if(r.tight&&r.tight.length) tightDays.push({d,t:r.tight});
   });
   if(!n){toast('No inbound staff on shift to assign','err');return;}
   const {error}=await sb.from('app_settings').upsert({key:'break_overrides',value:JSON.stringify(breakOverrides)},{onConflict:'key'});
   if(error){toast('Save failed: '+error.message,'err');return;}
   await sb.from('app_settings').upsert({key:'last_breaks_updated_at',value:new Date().toISOString()},{onConflict:'key'});
-  toast(`Breaks planned for ${n} shift${n>1?'s':''} ✓${eaN?` · ${eaN} with an EA rest break`:''}${warn.length?` · ${warn.length} need attention`:''}`,'ok');
+  const hh=h=>String(h).padStart(2,'0')+':00';
+  let wi='';
+  if(needKnown){
+    if(!tightDays.length) wi=' · ✅ every hour stays above need';
+    else if(tightDays.length===1){ const t=tightDays[0].t; const below=t.filter(x=>x.gap<0).length;
+      wi=` · ⚠ ${t.length} hour${t.length>1?'s':''} still at or below need (${t.slice(0,4).map(x=>hh(x.h)+' '+x.low+'/'+x.need).join(', ')}${t.length>4?'…':''})${below?` — ${below} below`:''}`; }
+    else { const tot=tightDays.reduce((a,x)=>a+x.t.length,0); wi=` · ⚠ ${tot} hour${tot>1?'s':''} at or below need on ${tightDays.length} days (${tightDays.slice(0,5).map(x=>x.d).join(', ')}${tightDays.length>5?'…':''})`; }
+  }
+  toast(`Breaks planned for ${n} shift${n>1?'s':''} ✓${eaN?` · ${eaN} with an EA rest break`:''}${warn.length?` · ${warn.length} need attention`:''}${wi}`,wi.includes('⚠')?'err':'ok');
+  window._lastBreakWhatIf=tightDays;
   if(warn.length) console.warn('Break planner:',warn.join('\n'));
   renderBreaksTab();
 }
@@ -10077,7 +10382,7 @@ async function renderProfileCard(forceSid){
     const {data:_md}=await fetchScheduleMonth(_pmk);
     if(_md) _md.forEach(r=>{
       schedData[r.staff_id+'_'+r.day+'_'+_pmk]=r.shift||'';
-      if(r.ot_hours||r.ot_start) otData[r.staff_id+'_'+r.day+'_'+_pmk]={hours:r.ot_hours||0,start:r.ot_start||'',end:r.ot_end||'',type:r.ot_type||'OT'};
+      if(r.ot_hours||r.ot_start) (MC_FAM.has(r.shift)?otLost:otData)[r.staff_id+'_'+r.day+'_'+_pmk]={hours:r.ot_hours||0,start:r.ot_start||'',end:r.ot_end||'',type:r.ot_type||'OT'};
     });
   }
   const monthDays=Array.from({length:dim(_pCy,_pCm)},(_,i)=>({day:i+1,month:_pCm,year:_pCy,date:new Date(_pCy,_pCm,i+1)}));
@@ -11157,11 +11462,30 @@ function getLeaveYear(staff){
   return {start:yearStart, end:yearEnd};
 }
 
-// Contract staff: 6 days for a 6-month contract, 12 days for a 1-year contract (from the latest renewal)
+// Contract staff AL: 1 day earned on each monthly anniversary of the latest renewal; the last credit (month N-1) is 2 days, so the total = number of months.
+// e.g. 24/11/2026 – 23/5/2027 (6 months): +1 on 24/12, 24/1, 24/2, 24/3, then +2 on 24/4 = 6.
+function contractMonths(st,en){
+  if(!st||!en||en<st) return 0;
+  const e1=new Date(en.getFullYear(),en.getMonth(),en.getDate()+1);
+  let m=(e1.getFullYear()-st.getFullYear())*12+(e1.getMonth()-st.getMonth());
+  let a=new Date(st.getFullYear(),st.getMonth()+m,st.getDate()); if(a>e1){ m--; a=new Date(st.getFullYear(),st.getMonth()+m,st.getDate()); }
+  const days=Math.round((e1-a)/86400000);
+  return m+(days>=15?1:0);
+}
+function contractAL(staff,asOf){
+  const st=new Date(staff.renewal_date||staff.contract_start||staff.contract_end), en=new Date(staff.contract_end);
+  const S=new Date(st.getFullYear(),st.getMonth(),st.getDate()), N=contractMonths(S,en);
+  const at=asOf||new Date(); const T=new Date(at.getFullYear(),at.getMonth(),at.getDate());
+  let earned=0, next=null;
+  if(N===1){ earned=T>=S?1:0; }
+  else for(let k=1;k<=N-1;k++){ const d=new Date(S.getFullYear(),S.getMonth()+k,S.getDate()), amt=k===N-1?2:1;
+    if(d<=T) earned+=amt; else if(!next) next={date:d,amt}; }
+  return {earned,total:N,next};
+}
 function alEntitlementOf(staff){
   if(staff.position_status==='Contract'&&staff.contract_end){
     const st=new Date(staff.renewal_date||staff.contract_start||staff.contract_end), en=new Date(staff.contract_end);
-    if(st<=en){ const months=Math.round(((en-st)/86400000+1)/30.44); return months>=9?12:6; }
+    if(st<=en) return contractAL(staff).earned;   // earned so far
   }
   return staff.al_entitlement??14;
 }
@@ -11229,6 +11553,9 @@ async function renderLeaveBalance(staff, container){
 
   // RL: separate tracking
   const rlTaken=countLeaveTaken(staff.id,['RL'],alYear.start,alYear.end);
+  let rlAuto=0, rlTo=null;
+  try{ const {data:bb}=await sb.rpc('sched_leave_balance',{p_staff:staff.id,p_date:ymdStr(new Date().getFullYear(),new Date().getMonth(),new Date().getDate())}); if(bb&&bb.rl){ rlAuto=+bb.rl.auto||0; rlTo=bb.rl.to||null; } }catch(_){}
+  const rlEarned=(+staff.rl_entitlement||0)+rlAuto;
 
   const fmt=d=>`${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}`;
   const cs=staff.contract_start?new Date(staff.contract_start):null;
@@ -11266,7 +11593,7 @@ async function renderLeaveBalance(staff, container){
         <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px">
           <div style="text-align:center;padding:6px;background:var(--surface2);border-radius:var(--r)">
           <div style="font-size:13px;font-weight:500;color:var(--text)">${alEnt} days</div>
-          <div style="font-size:10px;color:var(--text3)">Entitlement</div>
+          <div style="font-size:10px;color:var(--text3)">${(()=>{ if(staff.position_status==='Contract'&&staff.contract_end){ const c=contractAL(staff); return 'Earned of '+c.total+(c.next?' · +'+c.next.amt+' on '+c.next.date.toLocaleDateString('en-GB',{day:'numeric',month:'short'}):''); } return 'Entitlement'; })()}</div>
         </div>
         <div onclick="showLeaveDates('${staff.id}','AL')" style="text-align:center;padding:6px;background:var(--surface2);border-radius:var(--r);cursor:pointer;border:1px solid transparent" onmouseover="this.style.borderColor='var(--amber)'" onmouseout="this.style.borderColor='transparent'">
           <div style="font-size:13px;font-weight:500;color:var(--amber)">${alTaken.toFixed(1)} days</div>
@@ -11318,10 +11645,11 @@ async function renderLeaveBalance(staff, container){
         <div style="display:flex;justify-content:space-between;align-items:center">
           <div>
             <div style="font-size:12px;font-weight:600">Replacement Leave (RL)</div>
-            <div style="font-size:10px;color:var(--text3)">Earned ${+staff.rl_entitlement||0} day(s) · taken ${rlTaken}</div>
+            <div style="font-size:10px;color:var(--text3)">Earned ${rlEarned} day(s)${rlAuto?` (${rlAuto} auto from public holiday on rest day${+staff.rl_entitlement?` + ${+staff.rl_entitlement} manual`:''})`:''} · taken ${rlTaken}</div>
+            <div style="font-size:10px;color:var(--text3)">${staff.office_hours?'Office-hours staff: Sunday PH → next Monday is the replacement holiday':'Use before '+(staff.position_status==='Permanent'?'31 Dec '+new Date().getFullYear():(rlTo?fmt(new Date(rlTo)):'contract end'))}</div>
           </div>
           <div style="text-align:right">
-            <div style="font-size:20px;font-weight:700;color:${(+staff.rl_entitlement||0)-rlTaken<=0?'var(--red)':'var(--green)'}">${Math.max(0,(+staff.rl_entitlement||0)-rlTaken)}</div>
+            <div style="font-size:20px;font-weight:700;color:${rlEarned-rlTaken<=0?'var(--red)':'var(--green)'}">${Math.max(0,rlEarned-rlTaken)}</div>
             <div style="font-size:10px;color:var(--text3)">days left</div>
           </div>
         </div>
@@ -11500,7 +11828,7 @@ async function saveProfileDetails(staffId){
   });
   { const cur=staffList.find(x=>x.id===staffId)||allStaff.find(x=>x.id===staffId)||{};
     const merged={...cur,...updates};
-    if(merged.position_status==='Contract'&&merged.contract_end) updates.al_entitlement=alEntitlementOf(merged); }
+    if(merged.position_status==='Contract'&&merged.contract_end) updates.al_entitlement=contractAL(merged).total; }
   const chk=checkEmployment(updates);
   if(chk){ if(statusEl) statusEl.textContent=chk; toast(chk,'err'); return; }
 
@@ -11666,7 +11994,7 @@ async function renderAvailability(){
     if(!Object.keys(schedData).some(k=>k.endsWith('_'+mk))){
       const {data}=await fetchScheduleMonth(mk);
       (data||[]).forEach(r=>{ schedData[r.staff_id+'_'+r.day+'_'+mk]=r.shift;
-        if(r.ot_hours||r.ot_start) otData[r.staff_id+'_'+r.day+'_'+mk]={hours:r.ot_hours||0,start:r.ot_start||'',end:r.ot_end||'',type:r.ot_type||'OT'}; });
+        if(r.ot_hours||r.ot_start) (MC_FAM.has(r.shift)?otLost:otData)[r.staff_id+'_'+r.day+'_'+mk]={hours:r.ot_hours||0,start:r.ot_start||'',end:r.ot_end||'',type:r.ot_type||'OT'}; });
     }
   }
   // Load tasks for week
@@ -12389,7 +12717,7 @@ function toast(msg,type='ok'){
   const el=document.createElement('div');
   el.className='toast '+type;el.textContent=msg;area.appendChild(el);
   requestAnimationFrame(()=>{requestAnimationFrame(()=>el.classList.add('show'))});
-  setTimeout(()=>{el.classList.remove('show');setTimeout(()=>el.remove(),300)},2800);
+  setTimeout(()=>{el.classList.remove('show');setTimeout(()=>el.remove(),300)},Math.min(9000,2800+Math.max(0,String(msg).length-60)*50));
 }
 
 // ── START ──
