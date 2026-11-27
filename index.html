@@ -839,6 +839,7 @@ tr.section-drag-over td{border-top:3px solid var(--blue) !important}
             <div style="display:flex;border:1px solid var(--border2);border-radius:var(--r);overflow:hidden">
               <button id="btnMonthView" onclick="setViewMode('month')" style="font-size:11px;padding:0 10px;height:30px;border:none;background:var(--blue-bg);color:var(--blue);cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:500">Month</button>
               <button id="btnWeekView" onclick="setViewMode('week')" style="font-size:11px;padding:0 10px;height:30px;border:none;border-left:1px solid var(--border2);background:var(--surface);color:var(--text2);cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:500">Week</button>
+              <button id="btnRangeView" onclick="openRangePicker()" title="Pick any start and end date" style="font-size:11px;padding:0 10px;height:30px;border:none;border-left:1px solid var(--border2);background:var(--surface);color:var(--text2);cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:500">Custom</button>
               <button id="btnDayView" onclick="setViewMode('day')" style="font-size:11px;padding:0 10px;height:30px;border:none;border-left:1px solid var(--border2);background:var(--surface);color:var(--text2);cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:500">Day</button>
             </div>
             <button class="btn" style="width:28px;padding:0;justify-content:center" onclick="navPrev()">←</button>
@@ -1503,7 +1504,7 @@ function hiddenDay(d,m,y){ return viewerRestricted()&&!isDayPublished(d,m??cm,y?
 function getR(sid,day){
   if(hiddenDay(day)) return '';
   let mk=cy+'-'+(cm+1);
-  if(typeof viewMode!=='undefined'&&viewMode==='week'){ const vd=getViewDays().find(v=>v.day===+day); if(vd) mk=vd.year+'-'+(vd.month+1); }
+  if(typeof viewMode!=='undefined'&&(viewMode==='week'||viewMode==='range')){ const vd=getViewDays().find(v=>v.day===+day); if(vd) mk=vd.year+'-'+(vd.month+1); }
   // exact month only — the old day-only key leaked last month's notes into other months
   return remarkData[sid+'_'+day+'_'+mk]||'';
 } // {sid, day, shift}
@@ -3096,6 +3097,35 @@ function getS(sid,d,m,y){
 
 function chMonth(n){cm+=n;if(cm>11){cm=0;cy++}if(cm<0){cm=11;cy--}document.getElementById('mLabel').textContent=MONTHS[cm]+' '+cy;injectMalaysianHolidays();loadSchedule();}
 
+const ymdIn=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+function openRangePicker(){
+  const t=new Date(); const a=rangeStart||new Date(cy,cm,1), b=rangeEnd||new Date(cy,cm,dim(cy,cm));
+  const box=document.getElementById('modalBox');
+  const pre=(l,x,y)=>`<button class="btn" style="font-size:11px" onclick="document.getElementById('rgFrom').value='${ymdIn(x)}';document.getElementById('rgTo').value='${ymdIn(y)}'">${l}</button>`;
+  box.innerHTML=`<h3>📅 Custom date range</h3>
+    <div style="font-size:12px;color:var(--text2);margin:-4px 0 10px">Show any start and end date. The range must be shorter than one month (e.g. 26 Nov – 25 Dec).</div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap"><label style="font-size:12px">From<br><input type="date" id="rgFrom" value="${ymdIn(a)}" style="font-size:13px;padding:6px;border:1px solid var(--border2);border-radius:var(--r)"></label>
+    <label style="font-size:12px">To<br><input type="date" id="rgTo" value="${ymdIn(b)}" style="font-size:13px;padding:6px;border:1px solid var(--border2);border-radius:var(--r)"></label></div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px">${pre('Next 7 days',t,new Date(t.getFullYear(),t.getMonth(),t.getDate()+6))}${pre('Next 14 days',t,new Date(t.getFullYear(),t.getMonth(),t.getDate()+13))}${pre('26th – 25th cycle',new Date(t.getFullYear(),t.getMonth()-(t.getDate()<26?1:0),26),new Date(t.getFullYear(),t.getMonth()+(t.getDate()<26?0:1),25))}</div>
+    <div id="rgErr" style="color:var(--red);font-size:12px;margin-top:8px;min-height:16px"></div>
+    <div class="mbtns"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn btn-blue" onclick="applyRange()">Show</button></div>`;
+  document.getElementById('overlay').classList.add('open');
+}
+function applyRange(){
+  const f=document.getElementById('rgFrom').value, t=document.getElementById('rgTo').value, err=document.getElementById('rgErr');
+  if(!f||!t){ err.textContent='Pick both dates.'; return; }
+  const a=new Date(f+'T00:00:00'), b=new Date(t+'T00:00:00');
+  if(b<a){ err.textContent='End date is before the start date.'; return; }
+  if(a.getMonth()!==b.getMonth()||a.getFullYear()!==b.getFullYear()){ const lim=new Date(a.getFullYear(),a.getMonth()+1,a.getDate()-1); if(b>lim){ err.textContent='Keep it shorter than one month (latest end for this start: '+ymdIn(lim)+').'; return; } }
+  rangeStart=a; rangeEnd=b; closeModal(); cy=a.getFullYear(); cm=a.getMonth();
+  setViewMode('range'); loadSchedule();
+}
+function rangeShift(dir){
+  const n=Math.round((rangeEnd-rangeStart)/86400000)+1;
+  rangeStart=new Date(rangeStart.getFullYear(),rangeStart.getMonth(),rangeStart.getDate()+dir*n);
+  rangeEnd=new Date(rangeEnd.getFullYear(),rangeEnd.getMonth(),rangeEnd.getDate()+dir*n);
+  cy=rangeStart.getFullYear(); cm=rangeStart.getMonth(); updateNavLabel(); loadSchedule();
+}
 function setViewMode(mode){
   viewMode=mode;
   // Toggle schedule table vs day view
@@ -3105,7 +3135,7 @@ function setViewMode(mode){
   if(dayWrap) dayWrap.style.setProperty('display', mode==='day'?'block':'none', 'important');
 
   // Update button styles
-  ['month','week','day'].forEach(m=>{
+  ['month','week','range','day'].forEach(m=>{
     const btn=document.getElementById('btn'+m.charAt(0).toUpperCase()+m.slice(1)+'View');
     if(btn){
       btn.style.background=m===mode?'var(--blue-bg)':'var(--surface)';
@@ -3144,6 +3174,7 @@ function navPrev(){
     if(currentDayView<1){cm--;if(cm<0){cm=11;cy--;}currentDayView=dim(cy,cm);}
     renderDayView(); updateNavLabel(); return;
   }
+  if(viewMode==='range'){ rangeShift(-1); return; }
   if(viewMode==='week'){
     currentWeekStart=new Date(currentWeekStart);
     currentWeekStart.setDate(currentWeekStart.getDate()-7);
@@ -3164,6 +3195,7 @@ function navNext(){
     if(currentDayView>maxDay){currentDayView=1;cm++;if(cm>11){cm=0;cy++;}}
     renderDayView(); updateNavLabel(); return;
   }
+  if(viewMode==='range'){ rangeShift(1); return; }
   if(viewMode==='week'){
     if(!currentWeekStart){setViewMode('week');return;}
     currentWeekStart=new Date(currentWeekStart);
@@ -3191,6 +3223,10 @@ function updateNavLabel(){
     el.textContent=`${dow[dt.getDay()]}, ${currentDayView} ${MONTHS[cm]} ${cy}`;
     return;
   }
+  if(viewMode==='range'&&rangeStart&&rangeEnd){
+    const fmt=d=>`${d.getDate()} ${MONTHS[d.getMonth()].substr(0,3)}`;
+    el.textContent=`${fmt(rangeStart)} – ${fmt(rangeEnd)} ${rangeEnd.getFullYear()}`; return;
+  }
   if(viewMode==='week'&&currentWeekStart){
     const ws=currentWeekStart;
     const we=new Date(ws);we.setDate(ws.getDate()+6);
@@ -3201,7 +3237,12 @@ function updateNavLabel(){
   }
 }
 
+let rangeStart=null, rangeEnd=null;
 function getViewDays(){
+  if(viewMode==='range'&&rangeStart&&rangeEnd){
+    const out=[]; for(let d=new Date(rangeStart); d<=rangeEnd; d=new Date(d.getFullYear(),d.getMonth(),d.getDate()+1)) out.push({day:d.getDate(),month:d.getMonth(),year:d.getFullYear(),date:new Date(d)});
+    return out;
+  }
   if(viewMode==='week'){
     if(!currentWeekStart){
       // Default to week containing day 1 of current month
@@ -3290,7 +3331,7 @@ function renderSchedule(){
     const remTip=rem?`<span class="remark-tip">${rem.label}</span>`:'';
     // In weekly view show full date
     const dayPubH=!restrictView||isDayPublished(d,vd.month||cm,vd.year||cy);
-    const dayLabel=viewMode==='week'
+    const dayLabel=(viewMode==='week'||viewMode==='range')
       ?`<span style="font-size:14px;font-weight:500">${d}</span><br><span style="font-size:10px;color:var(--text3)">${MONTHS[vd.month].substr(0,3)}</span>`
       :`<span style="font-size:12px;font-weight:500">${d}</span>`;
     const clickAttr=isAdmin
@@ -3318,7 +3359,7 @@ function renderSchedule(){
   document.getElementById('thead').innerHTML=h;
   // Apply week-view class for wider cells
   const tbl=document.querySelector('#tab-schedule table');
-  if(tbl){tbl.classList.toggle('week-view',viewMode==='week');}
+  if(tbl){tbl.classList.toggle('week-view',viewMode==='week'||(viewMode==='range'&&viewDays.length<=10));}
 
   // Use sectionOrder for role grouping; default Agent first
   const grouped={};
@@ -11390,6 +11431,8 @@ function pickerSelectDay(d){
     currentDayView=d;
     renderDayView();
     updateNavLabel();
+  } else if(viewMode==='range'){
+    setViewMode('month'); loadSchedule(); return;
   } else if(viewMode==='week'){
     // Jump to the week containing this day
     const dt=new Date(cy,cm,d);
