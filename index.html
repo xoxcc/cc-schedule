@@ -7066,7 +7066,39 @@ async function renderRequestsTab(){
     return;
   }
   const dow=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  // Group consecutive pending time-off days (same person, leave type and note) into one card
+  const grpOf={};
+  { const cand=filtered.filter(r=>r.type==='timeoff'&&r.status==='pending'&&r.day&&r.month_key).map(r=>{ const [y,m]=r.month_key.split('-').map(Number); return {r,t:new Date(y,m-1,r.day).getTime()}; })
+      .sort((a,b)=>String(a.r.staff_id).localeCompare(String(b.r.staff_id))||String(a.r.shift_requested).localeCompare(String(b.r.shift_requested))||String(a.r.note||'').localeCompare(String(b.r.note||''))||a.t-b.t);
+    let cur=null; const done=[];
+    cand.forEach(c=>{ const p=cur&&cur[cur.length-1];
+      if(p&&p.r.staff_id===c.r.staff_id&&p.r.shift_requested===c.r.shift_requested&&(p.r.note||'')===(c.r.note||'')&&Math.round((c.t-p.t)/86400000)===1) cur.push(c);
+      else { cur=[c]; done.push(cur); } });
+    done.filter(g=>g.length>1).forEach(g=>{ const o={items:g.map(x=>x.r),ids:g.map(x=>x.r.id)}; g.forEach(x=>grpOf[x.r.id]=o); }); }
+  const grpCard=g=>{
+    const r=g.items[0], last=g.items[g.items.length-1];
+    const staff=staffList.find(x=>x.id===r.staff_id);
+    const fmt=x=>{ const [y,m]=x.month_key.split('-').map(Number); return `${x.day} ${MONTHS[m-1].slice(0,3)} (${dow[(fday(y,m-1)+x.day-1)%7]})`; };
+    const since=timeSince(g.items.reduce((a,x)=>a<x.created_at?a:x.created_at,r.created_at));
+    const own=currentProfile&&(currentProfile.staff_id===r.staff_id||(currentProfile.display_name||'').toLowerCase()===(r.requester_name||'').toLowerCase());
+    const ids=JSON.stringify(g.ids).replace(/"/g,'&quot;');
+    let act='';
+    if(isApprover){ act+=`<button class="btn" style="background:var(--green-bg);color:var(--green);border-color:var(--green-bd);height:28px;font-size:11px" onclick="approveGroup(${ids})">✓ Approve all ${g.ids.length}</button><button class="btn btn-red" style="height:28px;font-size:11px" onclick="openRejectModal('${g.ids.join(',')}')">✕ Reject all</button>`; }
+    if(own) act+=`<button class="btn" style="height:28px;font-size:11px;color:var(--text2)" onclick="withdrawGroup(${ids})">↩ Withdraw all</button>`;
+    const days=g.items.map(x=>`<div style="display:flex;align-items:center;gap:8px;padding:3px 0;font-size:11px"><span style="min-width:90px">${fmt(x)}</span><span style="color:var(--text3)">current: ${getS(x.staff_id,x.day)||'No shift'}</span>${isApprover?`<button class="btn" style="height:22px;font-size:10px;padding:0 8px" onclick="approveRequest('${x.id}')">✓</button><button class="btn btn-red" style="height:22px;font-size:10px;padding:0 8px" onclick="openRejectModal('${x.id}')">✕</button>`:''}</div>`).join('');
+    return `<div class="req-card2 pending">
+      <div class="req-icon">📅</div>
+      <div class="req-body2">
+        <div class="req-name2">${r.requester_name||staff?.name||'—'}</div>
+        <div class="req-detail">Requesting <b>${r.shift_requested||'leave'}</b> on <b>${fmt(r)} – ${fmt(last)}</b> · ${g.ids.length} days</div>
+        ${r.note?`<div style="font-size:11px;color:var(--text3);font-style:italic;margin-bottom:4px">"${r.note}"</div>`:''}
+        <details style="margin:2px 0 4px"><summary style="font-size:11px;color:var(--blue);cursor:pointer">Show days${isApprover?' / decide one by one':''}</summary>${days}</details>
+        <div class="req-meta"><span>Time-off</span><span>Submitted ${since}</span></div>
+      </div>
+      <div class="req-actions2"><span class="req-status-pill status-pending">PENDING</span>${act}</div>
+    </div>`; };
   list.innerHTML='<div class="req-list">'+filtered.map(r=>{
+    const _g=grpOf[r.id]; if(_g) return _g.ids[0]===r.id?grpCard(_g):'';
     const staff=staffList.find(x=>x.id===r.staff_id);
     const swStaff=staffList.find(x=>x.id===r.swap_with_staff_id);
     const isSwap=r.type==='swap'||r.type==='ot_swap'||r.type==='ot_offer'||r.type==='break_swap';
@@ -7489,13 +7521,21 @@ function openRejectModal(rid){
   document.getElementById('overlay').classList.add('open');
 }
 
+async function approveGroup(ids){ for(const id of ids){ await approveRequest(id); } }
+async function withdrawGroup(ids){
+  if(!confirm(`Withdraw all ${ids.length} days of this request?`)) return;
+  const {error}=await sb.from('requests').update({status:'withdrawn',reviewed_by:currentProfile?currentProfile.display_name:'',reviewed_at:new Date().toISOString()}).in('id',ids);
+  if(error){toast('Error: '+error.message,'err');return;}
+  toast('Request withdrawn','ok'); await loadPendingRequests(); renderRequestsTab();
+}
 async function rejectRequest(rid){
   const reason=document.getElementById('rejReason')?.value||'';
   const reviewer=currentProfile?currentProfile.display_name:'Admin';
+  const rids=String(rid).split(',');
   const {error}=await sb.from('requests').update({
     status:'rejected', reviewed_by:reviewer,
     reviewed_at:new Date().toISOString(), reject_reason:reason
-  }).eq('id',rid);
+  }).in('id',rids);
   if(error){toast('Error: '+error.message,'err');return;}
   closeModal();
   toast('Request rejected','ok');
