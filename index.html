@@ -3002,9 +3002,13 @@ async function runBreakReplan(){
     const keys=Object.keys(breakOverrides).filter(k=>k.endsWith('_'+d+'_'+mk));
     if(!keys.length) return;                                   // no breaks planned yet for that day
     if(keys.some(k=>(breakOverrides[k]||[]).some(b=>!b.auto)||(Array.isArray(breakOverrides[k])&&!breakOverrides[k].length))){ manual.push(d); return; }
-    keys.forEach(k=>delete breakOverrides[k]);                 // drops the person now on MC/EL too
+    const prevOwn={};
+    keys.forEach(k=>{ const sid=k.split('_')[0], st=staffList.find(x=>String(x.id)===sid);
+      if(brLockOwner(k)&&st&&isCallStaff(st,getS(st.id,d,cm,cy))) return;   // another TL's breaks stay as they are
+      const o=(breakOverrides[k]||[]).find(x=>x&&x.by); if(o) prevOwn[k]=o;
+      delete breakOverrides[k]; });                              // drops the person now on MC/EL too
     const r=planBreaksForDay(d);
-    r.people.forEach(p=>{ breakOverrides[p.s.id+'_'+d+'_'+mk]=planToOverrides(p.plan); });
+    r.people.forEach(p=>{ if(p.fixed) return; const k=p.s.id+'_'+d+'_'+mk, o=prevOwn[k], arr=planToOverrides(p.plan); breakOverrides[k]=o?arr.map(b=>({...b,by:o.by,byName:o.byName})):arr; });
     done.push(d);
   });
   if(done.length){
@@ -9454,6 +9458,7 @@ function brToggleSkip(i){ brRows[i].skip=!brRows[i].skip;
   if(c){ c.style.opacity=brRows[i].skip?'.5':'1'; c.querySelectorAll('input[type=time]').forEach(x=>x.disabled=brRows[i].skip); }
   if(t) t.textContent=brRows[i].skip?'Skipped (optional)':'Taking this break'; if(cb) cb.checked=!brRows[i].skip; }
 function openBreakOverride(staffId, day, name){
+  { const lo=brLockOwner(staffId+'_'+day+'_'+cy+'-'+(cm+1)); if(lo){ toast('🔒 Breaks already assigned by '+lo+' — only they or a manager can change them','err'); return; } }
   const sh=getS(staffId,day,cm,cy);
   const shiftDef=shiftTypes.find(x=>x.code===sh);
   const mk=cy+'-'+(cm+1);
@@ -9509,6 +9514,7 @@ function openBreakOverride(staffId, day, name){
 
 async function saveBreakOverride(staffId,day,count){
   const key=staffId+'_'+day+'_'+cy+'-'+(cm+1);
+  { const lo=brLockOwner(key); if(lo){ toast('🔒 Assigned by '+lo+' — not changed','err'); return; } }
   const rows=brRows.length?brRows:getStaffBreaksOrAuto(staffId,day);
   const anySkip=rows.some(r=>r.skip);
   const overrides=rows.map((br,i)=>{
@@ -9521,7 +9527,7 @@ async function saveBreakOverride(staffId,day,count){
     const {skip,...b}=br;
     return{...b,start,end,startMins:sh2*60+sm,endMins:eh*60+em,auto:br.auto&&!changed&&!anySkip};   // a skip makes the plan manual, so auto re-planning keeps it
   }).filter(Boolean);
-  breakOverrides[key]=overrides;
+  breakOverrides[key]=brStamp(overrides);
   // Persist to Supabase — also write timestamp so staff clients auto-reload
   await sb.from('app_settings').upsert({key:'break_overrides',value:JSON.stringify(breakOverrides)},{onConflict:'key'});
   await sb.from('app_settings').upsert({key:'last_breaks_updated_at',value:new Date().toISOString()},{onConflict:'key'});
@@ -9559,6 +9565,7 @@ async function saveBreakOverride(staffId,day,count){
 
 async function resetBreakOverride(staffId,day){
   const key=staffId+'_'+day+'_'+cy+'-'+(cm+1);
+  { const lo=brLockOwner(key); if(lo){ toast('🔒 Assigned by '+lo+' — not changed','err'); return; } }
   delete breakOverrides[key];
   await sb.from('app_settings').upsert({key:'break_overrides',value:JSON.stringify(breakOverrides)},{onConflict:'key'});
   await sb.from('app_settings').upsert({key:'last_breaks_updated_at',value:new Date().toISOString()},{onConflict:'key'});
@@ -9793,7 +9800,7 @@ function renderBreaksTab(){
       html+=`<tr style="background:${rowBg}">
         <td style="padding:7px 12px;border-bottom:0.5px solid var(--border);font-weight:${currentProfile?.staff_id===s.id?'700':'500'};font-size:11px;background:${currentProfile?.staff_id===s.id?'var(--blue-bg)':''}">
           ${currentProfile?.staff_id===s.id?`<span style="color:var(--blue)">${s.name} <span style="font-size:9px;padding:1px 5px;border-radius:20px;background:var(--blue);color:#fff;margin-left:4px">You</span></span>`:s.name}
-          ${hasOverride?`<span style="font-size:9px;padding:1px 5px;border-radius:20px;background:var(--amber-bg);color:var(--amber);border:0.5px solid var(--amber-bd);margin-left:5px">custom</span>`:''}${eaFlag}
+          ${hasOverride?`<span style="font-size:9px;padding:1px 5px;border-radius:20px;background:var(--amber-bg);color:var(--amber);border:0.5px solid var(--amber-bd);margin-left:5px">custom</span>`:''}${(()=>{ const ow=brOwnerOf(s.id+'_'+dayVal+'_'+mk); return ow?`<div title="Breaks assigned by ${ow}${brLockOwner(s.id+'_'+dayVal+'_'+mk)?' — locked':''}" style="font-size:9px;color:var(--text3);font-weight:400;margin-top:2px">${brLockOwner(s.id+'_'+dayVal+'_'+mk)?'🔒':'✓'} Assigned by ${ow}</div>`:''; })()}${eaFlag}
         </td>
         <td style="padding:7px 8px;border-bottom:0.5px solid var(--border);text-align:center">
           <span style="display:inline-block;line-height:1.3;font-size:11px;padding:2px 8px;border-radius:20px;background:${solid(shiftDef?.color||'#888')};color:#fff;font-weight:500">${sh}</span>
@@ -9913,6 +9920,16 @@ function breakOptions(win0,relax){
   return out;
 }
 
+// ── Break ownership: once a TL assigns a shift's breaks they are locked to that TL (managers/admin can still change them) ──
+function brOwnerMe(){ return String(currentProfile?.staff_id||currentProfile?.username||currentProfile?.email||''); }
+function brCanOverride(){ return currentProfile?.app_role==='admin'||['Senior Manager','Manager'].includes(currentProfile?.staff_role||''); }
+// Any assigned break is locked. Owner = the TL who assigned it; breaks from before owners were recorded are locked to managers/admin.
+function brLockOwner(key){ const a=breakOverrides[key]; if(!Array.isArray(a)||!a.length) return null; if(brCanOverride()) return null;
+  const b=a.find(x=>x&&x.by); if(!b) return 'an earlier assignment (ask a manager)';
+  if(String(b.by)===brOwnerMe()) return null; return b.byName||'another TL'; }
+function brOwnerOf(key){ const a=breakOverrides[key]; if(!Array.isArray(a)||!a.length) return null; const b=a.find(x=>x&&x.by); return b?(b.byName||'a TL'):'Earlier (no name)'; }
+function brStamp(arr){ const me=brOwnerMe(), nm=currentProfile?.display_name||currentProfile?.username||''; return arr.map(b=>({...b,by:me,byName:nm})); }
+function brToPlan(arr){ return arr.map(b=>({k:brIsShort(b)?'short':(b.eaOnly?'ea':((/meal|lunch/i.test(b.name||'')||(b.duration||0)>=60)?'meal':'ea')),st:b.startMins,dur:b.endMins-b.startMins})); }
 function planBreaksForDay(day){
   const C=BREAK_CFG, SL=1440/C.step;
   const people=[]; const warnings=[];
@@ -9928,7 +9945,8 @@ function planBreaksForDay(day){
       const clear=opts.filter(set=>set.every(b=>offs.every(([a,e])=>b.st>=e||b.st+b.dur<=a)));
       if(clear.length) opts=clear; else warnings.push(`${s.name}: a break overlaps their task`);
     }
-    people.push({s,sh,win,opts,offs});
+    const lockKey=s.id+'_'+day+'_'+cy+'-'+(cm+1), lk=brLockOwner(lockKey);
+    people.push({s,sh,win,opts,offs,fixed:!!lk,plan:lk?brToPlan(breakOverrides[lockKey]):undefined});
   });
   // Headcount per 10-min slot — per Coverage group (role) and in total (incl. contiguous OT; QA support adds to total)
   const grpOf=p=>p.s.staff_role||'Agent';
@@ -9976,9 +9994,9 @@ function planBreaksForDay(day){
   // Most constrained first, then refinement passes until nothing improves
   people.sort((a,b)=>a.opts.length-b.opts.length||a.win.S-b.win.S);
   const pick=p=>{ let best=null,bc=Infinity; for(const o of p.opts){ const c=cost(p,o); if(c<bc-1e-9){bc=c;best=o;} } return best; };
-  people.forEach(p=>{ p.plan=pick(p); apply(p,p.plan,1); });
+  people.forEach(p=>{ if(p.fixed){ apply(p,p.plan,1); return; } p.plan=pick(p); apply(p,p.plan,1); });
   for(let pass=0;pass<30;pass++){ let moved=false;
-    people.forEach(p=>{ apply(p,p.plan,-1); const np=pick(p); if(np!==p.plan) moved=true; p.plan=np; apply(p,p.plan,1); });
+    people.forEach(p=>{ if(p.fixed) return; apply(p,p.plan,-1); const np=pick(p); if(np!==p.plan) moved=true; p.plan=np; apply(p,p.plan,1); });
     if(!moved) break; }
   // What-if summary: per hour, the lowest number on calls (what Coverage → After breaks shows) vs the agents needed
   const tight=[];
@@ -10002,15 +10020,15 @@ async function autoAssignBreaks(scope){
   let days=scope==='month'||scope==='missing'?Array.from({length:dim(cy,cm)},(_,i)=>i+1):[dayVal];
   if(scope==='missing'){ days=days.filter(d=>!Object.keys(breakOverrides).some(k=>k.endsWith('_'+d+'_'+mk))); if(!days.length){ toast('Every day this month already has breaks','ok'); return; }
     if(!confirm(`Plan breaks for ${days.length} day${days.length>1?'s':''} with none yet (${days.join(', ')} ${MONTHS[cm].slice(0,3)})? Days already planned are not touched.`)) return; }
-  let n=0, eaN=0; const warn=[]; const tightDays=[]; let needKnown=false;
+  let n=0, eaN=0, lockedN=0; const warn=[]; const tightDays=[]; let needKnown=false;
   days.forEach(d=>{
     const r=planBreaksForDay(d);
-    r.people.forEach(p=>{ breakOverrides[p.s.id+'_'+d+'_'+mk]=planToOverrides(p.plan); n++; if(p.plan.some(b=>b.k==='ea')) eaN++; });
+    r.people.forEach(p=>{ if(p.fixed){ lockedN++; return; } breakOverrides[p.s.id+'_'+d+'_'+mk]=brStamp(planToOverrides(p.plan)); n++; if(p.plan.some(b=>b.k==='ea')) eaN++; });
     r.warnings.forEach(x=>warn.push(`${d} ${MONTHS[cm].slice(0,3)} — ${x}`));
     if(r.needKnown) needKnown=true;
     if(r.tight&&r.tight.length) tightDays.push({d,t:r.tight});
   });
-  if(!n){toast('No inbound staff on shift to assign','err');return;}
+  if(!n){toast(lockedN?`All ${lockedN} are already assigned by another TL — nothing to change`:'No inbound staff on shift to assign','err');return;}
   const {error}=await sb.from('app_settings').upsert({key:'break_overrides',value:JSON.stringify(breakOverrides)},{onConflict:'key'});
   if(error){toast('Save failed: '+error.message,'err');return;}
   await sb.from('app_settings').upsert({key:'last_breaks_updated_at',value:new Date().toISOString()},{onConflict:'key'});
@@ -10022,7 +10040,7 @@ async function autoAssignBreaks(scope){
       wi=` · ⚠ ${t.length} hour${t.length>1?'s':''} still at or below need (${t.slice(0,4).map(x=>hh(x.h)+' '+x.low+'/'+x.need).join(', ')}${t.length>4?'…':''})${below?` — ${below} below`:''}`; }
     else { const tot=tightDays.reduce((a,x)=>a+x.t.length,0); wi=` · ⚠ ${tot} hour${tot>1?'s':''} at or below need on ${tightDays.length} days (${tightDays.slice(0,5).map(x=>x.d).join(', ')}${tightDays.length>5?'…':''})`; }
   }
-  toast(`Breaks planned for ${n} shift${n>1?'s':''} ✓${eaN?` · ${eaN} with an EA rest break`:''}${warn.length?` · ${warn.length} need attention`:''}${wi}`,wi.includes('⚠')?'err':'ok');
+  toast(`Breaks planned for ${n} shift${n>1?'s':''} ✓${lockedN?` · ${lockedN} already assigned by another TL (kept)`:''}${eaN?` · ${eaN} with an EA rest break`:''}${warn.length?` · ${warn.length} need attention`:''}${wi}`,wi.includes('⚠')?'err':'ok');
   window._lastBreakWhatIf=tightDays;
   if(warn.length) console.warn('Break planner:',warn.join('\n'));
   renderBreaksTab();
@@ -10033,7 +10051,9 @@ async function clearBreaksDay(){
   const d=parseInt(document.getElementById('breakDayFilter')?.value||0);
   if(!d){ toast('Select a day first','err'); return; }
   const mk=cy+'-'+(cm+1);
-  const keys=Object.keys(breakOverrides).filter(k=>k.endsWith('_'+d+'_'+mk)&&(breakOverrides[k]||[]).length);
+  const allKeys=Object.keys(breakOverrides).filter(k=>k.endsWith('_'+d+'_'+mk)&&(breakOverrides[k]||[]).length);
+  const keys=allKeys.filter(k=>!brLockOwner(k));
+  if(allKeys.length&&!keys.length){ toast('Every break on this day was assigned by another TL — only they or a manager can clear them','err'); return; }
   if(!keys.length){ toast(`No breaks assigned on ${d} ${MONTHS[cm].slice(0,3)}`,'ok'); return; }
   if(!confirm(`Remove all breaks on ${d} ${MONTHS[cm]} for ${keys.length} staff?`)) return;
   const backup={}; keys.forEach(k=>{ backup[k]=breakOverrides[k]; delete breakOverrides[k]; });
