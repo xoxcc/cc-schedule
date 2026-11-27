@@ -3067,7 +3067,9 @@ async function saveOT(staffId,day,hours,start,end,otType,opt){
   queueBreakReplan(parseInt(day));   // OT changes the 5-hour rest rule
 }
 
-function getOT(sid,d){ if(hiddenDay(d)) return null; return otData[sid+'_'+d]||null;}
+function getOT(sid,d){
+  if(viewMode==='week'||viewMode==='range'){ const vd=getViewDays().find(v=>v.day===+d); if(vd){ if(hiddenDay(d,vd.month,vd.year)) return null; return otData[sid+'_'+d+'_'+vd.year+'-'+(vd.month+1)]||null; } }
+  if(hiddenDay(d)) return null; return otData[sid+'_'+d]||null;}
 function getOTHours(sid,d){const o=getOT(sid,d);return o?o.hours:0;}
 
 // ── SCHEDULE RENDER ──
@@ -3086,11 +3088,13 @@ function viewerRestricted(){
   return !(p&&(p.publish_schedule===true||p.assign_shift===true||p.edit_schedule===true));
 }
 function getS(sid,d,m,y){
+  const multi=viewMode==='week'||viewMode==='range';   // a week/range can cross two months — day numbers repeat, so never fall back to the day-only key
+  if(multi&&m===undefined){ const vd=getViewDays().find(v=>v.day===+d); if(vd){ m=vd.month; y=vd.year; } }
   if(lwdMap[sid]&&afterLastDay(sid,y??cy,m??cm,d)) return '';
   if(viewerRestricted()&&!isDayPublished(d,m??cm,y??cy)) return '';
   if(m!==undefined&&y!==undefined){
     const mk=y+'-'+(m+1);
-    return schedData[sid+'_'+d+'_'+mk]||schedData[sid+'_'+d]||'';
+    return schedData[sid+'_'+d+'_'+mk]||(multi?'':schedData[sid+'_'+d])||'';
   }
   return schedData[sid+'_'+d]||'';
 }
@@ -10246,16 +10250,19 @@ function updatePublishBtn(){
 
 let _pubSnapshot=null;
 function cancelPublishModal(){ if(_pubSnapshot){ publishedDays=JSON.parse(_pubSnapshot); _pubSnapshot=null; } closeModal(); }
-function openPublishModal(){
-  _pubSnapshot=JSON.stringify(publishedDays);
-  const totalDays=dim(cy,cm);
+let pubY=null,pubM=null;
+function pubMonth(n){ let m=pubM+n,y=pubY; if(m>11){m=0;y++;} if(m<0){m=11;y--;} openPublishModal(y,m); }
+function openPublishModal(y,m){
+  if(y===undefined||_pubSnapshot===null) _pubSnapshot=JSON.stringify(publishedDays);
+  pubY=y!==undefined?y:cy; pubM=m!==undefined?m:cm;
+  const totalDays=dim(pubY,pubM);
   const dow=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
   const box=document.getElementById('modalBox');
 
   // Build week groups Sun-Sat
   let weeks=[];
   let week=[];
-  const firstDow=new Date(cy,cm,1).getDay();
+  const firstDow=new Date(pubY,pubM,1).getDay();
   // Pad start
   for(let i=0;i<firstDow;i++) week.push(null);
   for(let d=1;d<=totalDays;d++){
@@ -10264,11 +10271,10 @@ function openPublishModal(){
   }
   if(week.length) weeks.push(week);
 
-  const allPublished=Array.from({length:totalDays},(_,i)=>i+1).every(d=>isDayPublished(d,cm,cy));
-  const nonePublished=!isMonthHasPublished();
-
+  
   box.innerHTML=`<h3>📢 Publish schedule</h3>
-  <div class="msub">${MONTHS[cm]} ${cy} — select which days to publish for staff viewing</div>
+  <div style="display:flex;align-items:center;gap:8px;margin:2px 0 4px"><button class="btn" style="width:28px;padding:0;justify-content:center" onclick="pubMonth(-1)">‹</button><b style="font-size:14px;min-width:130px;text-align:center">${MONTHS[pubM]} ${pubY}</b><button class="btn" style="width:28px;padding:0;justify-content:center" onclick="pubMonth(1)">›</button></div>
+  <div class="msub">Select which days to publish for staff viewing</div>
 
   <div style="display:flex;gap:8px;margin:10px 0;flex-wrap:wrap">
     <button class="btn" onclick="publishSelectAll(true)" style="font-size:11px;background:var(--green-bg);color:var(--green);border-color:var(--green-bd)">✅ Publish all days</button>
@@ -10283,10 +10289,10 @@ function openPublishModal(){
     <tbody>
       ${weeks.map(week=>`<tr>${week.map(d=>{
         if(!d) return'<td></td>';
-        const pub=isDayPublished(d,cm,cy);
-        const dt=new Date(cy,cm,d);
+        const pub=isDayPublished(d,pubM,pubY);
+        const dt=new Date(pubY,pubM,d);
         const isWk=dt.getDay()===0||dt.getDay()===6;
-        const sh=staffList.some(s=>getS(s.id,d,cm,cy)); // has any shift
+        const sh=pubY===cy&&pubM===cm&&staffList.some(s=>getS(s.id,d,cm,cy)); // has any shift
         return`<td style="padding:3px"><div onclick="toggleDayPublish(${d})" 
           id="pubDay_${d}"
           style="cursor:pointer;border-radius:var(--r);padding:6px 4px;text-align:center;border:1.5px solid ${pub?'var(--green)':'var(--border2)'};background:${pub?'var(--green-bg)':'var(--surface)'};transition:all .15s">
@@ -10310,7 +10316,7 @@ function openPublishModal(){
 }
 
 function toggleDayPublish(d){
-  const pcy=cy, pcm=cm;
+  const pcy=pubY, pcm=pubM;
   const k=pcy+'-'+(pcm+1)+'-'+d;
   const el=document.getElementById('pubDay_'+d);
   if(publishedDays[k]){
@@ -10335,7 +10341,7 @@ function toggleDayPublish(d){
 }
 
 function publishSelectAll(pub){
-  const pcy=cy, pcm=cm;
+  const pcy=pubY, pcm=pubM;
   const totalDays=dim(pcy,pcm);
   for(let d=1;d<=totalDays;d++){
     const k=pcy+'-'+(pcm+1)+'-'+d;
@@ -10372,8 +10378,8 @@ async function savePublishAndClose(){
   closeModal();
   updatePublishBtn();
   renderSchedule();
-  const count=Object.keys(publishedDays).filter(k=>k.startsWith(cy+'-'+(cm+1)+'-')).length;
-  toast(`✅ ${count} days published for ${MONTHS[cm]} ${cy}`,'ok');
+  const count=Object.keys(publishedDays).filter(k=>k.startsWith(pubY+'-'+(pubM+1)+'-')).length;
+  toast(`✅ ${count} days published for ${MONTHS[pubM]} ${pubY}`,'ok');
 }
 
 // ── PROFILE ──
