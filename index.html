@@ -9462,6 +9462,10 @@ function openBreakOverride(staffId, day, name){
   const cur=getStaffBreaksOrAuto(staffId,day), full=getAutoBreaks(sh);
   brRows=full.map(ab=>{ const c=cur.find(x=>x.name===ab.name); return c?{...c,skip:false}:{...ab,skip:hasOverride}; })
     .concat(cur.filter(c=>!full.some(ab=>ab.name===c.name)).map(c=>({...c,skip:false})));
+  if(!brRows.some(brIsShort)&&getShiftStart(sh)!=null&&isCallStaff(staffList.find(x=>String(x.id)===String(staffId))||{},sh)){   // Short Break is always listed (skipped until the TL ticks it)
+    const sr=breakRuleOf('short'), st0=Math.min((getShiftStart(sh)||480)+240,16*60), p2=n=>String(n).padStart(2,'0');
+    brRows.push({id:sr.id,name:sr.name,icon:sr.icon,color:sr.color,duration:sr.duration,start:p2(Math.floor(st0/60))+':'+p2(st0%60),end:p2(Math.floor((st0+sr.duration)/60))+':'+p2((st0+sr.duration)%60),startMins:st0,endMins:st0+sr.duration,skip:true});
+  }
   const breaks=brRows;
   const box=document.getElementById('modalBox');
   box.innerHTML=`<h3>✏️ Assign breaks</h3>
@@ -9750,7 +9754,7 @@ function renderBreaksTab(){
     <thead><tr style="background:var(--surface2)">
       <th style="padding:8px 12px;text-align:left;border-bottom:0.5px solid var(--border);font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:var(--text2);min-width:170px">Staff</th>
       <th style="padding:8px 8px;text-align:center;border-bottom:0.5px solid var(--border);font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:var(--text2);width:52px">Shift</th>
-      ${breakRules.map(br=>`
+      ${brCols().map(br=>`
         <th style="padding:8px 6px;text-align:center;border-bottom:0.5px solid var(--border);font-size:10px;color:var(--text2)">
           <div style="display:flex;align-items:center;justify-content:center;gap:4px">
             <span style="width:8px;height:8px;border-radius:2px;background:${br.color};display:inline-block"></span>
@@ -9764,7 +9768,7 @@ function renderBreaksTab(){
 
   positions.forEach(pos=>{
     const group=onShift.filter(s=>s.staff_role===pos);
-    html+=`<tr><td colspan="${4+breakRules.length+(isApprover?1:0)}"
+    html+=`<tr><td colspan="${4+brCols().length+(isApprover?1:0)}"
       style="padding:5px 12px;background:var(--surface2);border-bottom:0.5px solid var(--border);border-top:1.5px solid var(--border2)">
       <span style="font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:.05em;color:var(--text2)">${pos}</span>
       <span style="font-size:10px;color:var(--text3);margin-left:6px">${group.length} on shift</span>
@@ -9795,8 +9799,8 @@ function renderBreaksTab(){
           <span style="display:inline-block;line-height:1.3;font-size:11px;padding:2px 8px;border-radius:20px;background:${solid(shiftDef?.color||'#888')};color:#fff;font-weight:500">${sh}</span>
           <div style="font-size:9px;color:var(--text3);margin-top:1px">${shiftDef?.label||''}</div>
         </td>
-        ${breakRules.map(br=>{
-          const assigned=breaks.find(b=>b.id===br.id);
+        ${brCols().map(br=>{
+          const assigned=breaks.find(b=>b.id===br.id||(brIsShort(br)&&brIsShort(b)));
           return`<td style="padding:7px 8px;border-bottom:0.5px solid var(--border);text-align:center">
             ${assigned
               ?`<div style="font-size:11px;font-weight:500;color:var(--text)">${assigned.start}</div><div style="font-size:9px;color:var(--text3)">→ ${assigned.end}</div>`
@@ -9839,6 +9843,9 @@ const BREAK_CFG={peakFrom:10*60, peakTo:16*60, firstWin:120, earliest:60, gap:30
 const CALL_ROLES=new Set(['Inbound Agent','New Staff','New Agent','Agent']);
 const ABSENT_FOR_BREAKS=new Set(['AL','RL','MC','MCR','MCP','EL','ELP','ELR','PH','O','OD','RD','UL','CL','HOSP','TO','H1','H2']);
 
+// Columns for the daily break table: the saved break rules, plus the planner's Short Break when no rule is named "short"
+function brCols(){ const l=breakRules.filter(b=>!b.eaOnly); if(!l.some(b=>/short/i.test(b.name))) l.push(breakRuleOf('short')); return l; }
+const brIsShort=b=>b&&(b.id==='short'||/short/i.test(b.name||''));
 function breakRuleOf(kind){
   const r=kind==='meal'?breakRules.find(b=>!b.eaOnly&&(/meal|lunch/i.test(b.name)||b.duration>=60))
     :kind==='short'?breakRules.find(b=>!b.eaOnly&&/short/i.test(b.name)&&b.duration<60)
